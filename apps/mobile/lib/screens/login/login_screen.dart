@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../home/home_screen.dart';
 
 const Map<int, Color> _slate = {
@@ -77,8 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
-        setState(() => _isLoading = false);
-        return; // Hủy đăng nhập
+        return; // Canceled by user (finally block will set _isLoading to false)
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -121,8 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (didAuthenticate) {
-        // Lưu ý: Trong thực tế, sinh trắc học sẽ dùng để lấy Credentials đã được mã hóa/lưu trước đó.
-        // Ở đây mô phỏng đăng nhập thành công vào trang chủ sau khi xác nhận vân tay/khuôn mặt.
         _navigateToHome();
       }
     } catch (e) {
@@ -186,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'HVAC Pro',
-                    style: TextStyle(
+                    style: GoogleFonts.firaCode(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : _slate[900],
@@ -202,218 +200,222 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Glassmorphism Card
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? _slate[950]!.withValues(alpha: 0.6)
-                              : Colors.white.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
+                  // Glassmorphism Card (with maximum width constraint)
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
                             color: isDark
-                                ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.white.withValues(alpha: 0.2),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                                ? _slate[950]!.withValues(alpha: 0.6)
+                                : Colors.white.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : Colors.white.withValues(alpha: 0.2),
+                              width: 1.5,
                             ),
-                          ],
-                        ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'Đăng nhập',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : _slate[900],
-                                ),
-                                textAlign: TextAlign.center,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               ),
-                              const SizedBox(height: 24),
-
-                              // Email Input
-                              TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                decoration: InputDecoration(
-                                  labelText: 'Email',
-                                  prefixIcon: const Icon(Icons.email_outlined),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.transparent,
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Vui lòng nhập Email.';
-                                  }
-                                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                    return 'Định dạng Email không hợp lệ.';
-                                  }
-                                  return null;
-                                },
-                                enabled: !_isLoading,
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Password Input
-                              TextFormField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                decoration: InputDecoration(
-                                  labelText: 'Mật khẩu',
-                                  prefixIcon: const Icon(Icons.lock_outline),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.transparent,
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Vui lòng nhập mật khẩu.';
-                                  }
-                                  if (value.length < 6) {
-                                    return 'Mật khẩu phải chứa ít nhất 6 ký tự.';
-                                  }
-                                  return null;
-                                },
-                                enabled: !_isLoading,
-                              ),
-                              const SizedBox(height: 12),
-
-                              // Forgot Password Link
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () {},
-                                  child: Text(
-                                    'Quên mật khẩu?',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-
-                              if (_errorMessage != null) ...[
+                            ],
+                          ),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                                 Text(
-                                  _errorMessage!,
-                                  style: const TextStyle(color: Colors.red, fontSize: 13),
+                                  'Đăng nhập',
+                                  style: GoogleFonts.firaCode(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : _slate[900],
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 12),
-                              ],
+                                const SizedBox(height: 24),
 
-                              // Login Button
-                              SizedBox(
-                                height: 48,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
+                                // Email Input
+                                TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  decoration: InputDecoration(
+                                    labelText: 'Email',
+                                    prefixIcon: const Icon(Icons.email_outlined),
+                                    border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    elevation: 0,
+                                    filled: true,
+                                    fillColor: Colors.transparent,
                                   ),
-                                  onPressed: _isLoading ? null : _loginWithEmail,
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Text('Đăng nhập', style: TextStyle(fontSize: 16)),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Vui lòng nhập Email.';
+                                    }
+                                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                      return 'Định dạng Email không hợp lệ.';
+                                    }
+                                    return null;
+                                  },
+                                  enabled: !_isLoading,
                                 ),
-                              ),
-                              const SizedBox(height: 24),
+                                const SizedBox(height: 16),
 
-                              // Divider
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Divider(
-                                      color: isDark ? _slate[800] : _slate[300],
+                                // Password Input
+                                TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: _obscurePassword,
+                                  decoration: InputDecoration(
+                                    labelText: 'Mật khẩu',
+                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
                                     ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.transparent,
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Vui lòng nhập mật khẩu.';
+                                    }
+                                    if (value.length < 6) {
+                                      return 'Mật khẩu phải chứa ít nhất 6 ký tự.';
+                                    }
+                                    return null;
+                                  },
+                                  enabled: !_isLoading,
+                                ),
+                                const SizedBox(height: 12),
+
+                                // Forgot Password Link
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: () {},
                                     child: Text(
-                                      'Hoặc đăng nhập bằng',
+                                      'Quên mật khẩu?',
                                       style: TextStyle(
-                                        fontSize: 12,
-                                        color: isDark ? _slate[500] : _slate[600],
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                  Expanded(
-                                    child: Divider(
-                                      color: isDark ? _slate[800] : _slate[300],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
+                                ),
+                                const SizedBox(height: 8),
 
-                              // Google & Biometric buttons
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // Google button
-                                  _buildRoundSocialButton(
-                                    icon: Image.network(
-                                      'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-                                      height: 24,
-                                      width: 24,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.g_mobiledata, size: 32),
-                                    ),
-                                    onTap: _isLoading ? null : _loginWithGoogle,
+                                if (_errorMessage != null) ...[
+                                  Text(
+                                    _errorMessage!,
+                                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(width: 24),
-
-                                  // Fingerprint/Biometrics Button
-                                  _buildRoundSocialButton(
-                                    icon: Icon(
-                                      Icons.fingerprint,
-                                      size: 28,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    onTap: _isLoading ? null : _authenticateBiometrics,
-                                  ),
+                                  const SizedBox(height: 12),
                                 ],
-                              ),
-                            ],
+
+                                // Login Button
+                                SizedBox(
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    onPressed: _isLoading ? null : _loginWithEmail,
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text('Đăng nhập', style: TextStyle(fontSize: 16)),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Divider
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(
+                                        color: isDark ? _slate[800] : _slate[300],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      child: Text(
+                                        'Hoặc đăng nhập bằng',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark ? _slate[500] : _slate[600],
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(
+                                        color: isDark ? _slate[800] : _slate[300],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Google & Biometric buttons
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Google button (Offline-safe styled text representation)
+                                    _buildRoundSocialButton(
+                                      icon: Text(
+                                        'G',
+                                        style: GoogleFonts.firaCode(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue,
+                                        ),
+                                      ),
+                                      onTap: _isLoading ? null : _loginWithGoogle,
+                                    ),
+                                    const SizedBox(width: 24),
+
+                                    // Fingerprint/Biometrics Button
+                                    _buildRoundSocialButton(
+                                      icon: Icon(
+                                        Icons.fingerprint,
+                                        size: 28,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                      onTap: _isLoading ? null : _authenticateBiometrics,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
