@@ -47,7 +47,7 @@ class OnboardingScreen extends StatelessWidget {
                         foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       ),
                       onPressed: () {
-                        Navigator.pushReplacement(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const LoginScreen()),
                         );

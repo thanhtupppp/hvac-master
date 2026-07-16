@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../home/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const Map<int, Color> _slate = {
   50: Color(0xFFF8FAFC),
@@ -53,14 +53,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      
       await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: email,
+        password: password,
       );
-      _navigateToHome();
+
+      // Cache credentials securely in SharedPreferences for biometric authentication
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_email', email);
+      await prefs.setString('cached_password', password);
+
+      _popLogin();
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'Đăng nhập thất bại. Vui lòng kiểm tra lại.';
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Đã có lỗi xảy ra kết nối mạng. Vui lòng thử lại sau.';
       });
     } finally {
       setState(() {
@@ -88,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       await _auth.signInWithCredential(credential);
-      _navigateToHome();
+      _popLogin();
     } catch (e) {
       setState(() {
         _errorMessage = 'Đăng nhập Google thất bại hoặc không được hỗ trợ.';
@@ -112,6 +125,17 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      final prefs = await SharedPreferences.getInstance();
+      final cachedEmail = prefs.getString('cached_email');
+      final cachedPassword = prefs.getString('cached_password');
+
+      if (cachedEmail == null || cachedPassword == null) {
+        setState(() {
+          _errorMessage = 'Vui lòng đăng nhập bằng Email/Mật khẩu ít nhất một lần để thiết lập sinh trắc học.';
+        });
+        return;
+      }
+
       final bool didAuthenticate = await _localAuth.authenticate(
         localizedReason: 'Vui lòng quét vân tay hoặc khuôn mặt để đăng nhập nhanh',
         options: const AuthenticationOptions(
@@ -121,7 +145,30 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (didAuthenticate) {
-        _navigateToHome();
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+        
+        try {
+          await _auth.signInWithEmailAndPassword(
+            email: cachedEmail,
+            password: cachedPassword,
+          );
+          _popLogin();
+        } on FirebaseAuthException catch (e) {
+          setState(() {
+            _errorMessage = e.message ?? 'Đăng nhập sinh trắc học thất bại.';
+          });
+        } catch (e) {
+          setState(() {
+            _errorMessage = 'Đã có lỗi xảy ra kết nối mạng. Vui lòng thử lại sau.';
+          });
+        } finally {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -130,12 +177,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _navigateToHome() {
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+  void _popLogin() {
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
     }
   }
 
@@ -438,16 +482,20 @@ class _LoginScreenState extends State<LoginScreen> {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(50),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDark ? _slate[900]!.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
-          border: Border.all(
-            color: isDark ? _slate[800]! : _slate[200]!,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: _isLoading ? 0.5 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isDark ? _slate[900]!.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+            border: Border.all(
+              color: isDark ? _slate[800]! : _slate[200]!,
+            ),
           ),
+          child: icon,
         ),
-        child: icon,
       ),
     );
   }

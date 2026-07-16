@@ -26,6 +26,18 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      if (err === "unauthorized") {
+        setError("Tài khoản của bạn không có quyền truy cập vào trang Admin.");
+      } else if (err === "error") {
+        setError("Có lỗi xảy ra khi xác thực quyền Admin.");
+      }
+    }
+  }, []);
+
   if (user) {
     return null;
   }
