@@ -4,21 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:email_validator/email_validator.dart';
 
-const Map<int, Color> _slate = {
-  50: Color(0xFFF8FAFC),
-  100: Color(0xFFF1F5F9),
-  200: Color(0xFFE2E8F0),
-  300: Color(0xFFCBD5E1),
-  400: Color(0xFF94A3B8),
-  500: Color(0xFF64748B),
-  600: Color(0xFF475569),
-  700: Color(0xFF334155),
-  800: Color(0xFF1E293B),
-  900: Color(0xFF0F172A),
-  950: Color(0xFF020617),
-};
+import '../../core/theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -37,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final LocalAuthentication _localAuth = LocalAuthentication();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final _storage = const FlutterSecureStorage();
 
   @override
   void dispose() {
@@ -61,10 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
-      // Cache credentials securely in SharedPreferences for biometric authentication
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cached_email', email);
-      await prefs.setString('cached_password', password);
+      // Clean up plaintext password if it exists from previous versions
+      await _storage.delete(key: 'cached_password');
+      // Save flag and email, NO password
+      await _storage.write(key: 'biometric_enabled', value: 'true');
+      await _storage.write(key: 'cached_email', value: email);
 
       _popLogin();
     } on FirebaseAuthException catch (e) {
@@ -91,7 +82,11 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
-        return; // Canceled by user (finally block will set _isLoading to false)
+        // Explicitly update loading state if user cancels Google Sign-In
+        setState(() {
+          _isLoading = false;
+        });
+        return;
       }
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -125,19 +120,18 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      final cachedEmail = prefs.getString('cached_email');
-      final cachedPassword = prefs.getString('cached_password');
+      final enabled = await _storage.read(key: 'biometric_enabled');
+      final user = _auth.currentUser; // Firebase persists session automatically
 
-      if (cachedEmail == null || cachedPassword == null) {
+      if (enabled != 'true' || user == null) {
         setState(() {
-          _errorMessage = 'Vui lòng đăng nhập bằng Email/Mật khẩu ít nhất một lần để thiết lập sinh trắc học.';
+          _errorMessage = 'Vui lòng đăng nhập bằng Email/Mật khẩu ít nhất một lần.';
         });
         return;
       }
 
       final bool didAuthenticate = await _localAuth.authenticate(
-        localizedReason: 'Vui lòng quét vân tay hoặc khuôn mặt để đăng nhập nhanh',
+        localizedReason: 'Vui lòng quét vân tay hoặc khuôn mặt để mở khóa',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
@@ -145,34 +139,40 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (didAuthenticate) {
-        setState(() {
-          _isLoading = true;
-          _errorMessage = null;
-        });
-        
-        try {
-          await _auth.signInWithEmailAndPassword(
-            email: cachedEmail,
-            password: cachedPassword,
-          );
-          _popLogin();
-        } on FirebaseAuthException catch (e) {
-          setState(() {
-            _errorMessage = e.message ?? 'Đăng nhập sinh trắc học thất bại.';
-          });
-        } catch (e) {
-          setState(() {
-            _errorMessage = 'Đã có lỗi xảy ra kết nối mạng. Vui lòng thử lại sau.';
-          });
-        } finally {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        // Firebase session exists -> no need to sign in again, just unlock UI
+        _popLogin();
       }
     } catch (e) {
       setState(() {
         _errorMessage = 'Lỗi trong quá trình xác thực sinh trắc học.';
+      });
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập Email để khôi phục mật khẩu.';
+      });
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      setState(() {
+        _errorMessage = 'Đã gửi email khôi phục mật khẩu. Vui lòng kiểm tra hộp thư.';
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Gửi email khôi phục thất bại. Vui lòng kiểm tra lại.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -219,10 +219,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 2,
                       ),
                     ),
-                    child: Icon(
-                      Icons.ac_unit,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.primary,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(40),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -231,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: GoogleFonts.firaCode(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : _slate[900],
+                      color: isDark ? Colors.white : AppColors.slate[900],
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -239,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Hệ thống tra cứu chuyên nghiệp',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? _slate[400] : _slate[600],
+                      color: isDark ? AppColors.slate[400] : AppColors.slate[600],
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -255,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: isDark
-                                ? _slate[950]!.withValues(alpha: 0.6)
+                                ? AppColors.slate[950]!.withValues(alpha: 0.6)
                                 : Colors.white.withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
@@ -282,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   style: GoogleFonts.firaCode(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : _slate[900],
+                                    color: isDark ? Colors.white : AppColors.slate[900],
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -305,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     if (value == null || value.isEmpty) {
                                       return 'Vui lòng nhập Email.';
                                     }
-                                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                    if (!EmailValidator.validate(value)) {
                                       return 'Định dạng Email không hợp lệ.';
                                     }
                                     return null;
@@ -351,19 +353,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(height: 12),
 
                                 // Forgot Password Link
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: () {},
-                                    child: Text(
-                                      'Quên mật khẩu?',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontSize: 13,
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _isLoading ? null : _resetPassword,
+                                      child: Text(
+                                        'Quên mật khẩu?',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
                                 const SizedBox(height: 8),
 
                                 if (_errorMessage != null) ...[
@@ -407,7 +409,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   children: [
                                     Expanded(
                                       child: Divider(
-                                        color: isDark ? _slate[800] : _slate[300],
+                                        color: isDark ? AppColors.slate[800] : AppColors.slate[300],
                                       ),
                                     ),
                                     Padding(
@@ -416,13 +418,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                         'Hoặc đăng nhập bằng',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: isDark ? _slate[500] : _slate[600],
+                                          color: isDark ? AppColors.slate[500] : AppColors.slate[600],
                                         ),
                                       ),
                                     ),
                                     Expanded(
                                       child: Divider(
-                                        color: isDark ? _slate[800] : _slate[300],
+                                        color: isDark ? AppColors.slate[800] : AppColors.slate[300],
                                       ),
                                     ),
                                   ],
@@ -433,14 +435,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // Google button (Offline-safe styled text representation)
+                                    // Google button
                                     _buildRoundSocialButton(
-                                      icon: Text(
-                                        'G',
-                                        style: GoogleFonts.firaCode(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue,
+                                      icon: ClipOval(
+                                        child: Image.asset(
+                                          'assets/images/google_logo.png',
+                                          width: 24,
+                                          height: 24,
+                                          fit: BoxFit.cover,
                                         ),
                                       ),
                                       onTap: _isLoading ? null : _loginWithGoogle,
@@ -489,9 +491,9 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isDark ? _slate[900]!.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+            color: isDark ? AppColors.slate[900]!.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
             border: Border.all(
-              color: isDark ? _slate[800]! : _slate[200]!,
+              color: isDark ? AppColors.slate[800]! : AppColors.slate[200]!,
             ),
           ),
           child: icon,

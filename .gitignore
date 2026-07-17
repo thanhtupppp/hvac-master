@@ -1,0 +1,70 @@
+# ===========================
+# Root .gitignore - HVAC Master
+# ===========================
+
+# ---- Dependencies ----
+node_modules/
+.pnp
+.pnp.*
+
+# ---- Environment & Secrets ----
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# ---- API Keys / Credentials / Test files with secrets ----
+cloudinary_test.js
+
+# ---- Build outputs ----
+/build/
+/dist/
+/.next/
+/out/
+
+# ---- IDE & Editor ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---- Agent / AI / Plugin configs (local only) ----
+.agents/
+.codegraph/
+.superpowers/
+CLAUDE.md
+
+# ---- OS generated ----
+.DS_Store
+Desktop.ini
+ehthumbs.db
+
+# ---- Firebase (local emulator data) ----
+.firebase/
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---- Mobile - Google Services (contains API keys) ----
+# google-services.json and GoogleService-Info.plist contain API keys
+# Uncomment the lines below if you want to exclude them (recommended for public repos)
+# apps/mobile/android/app/google-services.json
+# apps/mobile/ios/Runner/GoogleService-Info.plist
+
+# ---- Mobile - Build artifacts ----
+**/build/
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+
+# ---- Design system artifacts ----
+design-system/

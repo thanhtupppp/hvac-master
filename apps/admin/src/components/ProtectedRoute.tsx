@@ -7,7 +7,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [checkingAdmin, setCheckingAdmin] = useState(true);
@@ -31,11 +31,13 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
           setIsAdmin(true);
         } else {
           setIsAdmin(false);
+          await logout();
           router.push("/login?error=unauthorized");
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsAdmin(false);
+        await logout();
         router.push("/login?error=error");
       } finally {
         setCheckingAdmin(false);

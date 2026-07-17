@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Fira_Sans, Fira_Code } from "next/font/google";
+import { Lora, Fira_Code } from "next/font/google";
 import "./globals.css";
 
-const firaSans = Fira_Sans({
-  variable: "--font-fira-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const firaCode = Fira_Code({
@@ -30,7 +30,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${firaSans.variable} ${firaCode.variable} h-full antialiased`}
+      className={`${lora.variable} ${firaCode.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <ThemeWatcher />

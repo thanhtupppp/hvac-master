@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'core/theme/app_theme.dart';
+import 'core/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,23 +47,10 @@ class HvacApp extends ConsumerWidget {
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale, // Automatically detects system locale or uses fallback
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1), // Navy Blue
-          brightness: Brightness.light,
-        ),
-        textTheme: GoogleFonts.firaSansTextTheme(ThemeData.light().textTheme),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D47A1),
-          brightness: Brightness.dark,
-        ),
-        textTheme: GoogleFonts.firaSansTextTheme(ThemeData.dark().textTheme),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system, // Dark mode support based on system settings
+      onGenerateRoute: AppRoutes.onGenerateRoute,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
