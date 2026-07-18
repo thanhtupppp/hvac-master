@@ -9,6 +9,7 @@ import '../../core/routes/app_routes.dart';
 import '../../providers/article_provider.dart';
 import '../../models/article.dart';
 import '../../providers/history_provider.dart';
+import '../../providers/user_provider.dart';
 import '../../core/utils/category_utils.dart';
 import 'widgets/latest_articles_section.dart';
 import 'widgets/popular_articles_section.dart';
@@ -28,6 +29,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _localAuth = LocalAuthentication();
   bool _biometricEnabled = false;
   bool _canCheckBiometrics = false;
+  bool _isUnlocked = true;
 
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
@@ -70,10 +72,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final canCheck =
         await _localAuth.canCheckBiometrics ||
         await _localAuth.isDeviceSupported();
+    
+    final biometricEnabled = enabled == 'true';
+
     setState(() {
-      _biometricEnabled = enabled == 'true';
+      _biometricEnabled = biometricEnabled;
       _canCheckBiometrics = canCheck;
+      if (biometricEnabled && canCheck) {
+        _isUnlocked = false;
+      }
     });
+
+    if (biometricEnabled && canCheck) {
+      _authenticateOnLaunch();
+    }
+  }
+
+  Future<void> _authenticateOnLaunch() async {
+    try {
+      final didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Xác thực vân tay để truy cập ứng dụng',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+      if (didAuthenticate) {
+        setState(() {
+          _isUnlocked = true;
+        });
+      }
+    } catch (e) {
+      // Keep it locked
+    }
   }
 
   Future<void> _toggleBiometric(bool value) async {
@@ -115,6 +146,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_isUnlocked) {
+      return Scaffold(
+        backgroundColor: AppColors.bgPrimary,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.03),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                ),
+                child: const Icon(
+                  Icons.lock_outline,
+                  color: AppColors.textMuted,
+                  size: 64,
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Ứng dụng đang khóa',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Vui lòng xác thực vân tay để truy cập',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 48),
+              GestureDetector(
+                onTap: _authenticateOnLaunch,
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF7C3AED), Color(0xFF3F51B5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.fingerprint,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              TextButton.icon(
+                icon: const Icon(Icons.logout, size: 16),
+                label: const Text(
+                  'Đăng nhập bằng tài khoản khác',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.accentBright,
+                ),
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut();
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final List<Widget> pages = [
       _buildDashboardTab(),
       _buildSearchTab(),
@@ -277,11 +394,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // Dashboard tab matching the mockup
   Widget _buildDashboardTab() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.email?.split('@').first ?? 'Kỹ thuật viên';
-    final avatarText = displayName
-        .substring(0, displayName.length > 2 ? 2 : displayName.length)
-        .toUpperCase();
+    final userAsync = ref.watch(userProfileProvider);
+    final userModel = userAsync.asData?.value;
+
+    final displayName = userModel?.displayName ??
+        (FirebaseAuth.instance.currentUser?.email?.split('@').first ?? 'Kỹ thuật viên');
+
+    final avatarText = displayName.isNotEmpty
+        ? displayName.substring(0, displayName.length > 2 ? 2 : displayName.length).toUpperCase()
+        : '?';
+
+    final Map<String, List<Color>> avatarGradients = {
+      'purple': [const Color(0xFF7C3AED), const Color(0xFF3F51B5)],
+      'pink': [const Color(0xFFE91E63), const Color(0xFF9C27B0)],
+      'blue': [const Color(0xFF2196F3), const Color(0xFF00BCD4)],
+      'orange': [const Color(0xFFFF9800), const Color(0xFFFF5722)],
+      'green': [const Color(0xFF4CAF50), const Color(0xFF8BC34A)],
+    };
+
+    final colors = avatarGradients[userModel?.photoURL ?? 'purple'] ?? avatarGradients['purple']!;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -315,26 +446,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
                 // Custom Avatar
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      avatarText,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: colors,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            avatarText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (userModel?.isPremium == true)
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.amber,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.stars, color: Colors.white, size: 8),
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -442,6 +590,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               setState(() {
                 _selectedIndex = 2; // Open Bookmarks
               });
+            } else if (label == 'Công cụ') {
+              Navigator.pushNamed(context, AppRoutes.tools);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -475,160 +625,254 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // Premium Settings Tab
   Widget _buildSettingsTab() {
-    final user = FirebaseAuth.instance.currentUser;
-    return CustomScrollView(
-      slivers: [
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 40, 24, 16),
+    final userAsync = ref.watch(userProfileProvider);
+
+    return userAsync.when(
+      data: (userModel) {
+        if (userModel == null) {
+          return const Center(
             child: Text(
-              'Cài đặt',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+              'Vui lòng đăng nhập',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
+        final Map<String, List<Color>> avatarGradients = {
+          'purple': [const Color(0xFF7C3AED), const Color(0xFF3F51B5)],
+          'pink': [const Color(0xFFE91E63), const Color(0xFF9C27B0)],
+          'blue': [const Color(0xFF2196F3), const Color(0xFF00BCD4)],
+          'orange': [const Color(0xFFFF9800), const Color(0xFFFF5722)],
+          'green': [const Color(0xFF4CAF50), const Color(0xFF8BC34A)],
+        };
+
+        final colors = avatarGradients[userModel.photoURL] ?? avatarGradients['purple']!;
+        final displayName = userModel.displayName;
+        final avatarText = displayName.isNotEmpty
+            ? displayName.substring(0, displayName.length > 2 ? 2 : displayName.length).toUpperCase()
+            : '?';
+
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24, 40, 24, 16),
+                child: Text(
+                  'Cài đặt',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Account Section
-                const Text(
-                  'TÀI KHOẢN',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgCard,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.email_outlined,
-                        color: Color(0xFF388AF6),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Email đăng nhập',
-                            style: TextStyle(color: Colors.white, fontSize: 14),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Mini Profile Card
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCard,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: userModel.isPremium ? Colors.amber.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
+                            width: 1.5,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user?.email ?? 'Không khả dụng',
-                            style: const TextStyle(
-                              color: AppColors.textMuted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Security Section
-                const Text(
-                  'BẢO MẬT & ĐĂNG NHẬP',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgCard,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: const [
-                              Icon(Icons.fingerprint, color: Color(0xFF388AF6)),
-                              SizedBox(width: 16),
-                              Text(
-                                'Đăng nhập bằng vân tay',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: colors,
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
                               ),
-                            ],
-                          ),
-                          _canCheckBiometrics
-                              ? Switch(
-                                  value: _biometricEnabled,
-                                  onChanged: _toggleBiometric,
-                                  activeThumbColor: const Color(0xFF388AF6),
-                                )
-                              : const Text(
-                                  'Không hỗ trợ',
-                                  style: TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 12,
+                              child: Center(
+                                child: Text(
+                                  avatarText,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
                                   ),
                                 ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 48),
-
-                // Log out Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[800]?.withValues(alpha: 0.2),
-                      foregroundColor: Colors.red[200],
-                      elevation: 0,
-                      side: BorderSide(color: Colors.red[800]!),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          displayName,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (userModel.isPremium) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: Colors.amber, width: 0.5),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.stars, color: Colors.amber, size: 10),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'VIP',
+                                                style: TextStyle(color: Colors.amber, fontSize: 8, fontWeight: FontWeight.bold),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    userModel.email,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Thông tin cá nhân & tài khoản >',
+                                    style: TextStyle(
+                                      color: AppColors.accentBright,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                    },
-                    child: const Text(
-                      'Đăng xuất',
+
+                    const SizedBox(height: 28),
+
+                    // Security Section
+                    const Text(
+                      'BẢO MẬT & ĐĂNG NHẬP',
                       style: TextStyle(
-                        fontSize: 16,
+                        color: AppColors.textMuted,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgCard,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(Icons.fingerprint, color: Color(0xFF388AF6)),
+                                  SizedBox(width: 16),
+                                  Text(
+                                    'Đăng nhập bằng vân tay',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              _canCheckBiometrics
+                                  ? Switch(
+                                      value: _biometricEnabled,
+                                      onChanged: _toggleBiometric,
+                                      activeThumbColor: const Color(0xFF388AF6),
+                                    )
+                                  : const Text(
+                                      'Không hỗ trợ',
+                                      style: TextStyle(
+                                        color: AppColors.textMuted,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // Log out Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[800]?.withValues(alpha: 0.2),
+                          foregroundColor: Colors.red[200],
+                          elevation: 0,
+                          side: BorderSide(color: Colors.red[800]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await FirebaseAuth.instance.signOut();
+                        },
+                        child: const Text(
+                          'Đăng xuất',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Lỗi: ${err.toString()}', style: const TextStyle(color: Colors.red))),
     );
   }
 

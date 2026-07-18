@@ -48,6 +48,7 @@ dependencies:
   shared_preferences: ^2.2.0
   flutter_secure_storage: ^9.0.0
   email_validator: ^3.0.0
+  ffi: ^2.1.2
   flutter_cached_pdfview: ^0.4.3
   video_player: ^2.8.2
   chewie: ^1.7.1

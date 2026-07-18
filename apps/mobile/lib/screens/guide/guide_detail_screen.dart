@@ -1,5 +1,6 @@
 import 'dart:ui' as ui show ImageFilter, TextDirection;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -7,8 +8,9 @@ import '../../core/routes/app_routes.dart';
 import '../../models/article.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../providers/user_provider.dart';
 
-class GuideDetailScreen extends StatefulWidget {
+class GuideDetailScreen extends ConsumerStatefulWidget {
   final Article article;
 
   const GuideDetailScreen({
@@ -17,10 +19,10 @@ class GuideDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<GuideDetailScreen> createState() => _GuideDetailScreenState();
+  ConsumerState<GuideDetailScreen> createState() => _GuideDetailScreenState();
 }
 
-class _GuideDetailScreenState extends State<GuideDetailScreen> {
+class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
   bool _isBookmarked = false;
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
@@ -67,8 +69,21 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
     }
   }
 
+  bool get _isLocked {
+    if (!widget.article.isPremium) return false;
+    final userModel = ref.read(userProfileProvider).asData?.value;
+    if (userModel == null) return true;
+    if (userModel.status == 'disabled') return true;
+    if (userModel.isPremium) {
+      if (userModel.premiumExpiry == null) return false;
+      return userModel.premiumExpiry!.isBefore(DateTime.now());
+    }
+    return true;
+  }
+
   void _initVideoPlayer() {
-    if (widget.article.videoUrl != null && widget.article.videoUrl!.isNotEmpty && !widget.article.isPremium) {
+    if (_videoPlayerController != null) return;
+    if (widget.article.videoUrl != null && widget.article.videoUrl!.isNotEmpty && !_isLocked) {
       _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.article.videoUrl!));
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
@@ -200,7 +215,7 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             ),
             onPressed: () {
-              if (widget.article.isPremium) {
+              if (_isLocked) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Tài liệu VIP - Vui lòng nâng cấp tài khoản để xem')),
                 );
@@ -427,6 +442,12 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
   }
 
   Widget _buildVideoPlayerSection(BuildContext context) {
+    if (!_isLocked && _videoPlayerController == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _initVideoPlayer();
+      });
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -456,7 +477,7 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: widget.article.isPremium
+            child: _isLocked
                 ? Stack(
                     children: [
                       Positioned.fill(
@@ -543,7 +564,7 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             ),
             onPressed: () {
-              if (widget.article.isPremium) {
+              if (_isLocked) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Tài liệu VIP - Vui lòng nâng cấp tài khoản để xem')),
                 );
@@ -1169,7 +1190,7 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
                       letterSpacing: 1.0,
                     ),
                   ),
-                  if (!widget.article.isPremium)
+                  if (!_isLocked)
                     GestureDetector(
                       onTap: () => _showFullscreenBlueprint(context),
                       child: const Row(
@@ -1202,7 +1223,7 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: widget.article.isPremium
+                  child: _isLocked
                       ? Stack(
                           children: [
                             ImageFiltered(
@@ -1289,7 +1310,7 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
               const SizedBox(height: 24),
 
               // Content Area
-              widget.article.isPremium
+              _isLocked
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

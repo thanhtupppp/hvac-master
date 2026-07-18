@@ -1,54 +1,81 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/firebase-admin";
+import { z } from "zod";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://hvacpro.vn";
 
-// Auto-repair truncated JSON strings
-function repairJson(jsonStr: string): string {
-  jsonStr = jsonStr.trim();
-  if (jsonStr.endsWith('}')) {
-    return jsonStr;
-  }
+// Model ID format: "provider/model-name" or "provider/model-name:variant"
+// Accepts any valid OpenRouter model slug — no whitelist enforced.
+const MODEL_ID_SCHEMA = z
+  .string()
+  .trim()
+  .min(3, "Model ID quá ngắn.")
+  .max(100, "Model ID quá dài.")
+  .regex(
+    /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.:-]+$/,
+    "Model ID không đúng định dạng."
+  );
 
-  // Count double quotes
-  let quoteCount = 0;
-  for (let i = 0; i < jsonStr.length; i++) {
-    if (jsonStr[i] === '"' && (i === 0 || jsonStr[i - 1] !== '\\')) {
-      quoteCount++;
-    }
-  }
-
-  // If quote count is odd, it means we are inside a string. Close the string quote first.
-  if (quoteCount % 2 !== 0) {
-    jsonStr += '"';
-  }
-
-  // Count braces
-  let openBraceCount = 0;
-  let closeBraceCount = 0;
-  for (let i = 0; i < jsonStr.length; i++) {
-    if (jsonStr[i] === '{') openBraceCount++;
-    if (jsonStr[i] === '}') closeBraceCount++;
-  }
-
-  const missingBraces = openBraceCount - closeBraceCount;
-  if (missingBraces > 0) {
-    jsonStr += '}'.repeat(missingBraces);
-  }
-
-  return jsonStr;
-}
+// Request validation schema
+const requestBodySchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Tiêu đề không được trống")
+    .max(200, "Tiêu đề quá dài (Tối đa 200 ký tự)"),
+  causes: z.string().optional().default(""),
+  steps: z.string().optional().default(""),
+  notes: z.string().optional().default(""),
+  aiModel: MODEL_ID_SCHEMA.optional(),
+  targetLang: z.enum(["en", "ko", "ja", "zh", "km", "lo", "hi", "es", "fr", "de"]),
+});
 
 export async function POST(req: Request) {
+  // Fail fast on missing API key configuration
   if (!OPENROUTER_API_KEY) {
-    return NextResponse.json({ error: "Missing OPENROUTER_API_KEY environment variable" }, { status: 500 });
+    return NextResponse.json(
+      { error: "OpenRouter configuration is missing on server." },
+      { status: 500 }
+    );
   }
 
   try {
-    const { title, causes, steps, notes, aiModel, targetLang } = await req.json();
-
-    if (!title || !targetLang) {
-      return NextResponse.json({ error: "Missing title or targetLang parameter" }, { status: 400 });
+    // 1. Authenticate & Authorize request using requireAdmin
+    try {
+      await requireAdmin(req);
+    } catch (authError: any) {
+      return NextResponse.json(
+        { error: authError.message || "Unauthorized access." },
+        { status: authError.status || 401 }
+      );
     }
+
+    // 2. Parse and Validate input payload
+    const body = await req.json().catch(() => null);
+    const parsed = requestBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dữ liệu đầu vào không hợp lệ.", details: parsed.error.format() },
+        { status: 400 }
+      );
+    }
+
+    const { title, causes, steps, notes, aiModel, targetLang } = parsed.data;
+
+    // 3. Resolve model choice — env fallback validated by slug format
+    let modelFallback = "google/gemini-2.5-flash";
+    const envModel = process.env.OPENROUTER_MODEL;
+    if (envModel) {
+      if (!MODEL_ID_SCHEMA.safeParse(envModel).success) {
+        return NextResponse.json(
+          { error: "Server model configuration is invalid." },
+          { status: 500 }
+        );
+      }
+      modelFallback = envModel;
+    }
+    const model = aiModel || modelFallback;
 
     const languageNames: Record<string, string> = {
       en: "Tiếng Anh (English)",
@@ -60,49 +87,38 @@ export async function POST(req: Request) {
       hi: "Tiếng Hindi (Hindi - हिन्दी). Bạn bắt buộc phải dịch sang chữ viết Devanagari chính thức của tiếng Hindi (không dùng bảng chữ cái Latinh hay tiếng Anh).",
       es: "Tiếng Tây Ban Nha (Spanish)",
       fr: "Tiếng Pháp (French)",
-      de: "Tiếng Đức (German)"
+      de: "Tiếng Đức (German)",
     };
 
-    const targetLangName = languageNames[targetLang] || targetLang;
-
+    const targetLangName = languageNames[targetLang];
     const systemPrompt = `Bạn là một chuyên gia dịch thuật kỹ thuật chuyên nghiệp trong lĩnh vực Cơ điện lạnh (HVAC) và Thiết bị gia dụng. Hãy dịch tiêu đề và các phần nội dung bài viết sang ngôn ngữ: ${targetLangName}.
     
 Yêu cầu BẮT BUỘC về ngôn ngữ và kỹ thuật:
 1. Sử dụng thuật ngữ chuyên ngành kỹ thuật chính xác, tự nhiên và chuẩn công nghiệp của quốc gia bản địa (ví dụ các bộ phận như: máy nén, board mạch Inverter, cảm biến nhiệt độ NTC, van tiết lưu, dàn nóng, dàn lạnh, môi chất lạnh phải được dịch sang từ chuyên ngành kỹ thuật tương ứng, KHÔNG DỊCH WORD-BY-WORD theo nghĩa thông thường).
 2. Văn phong mang tính chất hướng dẫn xử lý kỹ thuật rõ ràng, ngắn gọn và thực tế cho thợ sửa chữa. Giữ nguyên các ký hiệu kỹ thuật viết tắt quốc tế phổ biến (ví dụ: PCB, MCU, AC/DC, NTC, EPROM) và các mã lỗi (ví dụ: E1, H11, F9).
 3. Giữ nguyên toàn bộ cấu trúc các thẻ HTML và các thẻ Markdown chèn ảnh/tài liệu đặc biệt như: ![img](url) hoặc [pdf](url) trong các mục nội dung.
-4. CHỈ TRẢ VỀ JSON HỢP LỆ, KHÔNG CHỨA TEXT NÀO KHÁC BÊN NGOÀI JSON (Không dùng markdown \`\`\`json).
-5. Cấu trúc JSON phải đúng định dạng như sau:
-{
-  "title": "...",
-  "causes": "...",
-  "steps": "...",
-  "notes": "..."
-}
-6. Tuyệt đối KHÔNG tự ý chèn thêm ngày, tháng, năm hoặc thông tin thời gian vào tiêu đề bài viết.`;
+4. CHỈ TRẢ VỀ JSON HỢP LỆ, KHÔNG CHỨA TEXT NÀO KHÁC BÊN NGOÀI JSON. Cấu trúc JSON phải khớp với schema được cung cấp.
+5. Tuyệt đối KHÔNG tự ý chèn thêm ngày, tháng, năm hoặc thông tin thời gian vào tiêu đề bài viết.`;
 
     const userPrompt = `Tiêu đề (Tiếng Việt):
 ${title}
 
 Nguyên nhân (Tiếng Việt):
-${causes || ""}
+${causes}
 
 Hướng dẫn khắc phục (Tiếng Việt):
-${steps || ""}
+${steps}
 
 Lưu ý kỹ thuật (Tiếng Việt):
-${notes || ""}`;
+${notes}`;
 
-    const model = aiModel || process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
-
-    console.log(`Translating article to ${targetLangName} using model ${model}...`);
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000", 
-        "X-Title": "HVAC Pro Admin Translation"
+        "HTTP-Referer": APP_URL,
+        "X-OpenRouter-Title": "HVAC Pro Admin Translation"
       },
       body: JSON.stringify({
         model: model,
@@ -110,7 +126,39 @@ ${notes || ""}`;
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        response_format: { type: "json_object" },
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "hvac_translation_schema",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                title: { 
+                  type: "string",
+                  description: "Tiêu đề bài viết đã được dịch thuật chính xác."
+                },
+                causes: { 
+                  type: "string",
+                  description: "Danh sách nguyên nhân lỗi đã được dịch thuật chính xác."
+                },
+                steps: { 
+                  type: "string",
+                  description: "Hướng dẫn các bước khắc phục mã lỗi đã được dịch thuật chính xác."
+                },
+                notes: { 
+                  type: "string",
+                  description: "Lưu ý an toàn kỹ thuật và kinh nghiệm thực tế đã được dịch thuật chính xác."
+                }
+              },
+              required: ["title", "causes", "steps", "notes"],
+              additionalProperties: false
+            }
+          }
+        },
+        provider: {
+          require_parameters: true
+        },
         max_tokens: 3000
       })
     });
@@ -118,56 +166,67 @@ ${notes || ""}`;
     if (!response.ok) {
       const errorData = await response.text();
       console.error(`OpenRouter API Error during translation to ${targetLangName}:`, errorData);
-      return NextResponse.json({ error: `Translation API failed for ${targetLangName}` }, { status: response.status });
+      return NextResponse.json(
+        { error: `Translation API service failed for ${targetLangName}.` },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();
-    let resultText = data.choices[0].message.content.trim();
-    
-    let translatedContent;
-    try {
-      const firstBrace = resultText.indexOf('{');
-      if (firstBrace === -1) {
-        throw new Error("Could not find JSON object start '{' in AI response");
-      }
-      
-      let jsonStr = resultText.substring(firstBrace);
-      
-      // Auto-repair JSON in case of truncation
-      jsonStr = repairJson(jsonStr);
+    const resultText = data.choices?.[0]?.message?.content?.trim();
 
-      try {
-        translatedContent = JSON.parse(jsonStr);
-      } catch (e) {
-        let inString = false;
-        let chars = jsonStr.split('');
-        for (let i = 0; i < chars.length; i++) {
-          if (chars[i] === '"' && (i === 0 || chars[i - 1] !== '\\')) {
-            inString = !inString;
-          } else if (inString && (chars[i] === '\n' || chars[i] === '\r')) {
-            if (chars[i] === '\n') {
-              chars[i] = '\\n';
-            } else if (chars[i] === '\r') {
-              chars[i] = '';
-            }
-          }
-        }
-        jsonStr = chars.join('');
-        translatedContent = JSON.parse(jsonStr);
-      }
-    } catch (parseError: any) {
-      console.error("AI response parsing failed. Original response:", resultText);
-      const length = resultText.length;
-      const startSnippet = resultText.substring(0, 300);
-      const endSnippet = length > 300 ? resultText.substring(length - 200) : "";
-      return NextResponse.json({ 
-        error: `Invalid JSON returned by AI: ${parseError.message}. Model: ${model}. Length: ${length}. Start: "${startSnippet}" ... End: "${endSnippet}"` 
-      }, { status: 500 });
+    if (!resultText) {
+      return NextResponse.json(
+        { error: "AI returned an empty response during translation." },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json(translatedContent);
-  } catch (error: any) {
+    // --- Multi-stage JSON repair pipeline ---
+    const repairJson = (raw: string): Record<string, string> | null => {
+      // Stage 1: direct parse
+      try { return JSON.parse(raw); } catch {}
+
+      // Stage 2: strip markdown code fences (```json ... ```)
+      const stripped = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+      try { return JSON.parse(stripped); } catch {}
+
+      // Stage 3: extract first {...} block
+      const match = stripped.match(/\{[\s\S]*\}/);
+      if (match) {
+        try { return JSON.parse(match[0]); } catch {}
+      }
+
+      // Stage 4: field-by-field regex extraction (last resort)
+      const extract = (key: string): string => {
+        const re = new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "s");
+        const m = stripped.match(re);
+        return m ? m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
+      };
+      const title  = extract("title");
+      const causes = extract("causes");
+      const steps  = extract("steps");
+      const notes  = extract("notes");
+      if (title || causes || steps || notes) return { title, causes, steps, notes };
+
+      return null;
+    };
+
+    const translatedContent = repairJson(resultText);
+    if (translatedContent) {
+      return NextResponse.json(translatedContent);
+    }
+
+    console.error("AI response JSON repair failed. Raw content:", resultText);
+    return NextResponse.json(
+      { error: "Failed to parse structured translation content from AI. Try a different model." },
+      { status: 500 }
+    );
+  } catch (error) {
     console.error("Error in translation route:", error);
-    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error occurred during content translation." },
+      { status: 500 }
+    );
   }
 }

@@ -15,6 +15,8 @@ export default function Header() {
     { label: "Bài viết", href: "/articles" },
     { label: "Danh mục", href: "/categories" },
     { label: "Hãng sản xuất", href: "/brands" },
+    { label: "Người dùng", href: "/users" },
+    { label: "Thanh toán", href: "/payments" },
   ];
 
   return (

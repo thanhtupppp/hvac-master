@@ -5,73 +5,117 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, Loader2 } from "lucide-react";
+
+// Hoist Google provider to module level to avoid re-initializing on every click
+const googleProvider = new GoogleAuthProvider();
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [failCount, setFailCount] = useState(0);
+  
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  const isLoading = isEmailLoading || isGoogleLoading;
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const err = params.get("error");
-      if (err === "unauthorized") {
-        setError("Tài khoản của bạn không có quyền truy cập vào trang Admin.");
-      } else if (err === "error") {
-        setError("Có lỗi xảy ra khi xác thực quyền Admin.");
-      }
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err === "unauthorized") {
+      setError("Tài khoản của bạn không có quyền truy cập vào trang Admin.");
+    } else if (err === "error") {
+      setError("Có lỗi xảy ra khi xác thực quyền Admin.");
     }
   }, []);
 
-  if (user) {
-    return null;
-  }
+  const getFirebaseErrorMessage = (code: string): string => {
+    const map: Record<string, string> = {
+      "auth/user-not-found": "Email không tồn tại trong hệ thống.",
+      "auth/wrong-password": "Mật khẩu không đúng.",
+      "auth/invalid-credential": "Thông tin đăng nhập không hợp lệ.",
+      "auth/too-many-requests": "Tài khoản bị tạm khóa do nhập sai nhiều lần. Vui lòng thử lại sau.",
+      "auth/user-disabled": "Tài khoản đã bị vô hiệu hóa.",
+      "auth/popup-closed-by-user": "Đăng nhập Google bị hủy.",
+      "auth/invalid-email": "Định dạng email không hợp lệ.",
+    };
+    return map[code] ?? "Đăng nhập thất bại. Vui lòng thử lại.";
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (failCount >= 5) {
+      setError("Bạn đã nhập sai quá 5 lần. Vui lòng đợi và thử lại sau.");
+      return;
+    }
     setError("");
-    setIsLoading(true);
+    setIsEmailLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/");
-    } catch (err: any) {
-      console.error(err);
-      setError("Đăng nhập thất bại. Vui lòng kiểm tra lại email hoặc mật khẩu.");
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code ?? "";
+      setError(getFirebaseErrorMessage(code));
+      setFailCount((c) => c + 1);
     } finally {
-      setIsLoading(false);
+      setIsEmailLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setError("");
-    setIsLoading(true);
-    const provider = new GoogleAuthProvider();
+    setIsGoogleLoading(true);
     try {
-      await signInWithPopup(auth, provider);
-      router.push("/");
-    } catch (err: any) {
-      console.error(err);
-      setError("Đăng nhập Google thất bại hoặc bị hủy bỏ.");
+      await signInWithPopup(auth, googleProvider);
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code ?? "";
+      setError(getFirebaseErrorMessage(code));
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Vui lòng nhập địa chỉ email trước để gửi liên kết khôi phục mật khẩu.");
+      return;
+    }
+    setError("");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert(`Liên kết khôi phục mật khẩu đã được gửi đến email: ${email}`);
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code ?? "";
+      setError(getFirebaseErrorMessage(code));
+    }
+  };
+
+  // Show loading spinner if auth status is checking or user is already verified and redirecting
+  if (loading || user) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-green-500" />
+          <p className="text-sm text-muted-foreground animate-pulse">Đang xác thực quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid lg:grid-cols-2 min-h-screen w-full bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
@@ -129,13 +173,17 @@ export default function LoginPage() {
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >
-              <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22-.03-.63z" fillRule="evenodd" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              <span>Đăng nhập với Google</span>
+              {isGoogleLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+              ) : (
+                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22-.03-.63z" fillRule="evenodd" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+              )}
+              <span>{isGoogleLoading ? "Đang xử lý..." : "Đăng nhập với Google"}</span>
             </Button>
 
             <div className="relative flex items-center justify-center">
@@ -158,6 +206,8 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
+                  autoFocus
                   className="border-slate-200 dark:border-slate-800 dark:bg-slate-900"
                   disabled={isLoading}
                 />
@@ -165,7 +215,13 @@ export default function LoginPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Mật khẩu</Label>
-                  <a href="#" className="text-xs text-green-600 hover:text-green-500 hover:underline">Quên mật khẩu?</a>
+                  <button 
+                    type="button" 
+                    onClick={handleForgotPassword}
+                    className="text-xs text-green-600 hover:text-green-500 hover:underline bg-transparent border-none cursor-pointer focus:outline-none"
+                  >
+                    Quên mật khẩu?
+                  </button>
                 </div>
                 <div className="relative">
                   <Input 
@@ -175,6 +231,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                     className="border-slate-200 dark:border-slate-800 dark:bg-slate-900 pr-10"
                     disabled={isLoading}
                   />
@@ -195,7 +252,7 @@ export default function LoginPage() {
                 className="w-full h-10 mt-2 bg-green-600 hover:bg-green-500 text-white font-semibold transition-colors duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Đang xử lý..." : "Đăng nhập bằng Email"}
+                {isEmailLoading ? "Đang xử lý..." : "Đăng nhập bằng Email"}
               </Button>
             </form>
           </CardContent>

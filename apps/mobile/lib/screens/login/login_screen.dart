@@ -29,6 +29,22 @@ class _LoginScreenState extends State<LoginScreen> {
   final _storage = const FlutterSecureStorage();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndAutoAuthenticate();
+    });
+  }
+
+  Future<void> _checkAndAutoAuthenticate() async {
+    final enabled = await _storage.read(key: 'biometric_enabled');
+    final user = _auth.currentUser;
+    if (enabled == 'true' && user != null) {
+      _authenticateBiometrics();
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
