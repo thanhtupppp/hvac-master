@@ -6,6 +6,7 @@ import '../models/enums.dart';
 import '../models/duct_input.dart';
 import '../models/duct_calculator_state.dart';
 import '../services/duct_calculator_service.dart';
+import '../engine/unit_converter.dart';
 
 final ductCalculatorServiceProvider = Provider<DuctCalculatorService>((ref) {
   return DuctCalculatorService();
@@ -63,13 +64,13 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
     double newFriction = currentInput.frictionRate;
 
     if (system == UnitSystem.imperial) {
-      newFlow = currentInput.flowRate * 0.5886;
-      newVelocity = currentInput.targetVelocity * 196.85;
-      newFriction = currentInput.frictionRate * 0.1225;
+      newFlow = UnitConverter.toCfm(currentInput.flowRate, currentInput.unitSystem);
+      newVelocity = UnitConverter.toFpm(currentInput.targetVelocity, currentInput.unitSystem);
+      newFriction = UnitConverter.toInWg(currentInput.frictionRate, currentInput.unitSystem);
     } else {
-      newFlow = currentInput.flowRate / 0.5886;
-      newVelocity = currentInput.targetVelocity / 196.85;
-      newFriction = currentInput.frictionRate / 0.1225;
+      newFlow = UnitConverter.fromCfm(currentInput.flowRate, system);
+      newVelocity = UnitConverter.fromFpm(currentInput.targetVelocity, system);
+      newFriction = UnitConverter.fromInWg(currentInput.frictionRate, system);
     }
 
     state = state.copyWith(
@@ -137,21 +138,31 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
 
   void _triggerCalculation() {
     if (!state.input.isValid) {
-      state = state.copyWith(status: CalculationStatus.idle);
+      state = state.copyWith(
+        status: CalculationStatus.idle,
+        result: () => null,
+        errorMessage: () => null,
+      );
       return;
     }
-    state = state.copyWith(status: CalculationStatus.calculating);
+    state = state.copyWith(
+      status: CalculationStatus.calculating,
+      result: () => null,
+      errorMessage: () => null,
+    );
     try {
       final service = _ref.read(ductCalculatorServiceProvider);
       final result = service.calculate(state.input);
       state = state.copyWith(
         status: CalculationStatus.success,
-        result: result,
+        result: () => result,
+        errorMessage: () => null,
       );
     } catch (e) {
       state = state.copyWith(
         status: CalculationStatus.error,
-        errorMessage: 'Lỗi tính toán: ${e.toString()}',
+        result: () => null,
+        errorMessage: () => 'Lỗi tính toán: ${e.toString()}',
       );
     }
   }

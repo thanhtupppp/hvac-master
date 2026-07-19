@@ -17,15 +17,15 @@ class DuctCalculatorState {
 
   DuctCalculatorState copyWith({
     DuctInput? input,
-    DuctResult? result,
+    DuctResult? Function()? result,
     CalculationStatus? status,
-    String? errorMessage,
+    String? Function()? errorMessage,
   }) {
     return DuctCalculatorState(
       input: input ?? this.input,
-      result: result ?? this.result,
+      result: result != null ? result() : this.result,
       status: status ?? this.status,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
     );
   }
 }
