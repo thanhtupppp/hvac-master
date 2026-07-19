@@ -18,4 +18,8 @@ class VelocityTable {
         return 400.0;
     }
   }
+
+  static double getRecommendedVelocityMs(SystemType type) {
+    return getRecommendedVelocityFpm(type) / 196.85;
+  }
 }

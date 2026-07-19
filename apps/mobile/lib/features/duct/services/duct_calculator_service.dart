@@ -1,12 +1,14 @@
 import '../../../core/hvac/models/models.dart';
 import '../../../core/hvac/units/unit_converter.dart';
 import '../../../core/hvac/standards/standard_sizes.dart';
+import '../../../core/hvac/validation/input_validator.dart';
 import 'duct_engine.dart';
 
 class DuctCalculatorService {
   HvacResult calculate(HvacInput input) {
-    if (!input.isValid) {
-      throw ArgumentError('HvacInput is invalid.');
+    final validationError = InputValidator.validateInput(input);
+    if (validationError != null) {
+      throw ArgumentError(validationError);
     }
 
     final imperialInput = UnitConverter.toImperial(input);

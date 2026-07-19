@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/hvac/units/units.dart' hide TemperatureDeltaUnit;
 import '../../core/theme/app_colors.dart';
-import '../../services/coolprop.dart';
 
 class UnitConverterScreen extends StatefulWidget {
   const UnitConverterScreen({super.key});
@@ -191,12 +191,13 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
       return DropdownButton<String>(
         value: _selectedPowerUnit,
         dropdownColor: AppColors.bgSecondary,
-        items: ['HP', 'BTU/h', 'kW', 'Tons'].map((String val) {
-          return DropdownMenuItem<String>(
-            value: val,
-            child: Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          );
-        }).toList(),
+        items: [
+          for (final u in [PowerUnit.hp, PowerUnit.btuHr, PowerUnit.kw, PowerUnit.ton])
+            DropdownMenuItem<String>(
+              value: _powerUnitToString(u),
+              child: Text(PowerConverter.label(u), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+        ],
         onChanged: (val) {
           if (val != null) setState(() => _selectedPowerUnit = val);
         },
@@ -205,12 +206,13 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
       return DropdownButton<String>(
         value: _selectedPressureUnit,
         dropdownColor: AppColors.bgSecondary,
-        items: ['Bar', 'PSI', 'kPa', 'MPa'].map((String val) {
-          return DropdownMenuItem<String>(
-            value: val,
-            child: Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          );
-        }).toList(),
+        items: [
+          for (final u in PressureConverter.common)
+            DropdownMenuItem<String>(
+              value: _pressureUnitToString(u),
+              child: Text(PressureConverter.label(u), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+        ],
         onChanged: (val) {
           if (val != null) setState(() => _selectedPressureUnit = val);
         },
@@ -219,12 +221,13 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
       return DropdownButton<String>(
         value: _selectedTempUnit,
         dropdownColor: AppColors.bgSecondary,
-        items: ['°C', '°F', 'K'].map((String val) {
-          return DropdownMenuItem<String>(
-            value: val,
-            child: Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          );
-        }).toList(),
+        items: [
+          for (final u in TemperatureUnit.values)
+            DropdownMenuItem<String>(
+              value: _tempUnitToString(u),
+              child: Text(TemperatureConverter.label(u), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+        ],
         onChanged: (val) {
           if (val != null) setState(() => _selectedTempUnit = val);
         },
@@ -233,52 +236,37 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
   }
 
   Widget _buildPowerOutputs(Color accent) {
-    // Outputs in: HP, BTU/h, kW, Tons
-    final double btu = CoolProp.convertPower(_inputValue, _selectedPowerUnit, 'BTU/h');
-    final double hp = CoolProp.convertPower(_inputValue, _selectedPowerUnit, 'HP');
-    final double kw = CoolProp.convertPower(_inputValue, _selectedPowerUnit, 'kW');
-    final double tons = CoolProp.convertPower(_inputValue, _selectedPowerUnit, 'Tons');
-
+    final from = _powerUnitFromStr(_selectedPowerUnit);
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       children: [
-        _buildResultRow('HP (Ngựa / Ngựa lạnh)', hp.toStringAsFixed(2), accent),
-        _buildResultRow('BTU/h (British Thermal Unit)', btu.toStringAsFixed(1), accent),
-        _buildResultRow('kW (Cooling capacity)', kw.toStringAsFixed(3), accent),
-        _buildResultRow('Tons (Tấn lạnh)', tons.toStringAsFixed(2), accent),
+        for (final u in [PowerUnit.hp, PowerUnit.btuHr, PowerUnit.kw, PowerUnit.ton, PowerUnit.w])
+          if (u != from)
+            _buildResultRow(PowerConverter.label(u), PowerConverter.convert(_inputValue, from, u).toStringAsFixed(3), accent),
       ],
     );
   }
 
   Widget _buildPressureOutputs(Color accent) {
-    final double bar = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'Bar');
-    final double psi = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'PSI');
-    final double kpa = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'kPa');
-    final double mpa = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'MPa');
-
+    final from = _pressureUnitFromStr(_selectedPressureUnit);
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       children: [
-        _buildResultRow('Bar', bar.toStringAsFixed(3), accent),
-        _buildResultRow('PSI (Pounds per square inch)', psi.toStringAsFixed(2), accent),
-        _buildResultRow('kPa (Kilopascal)', kpa.toStringAsFixed(1), accent),
-        _buildResultRow('MPa (Megapascal)', mpa.toStringAsFixed(4), accent),
+        for (final u in PressureConverter.all)
+          if (u != from)
+            _buildResultRow('${PressureConverter.label(u)} (${PressureConverter.description(u)})', PressureConverter.convert(_inputValue, from, u).toStringAsFixed(3), accent),
       ],
     );
   }
 
   Widget _buildTempOutputs(Color accent) {
-    // Outputs in: °C, °F, K
-    final double celsius = CoolProp.convertTemperature(_inputValue, _selectedTempUnit, '°C');
-    final double fahrenheit = CoolProp.convertTemperature(_inputValue, _selectedTempUnit, '°F');
-    final double kelvin = CoolProp.convertTemperature(_inputValue, _selectedTempUnit, 'K');
-
+    final from = _tempUnitFromStr(_selectedTempUnit);
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       children: [
-        _buildResultRow('°C (Độ Celsius)', celsius.toStringAsFixed(1), accent),
-        _buildResultRow('°F (Độ Fahrenheit)', fahrenheit.toStringAsFixed(1), accent),
-        _buildResultRow('K (Độ Kelvin)', kelvin.toStringAsFixed(1), accent),
+        for (final u in TemperatureUnit.values)
+          if (u != from)
+            _buildResultRow('${TemperatureConverter.label(u)} (${_tempLabel(u)})', TemperatureConverter.convert(_inputValue, from, u).toStringAsFixed(2), accent),
       ],
     );
   }
@@ -295,13 +283,16 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -310,5 +301,71 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
         ],
       ),
     );
+  }
+
+  String _powerUnitToString(PowerUnit u) {
+    switch (u) {
+      case PowerUnit.hp:     return 'HP';
+      case PowerUnit.btuHr: return 'BTU/h';
+      case PowerUnit.kw:    return 'kW';
+      case PowerUnit.ton:   return 'Tons';
+      case PowerUnit.w:     return 'W';
+      case PowerUnit.mw:    return 'MW';
+      case PowerUnit.kcalHr: return 'kcal/h';
+    }
+  }
+
+  PowerUnit _powerUnitFromStr(String s) {
+    switch (s) {
+      case 'HP':     return PowerUnit.hp;
+      case 'BTU/h': return PowerUnit.btuHr;
+      case 'kW':    return PowerUnit.kw;
+      case 'Tons':  return PowerUnit.ton;
+      case 'W':     return PowerUnit.w;
+      case 'MW':    return PowerUnit.mw;
+      case 'kcal/h': return PowerUnit.kcalHr;
+      default:       return PowerUnit.kw;
+    }
+  }
+
+  String _tempUnitToString(TemperatureUnit u) {
+    switch (u) {
+      case TemperatureUnit.celsius:    return '°C';
+      case TemperatureUnit.fahrenheit: return '°F';
+      case TemperatureUnit.kelvin:    return 'K';
+    }
+  }
+
+  TemperatureUnit _tempUnitFromStr(String s) {
+    switch (s) {
+      case '°C': return TemperatureUnit.celsius;
+      case '°F': return TemperatureUnit.fahrenheit;
+      case 'K':  return TemperatureUnit.kelvin;
+      default:   return TemperatureUnit.celsius;
+    }
+  }
+
+  String _tempLabel(TemperatureUnit u) {
+    switch (u) {
+      case TemperatureUnit.celsius:    return 'Độ Celsius';
+      case TemperatureUnit.fahrenheit: return 'Độ Fahrenheit';
+      case TemperatureUnit.kelvin:    return 'Độ Kelvin';
+    }
+  }
+
+  String _pressureUnitToString(PressureUnit u) => PressureConverter.label(u);
+
+  PressureUnit _pressureUnitFromStr(String s) {
+    switch (s) {
+      case 'Bar':    return PressureUnit.bar;
+      case 'PSI':    return PressureUnit.psi;
+      case 'kPa':    return PressureUnit.kpa;
+      case 'MPa':    return PressureUnit.mpa;
+      case 'inHg':   return PressureUnit.inhg;
+      case 'mmHg':   return PressureUnit.mmhg;
+      case 'inH₂O':  return PressureUnit.inh2o;
+      case 'Pa':     return PressureUnit.pa;
+      default:       return PressureUnit.bar;
+    }
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/core/hvac/models/models.dart';
 import 'package:mobile/core/hvac/units/unit_converter.dart';
 import 'package:mobile/core/hvac/standards/standard_sizes.dart';
+import 'package:mobile/core/hvac/standards/velocity_table.dart';
+import 'package:mobile/core/hvac/warnings/warning_builder.dart';
 import 'package:mobile/features/duct/services/duct_engine.dart';
 
 void main() {
@@ -233,6 +235,98 @@ void main() {
       );
       final res = DuctEngine.calculate(input, StandardSizes.imperialRect);
       expect(res.warnings.isEmpty, isTrue);
+    });
+
+    test('DuctEngine throws for invalid flow rate (InputValidator)', () {
+      final invalidInput = HvacInput(
+        flowRate: -100,
+        targetVelocity: 800,
+        frictionRate: 0.1,
+        method: CalculationMethod.velocity,
+        unitSystem: UnitSystem.imperial,
+        systemType: SystemType.supplyMain,
+      );
+      expect(() => DuctEngine.calculate(invalidInput, StandardSizes.imperialRect), throwsA(isA<ArgumentError>()));
+    });
+
+    test('DuctEngine throws for zero target velocity in velocity method', () {
+      final invalidInput = HvacInput(
+        flowRate: 1000,
+        targetVelocity: 0,
+        frictionRate: 0.1,
+        method: CalculationMethod.velocity,
+        unitSystem: UnitSystem.imperial,
+        systemType: SystemType.supplyMain,
+      );
+      expect(() => DuctEngine.calculate(invalidInput, StandardSizes.imperialRect), throwsA(isA<ArgumentError>()));
+    });
+  });
+
+  group('VelocityTable Tests', () {
+    test('getRecommendedVelocityFpm returns correct imperial values', () {
+      // values imported from velocity_table.dart
+      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.supplyMain), closeTo(900.0, 1e-9));
+      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.supplyBranch), closeTo(600.0, 1e-9));
+      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.returnMain), closeTo(700.0, 1e-9));
+      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.exhaust), closeTo(800.0, 1e-9));
+    });
+
+    test('getRecommendedVelocityMs converts fpm correctly', () {
+      // 900 fpm / 196.85 ≈ 4.572 m/s
+      expect(VelocityTable.getRecommendedVelocityMs(SystemType.supplyMain), closeTo(900 / 196.85, 0.001));
+      expect(VelocityTable.getRecommendedVelocityMs(SystemType.supplyBranch), closeTo(600 / 196.85, 0.001));
+      expect(VelocityTable.getRecommendedVelocityMs(SystemType.returnMain), closeTo(700 / 196.85, 0.001));
+      expect(VelocityTable.getRecommendedVelocityMs(SystemType.exhaust), closeTo(800 / 196.85, 0.001));
+    });
+  });
+
+  group('WarningBuilder Tests', () {
+    test('buildWarnings highVelocity for fpm > 1200', () {
+      final warnings = WarningBuilder.buildWarnings(
+        actualVelocityFpm: 1500,
+        frictionRate: 0.1,
+        unitSystem: UnitSystem.imperial,
+      );
+      expect(warnings.any((w) => w.type == WarningType.highVelocity), isTrue);
+    });
+
+    test('buildWarnings lowVelocity for fpm < 400', () {
+      final warnings = WarningBuilder.buildWarnings(
+        actualVelocityFpm: 300,
+        frictionRate: 0.1,
+        unitSystem: UnitSystem.imperial,
+      );
+      expect(warnings.any((w) => w.type == WarningType.lowVelocity), isTrue);
+    });
+
+    test('buildWarnings frictionOutOfRange for imperial out-of-range', () {
+      final warnings = WarningBuilder.buildWarnings(
+        actualVelocityFpm: 800,
+        frictionRate: 0.01,
+        unitSystem: UnitSystem.imperial,
+      );
+      expect(warnings.any((w) => w.type == WarningType.frictionOutOfRange), isTrue);
+    });
+
+    test('buildWarnings no warnings for normal values', () {
+      final warnings = WarningBuilder.buildWarnings(
+        actualVelocityFpm: 800,
+        frictionRate: 0.1,
+        unitSystem: UnitSystem.imperial,
+      );
+      expect(warnings.isEmpty, isTrue);
+    });
+
+    test('checkAspectRatio returns warning for ratio > 4', () {
+      final warning = WarningBuilder.checkAspectRatio(5.0);
+      expect(warning, isNotNull);
+      expect(warning!.type, WarningType.highAspectRatio);
+      expect(warning.severity, WarningSeverity.warning);
+    });
+
+    test('checkAspectRatio returns null for ratio <= 4', () {
+      expect(WarningBuilder.checkAspectRatio(3.5), isNull);
+      expect(WarningBuilder.checkAspectRatio(4.0), isNull);
     });
   });
 }

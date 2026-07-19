@@ -13,6 +13,14 @@ import '../../screens/tools/duct_calculator_screen.dart';
 import '../../screens/tools/superheat_calculator_screen.dart';
 import '../../screens/tools/unit_converter_screen.dart';
 import '../../screens/tools/refrigerant_selector_screen.dart';
+import '../../screens/tools/pressure_converter_screen.dart';
+import '../../screens/tools/airflow_calculator_screen.dart';
+import '../../screens/tools/air_velocity_calculator_screen.dart';
+import '../../screens/tools/ach_calculator_screen.dart';
+import '../../screens/tools/saturation_temperature_screen.dart';
+import '../../screens/tools/subcooling_calculator_screen.dart';
+import '../../screens/tools/dew_point_calculator_screen.dart';
+import '../../screens/tools/humidity_calculator_screen.dart';
 import '../../models/article.dart';
 
 class AppRoutes {
@@ -31,6 +39,14 @@ class AppRoutes {
   static const String superheat = '/tools/refrigerant';
   static const String unitConverter = '/tools/converter';
   static const String refrigerantSelector = '/tools/refrigerant-selector';
+  static const String pressureConverter = '/tools/pressure-converter';
+  static const String airflowCalculator = '/tools/airflow-calculator';
+  static const String airVelocityCalculator = '/tools/air-velocity-calculator';
+  static const String achCalculator = '/tools/ach-calculator';
+  static const String saturationTemperature = '/tools/saturation-temperature';
+  static const String subcoolingCalculator = '/tools/subcooling-calculator';
+  static const String dewPointCalculator = '/tools/dew-point';
+  static const String humidityCalculator = '/tools/humidity';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -54,6 +70,22 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const UnitConverterScreen());
       case refrigerantSelector:
         return MaterialPageRoute(builder: (_) => const RefrigerantSelectorScreen());
+      case pressureConverter:
+        return MaterialPageRoute(builder: (_) => const PressureConverterScreen());
+      case airflowCalculator:
+        return MaterialPageRoute(builder: (_) => const AirflowCalculatorScreen());
+      case airVelocityCalculator:
+        return MaterialPageRoute(builder: (_) => const AirVelocityCalculatorScreen());
+      case achCalculator:
+        return MaterialPageRoute(builder: (_) => const AchCalculatorScreen());
+      case saturationTemperature:
+        return MaterialPageRoute(builder: (_) => const SaturationTemperatureScreen());
+      case subcoolingCalculator:
+        return MaterialPageRoute(builder: (_) => const SubcoolingCalculatorScreen());
+      case dewPointCalculator:
+        return MaterialPageRoute(builder: (_) => const DewPointCalculatorScreen());
+      case humidityCalculator:
+        return MaterialPageRoute(builder: (_) => const HumidityCalculatorScreen());
       case brandList:
         final args = settings.arguments as Map<String, dynamic>?;
         if (args == null) return _errorRoute(settings.name);

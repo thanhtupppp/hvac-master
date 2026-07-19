@@ -98,31 +98,11 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
   }
 
   void onDuctTypeChanged(SystemType type) {
-    double suggestedVelocity = state.input.targetVelocity;
+    double suggestedVelocity;
     if (state.input.unitSystem == UnitSystem.imperial) {
       suggestedVelocity = VelocityTable.getRecommendedVelocityFpm(type);
     } else {
-      switch (type) {
-        case SystemType.supplyMain:
-          suggestedVelocity = 4.5;
-          break;
-        case SystemType.supplyBranch:
-          suggestedVelocity = 3.0;
-          break;
-        case SystemType.returnMain:
-          suggestedVelocity = 3.5;
-          break;
-        case SystemType.exhaust:
-          suggestedVelocity = 4.0;
-          break;
-        case SystemType.custom:
-          suggestedVelocity = 4.0;
-          break;
-        case SystemType.hotWaterPipe:
-        case SystemType.chilledWaterPipe:
-          suggestedVelocity = 2.0;
-          break;
-      }
+      suggestedVelocity = VelocityTable.getRecommendedVelocityMs(type);
     }
 
     state = state.copyWith(

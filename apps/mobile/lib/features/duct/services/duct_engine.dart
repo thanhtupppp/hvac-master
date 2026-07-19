@@ -3,11 +3,18 @@ import '../../../core/hvac/models/models.dart';
 import '../../../core/hvac/formulas/hvac_formulas.dart';
 import '../../../core/hvac/standards/standard_sizes.dart';
 import '../../../core/hvac/formulas/rectangle_generator.dart';
+import '../../../core/hvac/validation/input_validator.dart';
+import '../../../core/hvac/warnings/warning_builder.dart';
 
 class DuctEngine {
   static HvacResult calculate(HvacInput imperialInput, List<double> standardRectSizesInInches) {
     if (imperialInput.unitSystem != UnitSystem.imperial) {
       throw ArgumentError('DuctEngine calculations require imperial input system.');
+    }
+
+    final validationError = InputValidator.validateInput(imperialInput);
+    if (validationError != null) {
+      throw ArgumentError(validationError);
     }
 
     double calculatedDiameter = 0.0;
@@ -51,14 +58,11 @@ class DuctEngine {
       standardRectSizesInInches: standardRectSizesInInches,
     );
 
-    final warnings = <HvacWarning>[];
-    if (actualRoundVelocity > 1200.0) {
-      warnings.add(const HvacWarning(
-        type: WarningType.highVelocity,
-        message: 'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',
-        severity: WarningSeverity.warning,
-      ));
-    }
+    final warnings = WarningBuilder.buildWarnings(
+      actualVelocityFpm: actualRoundVelocity,
+      frictionRate: friction,
+      unitSystem: imperialInput.unitSystem,
+    );
 
     final res = HvacResult(
       roundResult: roundRes,
