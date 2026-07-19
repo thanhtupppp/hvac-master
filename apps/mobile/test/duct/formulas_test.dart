@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/services/duct/engine/formulas.dart';
+import 'package:mobile/core/hvac/formulas/hvac_formulas.dart';
 
 void main() {
   test('HvacFormulas velocity calculation matches formula', () {
@@ -8,7 +8,10 @@ void main() {
   });
 
   test('HvacFormulas round diameter matches approximation', () {
-    final d = HvacFormulas.roundDuctDiameter(cfm: 1000, frictionRateInWgPer100ft: 0.1);
+    final d = HvacFormulas.roundDuctDiameter(
+      cfm: 1000,
+      frictionRateInWgPer100ft: 0.1,
+    );
     expect(d, closeTo(13.62, 0.1));
   });
 

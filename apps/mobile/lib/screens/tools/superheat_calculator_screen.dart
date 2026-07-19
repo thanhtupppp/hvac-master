@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import '../../core/hvac/thermo/thermo.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/refrigerant_model.dart';
-import '../../services/coolprop.dart';
 
 class SuperheatCalculatorScreen extends StatefulWidget {
   const SuperheatCalculatorScreen({super.key});
 
   @override
-  State<SuperheatCalculatorScreen> createState() => _SuperheatCalculatorScreenState();
+  State<SuperheatCalculatorScreen> createState() =>
+      _SuperheatCalculatorScreenState();
 }
 
-class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> with SingleTickerProviderStateMixin {
+class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final Thermodynamics _thermo = Thermodynamics();
   RefrigerantModel _refrigerant = defaultRefrigerants.first; // R32
 
   String _pressureUnit = 'PSI';
@@ -57,23 +60,23 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
     setState(() {
       if (_tabController.index == 0) {
         // Superheat = Suction Line Temp - Suction Sat Temp
-        final satTempC = CoolProp.getTempFromPressure(
+        final satTempC = _thermo.getTempFromPressure(
           refrigerant: _refrigerant.name,
           pressure: _suctionPressure,
           pressureUnit: _pressureUnit,
           isGauge: _isGauge,
         );
-        _satTemp = CoolProp.convertTemperature(satTempC, '°C', _tempUnit);
+        _satTemp = satTempC;
         _resultVal = _suctionTemp - _satTemp;
       } else {
         // Subcooling = Liquid Sat Temp - Liquid Line Temp
-        final satTempC = CoolProp.getTempFromPressure(
+        final satTempC = _thermo.getTempFromPressure(
           refrigerant: _refrigerant.name,
           pressure: _liquidPressure,
           pressureUnit: _pressureUnit,
           isGauge: _isGauge,
         );
-        _satTemp = CoolProp.convertTemperature(satTempC, '°C', _tempUnit);
+        _satTemp = satTempC;
         _resultVal = _satTemp - _liquidTemp;
       }
     });
@@ -89,12 +92,20 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Độ Quá Nhiệt / Quá Lạnh',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -108,7 +119,10 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.bgCard,
                       borderRadius: BorderRadius.circular(16),
@@ -118,20 +132,31 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                       child: DropdownButton<String>(
                         value: _refrigerant.name,
                         dropdownColor: AppColors.bgSecondary,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-                        items: ['R32', 'R22', 'R134a', 'R410A', 'R404A'].map((String key) {
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.white70,
+                        ),
+                        items: ['R32', 'R22', 'R134a', 'R410A', 'R404A'].map((
+                          String key,
+                        ) {
                           return DropdownMenuItem<String>(
                             value: key,
                             child: Text(
                               key,
-                              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           );
                         }).toList(),
                         onChanged: (val) {
                           if (val != null) {
                             setState(() {
-                              _refrigerant = defaultRefrigerants.firstWhere((r) => r.name == val);
+                              _refrigerant = defaultRefrigerants.firstWhere(
+                                (r) => r.name == val,
+                              );
                             });
                             _recalculate();
                           }
@@ -141,7 +166,7 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Pressure Unit Toggle
                 GestureDetector(
                   onTap: () {
@@ -154,8 +179,10 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                         _suctionPressure = _suctionPressure * 14.5038;
                         _liquidPressure = _liquidPressure * 14.5038;
                       }
-                      _suctionPressureController.text = _suctionPressure.toStringAsFixed(1);
-                      _liquidPressureController.text = _liquidPressure.toStringAsFixed(1);
+                      _suctionPressureController.text = _suctionPressure
+                          .toStringAsFixed(1);
+                      _liquidPressureController.text = _liquidPressure
+                          .toStringAsFixed(1);
                     });
                     _recalculate();
                   },
@@ -170,7 +197,11 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                     child: Center(
                       child: Text(
                         _pressureUnit,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
@@ -198,7 +229,10 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                 ),
                 labelColor: Colors.white,
                 unselectedLabelColor: AppColors.textMuted,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
                 tabs: const [
                   Tab(text: 'Độ Quá Nhiệt (SH)'),
                   Tab(text: 'Độ Quá Lạnh (SC)'),
@@ -285,13 +319,18 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
     String diagnosisText = '';
     Color diagnosisColor = Colors.grey;
 
-    if (_tabController.index == 0) {
+    if (_resultVal.isNaN || _satTemp.isNaN) {
+      diagnosisText = 'Ngoài giới hạn tính toán (Trạng thái siêu tới hạn)';
+      diagnosisColor = Colors.redAccent;
+    } else if (_tabController.index == 0) {
       // Superheat diagnosis: target is usually 5-15 °F (approx 3-8 K)
       if (_resultVal < 2.0) {
-        diagnosisText = 'Quá nhiệt thấp - Nguy cơ ngập dịch nén (Liquid Floodback)';
+        diagnosisText =
+            'Quá nhiệt thấp - Nguy cơ ngập dịch nén (Liquid Floodback)';
         diagnosisColor = Colors.redAccent;
       } else if (_resultVal > 8.0) {
-        diagnosisText = 'Quá nhiệt cao - Thiếu ga hoặc nghẹt cáp/expansion valve';
+        diagnosisText =
+            'Quá nhiệt cao - Thiếu ga hoặc nghẹt cáp/expansion valve';
         diagnosisColor = Colors.orange;
       } else {
         diagnosisText = 'Độ quá nhiệt lý tưởng - Hệ thống hoạt động tốt';
@@ -303,7 +342,8 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
         diagnosisText = 'Quá lạnh thấp - Thiếu ga hoặc ngưng tụ kém';
         diagnosisColor = Colors.redAccent;
       } else if (_resultVal > 8.0) {
-        diagnosisText = 'Quá lạnh cao - Dư ga hoặc tắc nghẽn phin lọc/đường lỏng';
+        diagnosisText =
+            'Quá lạnh cao - Dư ga hoặc tắc nghẽn phin lọc/đường lỏng';
         diagnosisColor = Colors.orange;
       } else {
         diagnosisText = 'Độ quá lạnh lý tưởng - Hệ thống hoạt động tốt';
@@ -348,21 +388,25 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
           // Mid sat temp card
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.bgCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.divider),
-            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   satTempLabel,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
                 Text(
-                  '${_satTemp.toStringAsFixed(1)} $_tempUnit',
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                  _satTemp.isNaN
+                      ? '--'
+                      : '${_satTemp.toStringAsFixed(1)} $_tempUnit',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -394,7 +438,9 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_resultVal.toStringAsFixed(1)} K',
+                  _resultVal.isNaN
+                      ? '--'
+                      : '${_resultVal.toStringAsFixed(1)} K',
                   style: TextStyle(
                     color: accentColor,
                     fontSize: 32,
@@ -403,7 +449,9 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '(${_resultVal.toStringAsFixed(1)} $_tempUnit)',
+                  _resultVal.isNaN
+                      ? ''
+                      : '(${_resultVal.toStringAsFixed(1)} $_tempUnit)',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,
@@ -415,7 +463,9 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
                   decoration: BoxDecoration(
                     color: diagnosisColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: diagnosisColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: diagnosisColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     diagnosisText,
@@ -454,8 +504,15 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
             Expanded(
               child: TextField(
                 controller: controller,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
@@ -467,7 +524,11 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen> w
             const SizedBox(width: 8),
             Text(
               unit,
-              style: const TextStyle(color: Color(0xFFFF9800), fontSize: 14, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Color(0xFFFF9800),
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),

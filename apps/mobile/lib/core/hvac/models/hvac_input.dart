@@ -1,20 +1,20 @@
 import 'enums.dart';
 
-class DuctInput {
+class HvacInput {
   final double flowRate;
   final double targetVelocity;
   final double frictionRate;
   final CalculationMethod method;
   final UnitSystem unitSystem;
-  final DuctType ductType;
+  final SystemType systemType;
 
-  const DuctInput({
+  const HvacInput({
     required this.flowRate,
     required this.targetVelocity,
     required this.frictionRate,
     required this.method,
     required this.unitSystem,
-    required this.ductType,
+    required this.systemType,
   });
 
   bool get isValid {

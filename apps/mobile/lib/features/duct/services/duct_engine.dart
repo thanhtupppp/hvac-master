@@ -1,16 +1,11 @@
 import 'dart:math';
-import '../models/enums.dart';
-import '../models/duct_input.dart';
-import '../models/duct_result.dart';
-import '../models/round_result.dart';
-import '../models/duct_warning.dart';
-import '../models/calculation_metadata.dart';
-import 'formulas.dart';
-import 'standard_sizes.dart';
-import 'rectangle_generator.dart';
+import '../../../core/hvac/models/models.dart';
+import '../../../core/hvac/formulas/hvac_formulas.dart';
+import '../../../core/hvac/standards/standard_sizes.dart';
+import '../../../core/hvac/formulas/rectangle_generator.dart';
 
 class DuctEngine {
-  static DuctResult calculate(DuctInput imperialInput) {
+  static HvacResult calculate(HvacInput imperialInput, List<double> standardRectSizesInInches) {
     if (imperialInput.unitSystem != UnitSystem.imperial) {
       throw ArgumentError('DuctEngine calculations require imperial input system.');
     }
@@ -20,12 +15,10 @@ class DuctEngine {
     double friction = imperialInput.frictionRate;
 
     if (imperialInput.method == CalculationMethod.velocity) {
-      // Target velocity sizing
       velocity = imperialInput.targetVelocity;
       final double areaSqFt = imperialInput.flowRate / velocity;
       calculatedDiameter = sqrt(4.0 * (areaSqFt * 144.0) / pi);
     } else {
-      // Equal friction sizing
       calculatedDiameter = HvacFormulas.roundDuctDiameter(
         cfm: imperialInput.flowRate,
         frictionRateInWgPer100ft: imperialInput.frictionRate,
@@ -55,19 +48,20 @@ class DuctEngine {
       targetVelocityFpm: velocity,
       flowRateCfm: imperialInput.flowRate,
       input: imperialInput,
+      standardRectSizesInInches: standardRectSizesInInches,
     );
 
-    final warnings = <DuctWarning>[];
+    final warnings = <HvacWarning>[];
     if (actualRoundVelocity > 1200.0) {
-      warnings.add(const DuctWarning(
+      warnings.add(const HvacWarning(
         type: WarningType.highVelocity,
         message: 'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',
         severity: WarningSeverity.warning,
       ));
     }
 
-    final res = DuctResult(
-      roundDuct: roundRes,
+    final res = HvacResult(
+      roundResult: roundRes,
       rectangleOptions: options,
       warnings: warnings,
       metadata: CalculationMetadata(

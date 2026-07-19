@@ -1,11 +1,11 @@
 import 'enums.dart';
 
-class DuctWarning {
+class HvacWarning {
   final WarningType type;
   final String message;
   final WarningSeverity severity;
 
-  const DuctWarning({
+  const HvacWarning({
     required this.type,
     required this.message,
     required this.severity,

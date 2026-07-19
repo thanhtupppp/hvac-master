@@ -24,11 +24,16 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      setState(() {
-        // Reset defaults when tab changes
-        _inputController.text = '1.0';
-        _inputValue = 1.0;
-      });
+      if (!_tabController.indexIsChanging) {
+        setState(() {
+          // Reset defaults when tab changes
+          _inputController.text = '1.0';
+          _inputValue = 1.0;
+          _selectedPowerUnit = 'HP';
+          _selectedPressureUnit = 'Bar';
+          _selectedTempUnit = '°C';
+        });
+      }
     });
   }
 
@@ -121,9 +126,10 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
                             isDense: true,
                           ),
                           onChanged: (val) {
-                            setState(() {
-                              _inputValue = double.tryParse(val) ?? 0.0;
-                            });
+                            final parsed = double.tryParse(val);
+                            if (parsed != null) {
+                              setState(() => _inputValue = parsed);
+                            }
                           },
                         ),
                       ],
@@ -245,21 +251,10 @@ class _UnitConverterScreenState extends State<UnitConverterScreen> with SingleTi
   }
 
   Widget _buildPressureOutputs(Color accent) {
-    // Outputs in: Bar, PSI, kPa, MPa
-    // We convert everything to Bar first, then to others
-    double barAbs = _inputValue;
-    if (_selectedPressureUnit == 'PSI') {
-      barAbs = _inputValue / 14.5037738;
-    } else if (_selectedPressureUnit == 'kPa') {
-      barAbs = _inputValue / 100.0;
-    } else if (_selectedPressureUnit == 'MPa') {
-      barAbs = _inputValue * 10.0;
-    }
-
-    final double bar = barAbs;
-    final double psi = barAbs * 14.5037738;
-    final double kpa = barAbs * 100.0;
-    final double mpa = barAbs / 10.0;
+    final double bar = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'Bar');
+    final double psi = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'PSI');
+    final double kpa = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'kPa');
+    final double mpa = CoolProp.convertPressure(_inputValue, _selectedPressureUnit, 'MPa');
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24),

@@ -15,7 +15,9 @@ class PreferredRectSizes {
   static bool contains(double width, double height, bool isMetric) {
     final list = isMetric ? preferredMetric : preferredImperial;
     for (final p in list) {
-      if ((p.x == width && p.y == height) || (p.x == height && p.y == width)) {
+      final matchNormal = (p.x - width).abs() < 0.01 && (p.y - height).abs() < 0.01;
+      final matchRotated = (p.x - height).abs() < 0.01 && (p.y - width).abs() < 0.01;
+      if (matchNormal || matchRotated) {
         return true;
       }
     }

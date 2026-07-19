@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
-import '../../services/duct/models/enums.dart';
-import '../../services/duct/models/rectangle_option.dart';
-import '../../services/duct/models/duct_calculator_state.dart';
-import '../../services/duct/providers/duct_calculator_notifier.dart';
+import '../../core/hvac/models/models.dart';
+import '../../features/duct/models/duct_calculator_state.dart';
+import '../../features/duct/providers/duct_calculator_notifier.dart';
 
 class DuctCalculatorScreen extends ConsumerStatefulWidget {
   const DuctCalculatorScreen({super.key});
 
   @override
-  ConsumerState<DuctCalculatorScreen> createState() => _DuctCalculatorScreenState();
+  ConsumerState<DuctCalculatorScreen> createState() =>
+      _DuctCalculatorScreenState();
 }
 
 class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
@@ -26,8 +26,11 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
     final initialState = ref.read(ductCalculatorProvider);
     final isMetric = initialState.input.unitSystem == UnitSystem.metric;
     _flowController.text = initialState.input.flowRate.toStringAsFixed(0);
-    _velocityController.text = initialState.input.targetVelocity.toStringAsFixed(isMetric ? 1 : 0);
-    _frictionController.text = initialState.input.frictionRate.toStringAsFixed(isMetric ? 2 : 4);
+    _velocityController.text = initialState.input.targetVelocity
+        .toStringAsFixed(isMetric ? 1 : 0);
+    _frictionController.text = initialState.input.frictionRate.toStringAsFixed(
+      isMetric ? 2 : 4,
+    );
   }
 
   @override
@@ -45,15 +48,23 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
 
     // Listen for system/method state changes to update inputs without cursor jumping
     ref.listen<DuctCalculatorState>(ductCalculatorProvider, (previous, next) {
-      if (previous == null || previous.input.unitSystem != next.input.unitSystem) {
+      if (previous == null ||
+          previous.input.unitSystem != next.input.unitSystem) {
         final nextIsMetric = next.input.unitSystem == UnitSystem.metric;
         _flowController.text = next.input.flowRate.toStringAsFixed(0);
-        _velocityController.text = next.input.targetVelocity.toStringAsFixed(nextIsMetric ? 1 : 0);
-        _frictionController.text = next.input.frictionRate.toStringAsFixed(nextIsMetric ? 2 : 4);
+        _velocityController.text = next.input.targetVelocity.toStringAsFixed(
+          nextIsMetric ? 1 : 0,
+        );
+        _frictionController.text = next.input.frictionRate.toStringAsFixed(
+          nextIsMetric ? 2 : 4,
+        );
       }
-      if (previous != null && previous.input.ductType != next.input.ductType) {
+      if (previous != null &&
+          previous.input.systemType != next.input.systemType) {
         final nextIsMetric = next.input.unitSystem == UnitSystem.metric;
-        _velocityController.text = next.input.targetVelocity.toStringAsFixed(nextIsMetric ? 1 : 0);
+        _velocityController.text = next.input.targetVelocity.toStringAsFixed(
+          nextIsMetric ? 1 : 0,
+        );
       }
     });
 
@@ -63,7 +74,11 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -91,7 +106,8 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
             const SizedBox(height: 20),
 
             // Results layout
-            if (state.status == CalculationStatus.success && state.result != null) ...[
+            if (state.status == CalculationStatus.success &&
+                state.result != null) ...[
               _buildRoundHeroCard(state),
               const SizedBox(height: 20),
               _buildRectangleSection(state),
@@ -99,26 +115,34 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
               const Center(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 40),
-                  child: CircularProgressIndicator(color: AppColors.accentPrimary),
+                  child: CircularProgressIndicator(
+                    color: AppColors.accentPrimary,
+                  ),
                 ),
-              )
+              ),
             ] else if (state.status == CalculationStatus.error) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Text(
                   state.errorMessage ?? 'Lỗi tính toán',
-                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-              )
-            ]
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSegmentControls(DuctCalculatorState state, DuctCalculatorNotifier notifier) {
+  Widget _buildSegmentControls(
+    DuctCalculatorState state,
+    DuctCalculatorNotifier notifier,
+  ) {
     final isMetric = state.input.unitSystem == UnitSystem.metric;
     final isVelocity = state.input.method == CalculationMethod.velocity;
 
@@ -136,18 +160,23 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => notifier.onUnitSystemChanged(UnitSystem.metric),
+                    onTap: () =>
+                        notifier.onUnitSystemChanged(UnitSystem.metric),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isMetric ? AppColors.accentPrimary : Colors.transparent,
+                        color: isMetric
+                            ? AppColors.accentPrimary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         'Metric',
                         style: TextStyle(
-                          color: isMetric ? Colors.white : AppColors.textSecondary,
+                          color: isMetric
+                              ? Colors.white
+                              : AppColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -157,18 +186,23 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
                 ),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => notifier.onUnitSystemChanged(UnitSystem.imperial),
+                    onTap: () =>
+                        notifier.onUnitSystemChanged(UnitSystem.imperial),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: !isMetric ? AppColors.accentPrimary : Colors.transparent,
+                        color: !isMetric
+                            ? AppColors.accentPrimary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         'Imperial',
                         style: TextStyle(
-                          color: !isMetric ? Colors.white : AppColors.textSecondary,
+                          color: !isMetric
+                              ? Colors.white
+                              : AppColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -193,18 +227,23 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => notifier.onMethodChanged(CalculationMethod.velocity),
+                    onTap: () =>
+                        notifier.onMethodChanged(CalculationMethod.velocity),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isVelocity ? AppColors.accentPrimary : Colors.transparent,
+                        color: isVelocity
+                            ? AppColors.accentPrimary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         'Velocity',
                         style: TextStyle(
-                          color: isVelocity ? Colors.white : AppColors.textSecondary,
+                          color: isVelocity
+                              ? Colors.white
+                              : AppColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -214,18 +253,24 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
                 ),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => notifier.onMethodChanged(CalculationMethod.equalFriction),
+                    onTap: () => notifier.onMethodChanged(
+                      CalculationMethod.equalFriction,
+                    ),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: !isVelocity ? AppColors.accentPrimary : Colors.transparent,
+                        color: !isVelocity
+                            ? AppColors.accentPrimary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         'Friction',
                         style: TextStyle(
-                          color: !isVelocity ? Colors.white : AppColors.textSecondary,
+                          color: !isVelocity
+                              ? Colors.white
+                              : AppColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -241,7 +286,10 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
     );
   }
 
-  Widget _buildInputCard(DuctCalculatorState state, DuctCalculatorNotifier notifier) {
+  Widget _buildInputCard(
+    DuctCalculatorState state,
+    DuctCalculatorNotifier notifier,
+  ) {
     final isMetric = state.input.unitSystem == UnitSystem.metric;
     final isVelocity = state.input.method == CalculationMethod.velocity;
 
@@ -255,9 +303,9 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DropdownButtonFormField<DuctType>(
+          DropdownButtonFormField<SystemType>(
             key: const Key('ductTypeDropdown'),
-            initialValue: state.input.ductType,
+            initialValue: state.input.systemType,
             dropdownColor: AppColors.bgCard,
             style: const TextStyle(color: Colors.white, fontSize: 15),
             decoration: const InputDecoration(
@@ -265,23 +313,29 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
               labelStyle: TextStyle(color: AppColors.textSecondary),
               border: InputBorder.none,
             ),
-            items: DuctType.values.map((t) {
+            items: SystemType.values.map((t) {
               String name = '';
               switch (t) {
-                case DuctType.supplyMain:
+                case SystemType.supplyMain:
                   name = 'Supply Main';
                   break;
-                case DuctType.supplyBranch:
+                case SystemType.supplyBranch:
                   name = 'Supply Branch';
                   break;
-                case DuctType.returnMain:
+                case SystemType.returnMain:
                   name = 'Return Main';
                   break;
-                case DuctType.exhaust:
+                case SystemType.exhaust:
                   name = 'Exhaust';
                   break;
-                case DuctType.custom:
+                case SystemType.custom:
                   name = 'Custom';
+                  break;
+                case SystemType.hotWaterPipe:
+                  name = 'Hot Water Pipe';
+                  break;
+                case SystemType.chilledWaterPipe:
+                  name = 'Chilled Water Pipe';
                   break;
               }
               return DropdownMenuItem(value: t, child: Text(name));
@@ -348,8 +402,14 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
             child: TextFormField(
               key: key,
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
               decoration: InputDecoration(
                 labelText: label,
                 labelStyle: const TextStyle(color: AppColors.textSecondary),
@@ -360,7 +420,10 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
           ),
           Text(
             suffix,
-            style: const TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: AppColors.accentPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -368,7 +431,7 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
   }
 
   Widget _buildRoundHeroCard(DuctCalculatorState state) {
-    final round = state.result!.roundDuct;
+    final round = state.result!.roundResult;
     final isMetric = state.input.unitSystem == UnitSystem.metric;
     final suffix = isMetric ? 'mm' : '"';
 
@@ -380,13 +443,19 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
           colors: [AppColors.bgSecondary, AppColors.bgCard],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.accentPrimary.withValues(alpha: 0.3),
+        ),
       ),
       child: Column(
         children: [
           const Text(
             'ỐNG TRÒN GỢI Ý (HERO)',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -406,10 +475,16 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildSpecItem('Vận tốc', '${round.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}'),
-              _buildSpecItem('Ma sát', '${round.frictionRate.toStringAsFixed(2)} ${isMetric ? 'Pa/m' : 'in.wg/100ft'}'),
+              _buildSpecItem(
+                'Vận tốc',
+                '${round.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}',
+              ),
+              _buildSpecItem(
+                'Ma sát',
+                '${round.frictionRate.toStringAsFixed(2)} ${isMetric ? 'Pa/m' : 'in.wg/100ft'}',
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -418,9 +493,19 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
   Widget _buildSpecItem(String label, String val) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
         const SizedBox(height: 4),
-        Text(val, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+        Text(
+          val,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -440,7 +525,11 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
       children: [
         const Text(
           'ỐNG CHỮ NHẬT ĐỀ XUẤT (BEST)',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         Container(
@@ -457,7 +546,11 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
                 children: [
                   Text(
                     '${top.width.toStringAsFixed(0)} × ${top.height.toStringAsFixed(0)} $suffix',
-                    style: GoogleFonts.firaCode(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.firaCode(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Row(
                     children: List.generate(5, (index) {
@@ -474,17 +567,31 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Vận tốc: ${top.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}', style: const TextStyle(color: AppColors.textSecondary)),
-                  const Text('✓ RECOMMENDED SIZE', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11)),
+                  Text(
+                    'Vận tốc: ${top.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  const Text(
+                    '✓ RECOMMENDED SIZE',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),
         const SizedBox(height: 20),
         const Text(
           'PHƯƠNG ÁN KHÁC (MORE OPTIONS)',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         ...others.map((opt) {
@@ -494,10 +601,21 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
             child: ListTile(
               title: Text(
                 '${opt.width.toStringAsFixed(0)} × ${opt.height.toStringAsFixed(0)} $suffix',
-                style: GoogleFonts.firaCode(color: Colors.white, fontWeight: FontWeight.bold),
+                style: GoogleFonts.firaCode(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              subtitle: Text('Vận tốc: ${opt.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}'),
-              trailing: Text('${opt.stars} Sao', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                'Vận tốc: ${opt.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}',
+              ),
+              trailing: Text(
+                '${opt.stars} Sao',
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           );
         }),

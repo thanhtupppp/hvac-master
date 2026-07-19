@@ -1,10 +1,8 @@
-import 'enums.dart';
-import 'duct_input.dart';
-import 'duct_result.dart';
+import '../../../core/hvac/models/models.dart';
 
 class DuctCalculatorState {
-  final DuctInput input;
-  final DuctResult? result;
+  final HvacInput input;
+  final HvacResult? result;
   final CalculationStatus status;
   final String? errorMessage;
 
@@ -16,8 +14,8 @@ class DuctCalculatorState {
   });
 
   DuctCalculatorState copyWith({
-    DuctInput? input,
-    DuctResult? Function()? result,
+    HvacInput? input,
+    HvacResult? Function()? result,
     CalculationStatus? status,
     String? Function()? errorMessage,
   }) {

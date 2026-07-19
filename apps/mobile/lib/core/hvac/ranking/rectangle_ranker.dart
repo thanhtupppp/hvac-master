@@ -1,5 +1,5 @@
-import '../models/rectangle_option.dart';
-import 'preferred_rect_sizes.dart';
+import '../models/models.dart';
+import '../standards/preferred_rect_sizes.dart';
 
 class RectangleRanker {
   static const _wVelocity = 0.40;
@@ -12,10 +12,8 @@ class RectangleRanker {
     required double targetVelocityFpm,
     required double targetEquivDiamIn,
   }) {
-    // 1. Velocity Error
     final velScore = (1.0 - option.velocityError.clamp(0.0, 1.0)) * 100.0;
 
-    // 2. Aspect Ratio Penalty
     final ar = option.aspectRatio;
     double arScore = 0.0;
     if (ar <= 1.5) {
@@ -24,14 +22,21 @@ class RectangleRanker {
       arScore = 100.0 - ((ar - 1.5) / 2.5) * 60.0;
     }
 
-    // 3. Equivalent Diameter Error
-    final deScore = (1.0 - option.equivalentDiameterError.clamp(0.0, 1.0)) * 100.0;
+    final deScore =
+        (1.0 - option.equivalentDiameterError.clamp(0.0, 1.0)) * 100.0;
 
-    // 4. Preferred Size Bonus
-    final preferred = PreferredRectSizes.contains(option.width, option.height, false);
+    final preferred = PreferredRectSizes.contains(
+      option.width,
+      option.height,
+      false,
+    );
     final prefScore = preferred ? 100.0 : 0.0;
 
-    final raw = velScore * _wVelocity + arScore * _wAspect + deScore * _wEquivDiam + prefScore * _wPreferred;
+    final raw =
+        velScore * _wVelocity +
+        arScore * _wAspect +
+        deScore * _wEquivDiam +
+        prefScore * _wPreferred;
     return raw.clamp(0.0, 100.0);
   }
 

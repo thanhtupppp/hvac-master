@@ -1,14 +1,9 @@
-import '../models/enums.dart';
-import '../models/duct_input.dart';
-import '../models/duct_result.dart';
-import '../models/round_result.dart';
-import '../models/rectangle_option.dart';
+import '../models/models.dart';
 
 class UnitConverter {
-  // Flow Rate: 1 m³/h = 0.5886 CFM, 1 L/s = 2.1189 CFM
   static double toCfm(double flowRate, UnitSystem unit) {
     if (unit == UnitSystem.imperial) return flowRate;
-    return flowRate * 0.5886; // assuming m3/h for metric
+    return flowRate * 0.5886;
   }
 
   static double fromCfm(double cfm, UnitSystem unit) {
@@ -16,7 +11,6 @@ class UnitConverter {
     return cfm / 0.5886;
   }
 
-  // Velocity: 1 m/s = 196.85 fpm
   static double toFpm(double ms, UnitSystem unit) {
     if (unit == UnitSystem.imperial) return ms;
     return ms * 196.85;
@@ -27,18 +21,16 @@ class UnitConverter {
     return fpm / 196.85;
   }
 
-  // Length: 1 mm = 0.03937 inches
   static double toInches(double mm, UnitSystem unit) {
     if (unit == UnitSystem.imperial) return mm;
-    return mm * 0.03937;
+    return mm / 25.4;
   }
 
   static double fromInches(double inches, UnitSystem unit) {
     if (unit == UnitSystem.imperial) return inches;
-    return inches / 0.03937;
+    return inches * 25.4;
   }
 
-  // Friction: 1 Pa/m = 0.1225 in.wg/100ft
   static double toInWg(double pa, UnitSystem unit) {
     if (unit == UnitSystem.imperial) return pa;
     return pa * 0.1225;
@@ -49,26 +41,26 @@ class UnitConverter {
     return inWg / 0.1225;
   }
 
-  static DuctInput toImperial(DuctInput input) {
+  static HvacInput toImperial(HvacInput input) {
     if (input.unitSystem == UnitSystem.imperial) return input;
-    return DuctInput(
+    return HvacInput(
       flowRate: toCfm(input.flowRate, UnitSystem.metric),
       targetVelocity: toFpm(input.targetVelocity, UnitSystem.metric),
       frictionRate: toInWg(input.frictionRate, UnitSystem.metric),
       method: input.method,
       unitSystem: UnitSystem.imperial,
-      ductType: input.ductType,
+      systemType: input.systemType,
     );
   }
 
-  static DuctResult resultToMetric(DuctResult imperialResult) {
-    final round = imperialResult.roundDuct;
+  static HvacResult resultToMetric(HvacResult imperialResult) {
+    final round = imperialResult.roundResult;
     final convertedRound = RoundResult(
       calculatedDiameter: fromInches(round.calculatedDiameter, UnitSystem.metric),
       standardDiameter: fromInches(round.standardDiameter, UnitSystem.metric),
       velocity: fromFpm(round.velocity, UnitSystem.metric),
       frictionRate: fromInWg(round.frictionRate, UnitSystem.metric),
-      area: round.area * 645.16, // in² to mm²
+      area: round.area * 645.16,
     );
 
     final convertedOptions = imperialResult.rectangleOptions.map((opt) {
@@ -87,8 +79,8 @@ class UnitConverter {
       );
     }).toList();
 
-    return DuctResult(
-      roundDuct: convertedRound,
+    return HvacResult(
+      roundResult: convertedRound,
       rectangleOptions: convertedOptions,
       warnings: imperialResult.warnings,
       metadata: imperialResult.metadata,

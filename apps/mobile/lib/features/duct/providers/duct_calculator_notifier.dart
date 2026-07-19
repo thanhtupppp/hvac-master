@@ -1,36 +1,39 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import '../models/enums.dart';
-import '../models/duct_input.dart';
+import '../../../core/hvac/models/models.dart';
+import '../../../core/hvac/units/unit_converter.dart';
+import '../../../core/hvac/standards/velocity_table.dart';
 import '../models/duct_calculator_state.dart';
 import '../services/duct_calculator_service.dart';
-import '../engine/unit_converter.dart';
 
 final ductCalculatorServiceProvider = Provider<DuctCalculatorService>((ref) {
   return DuctCalculatorService();
 });
 
-final ductCalculatorProvider = StateNotifierProvider<DuctCalculatorNotifier, DuctCalculatorState>((ref) {
-  return DuctCalculatorNotifier(ref);
-});
+final ductCalculatorProvider =
+    StateNotifierProvider<DuctCalculatorNotifier, DuctCalculatorState>((ref) {
+      return DuctCalculatorNotifier(ref);
+    });
 
 class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
   final Ref _ref;
   Timer? _debounceTimer;
 
   DuctCalculatorNotifier(this._ref)
-      : super(const DuctCalculatorState(
-          input: DuctInput(
+    : super(
+        const DuctCalculatorState(
+          input: HvacInput(
             flowRate: 1700.0,
             targetVelocity: 4.5,
             frictionRate: 0.1,
             method: CalculationMethod.velocity,
             unitSystem: UnitSystem.metric,
-            ductType: DuctType.supplyMain,
+            systemType: SystemType.supplyMain,
           ),
           status: CalculationStatus.idle,
-        )) {
+        ),
+      ) {
     _triggerCalculation();
   }
 
@@ -63,9 +66,18 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
     double newFriction = currentInput.frictionRate;
 
     if (system == UnitSystem.imperial) {
-      newFlow = UnitConverter.toCfm(currentInput.flowRate, currentInput.unitSystem);
-      newVelocity = UnitConverter.toFpm(currentInput.targetVelocity, currentInput.unitSystem);
-      newFriction = UnitConverter.toInWg(currentInput.frictionRate, currentInput.unitSystem);
+      newFlow = UnitConverter.toCfm(
+        currentInput.flowRate,
+        currentInput.unitSystem,
+      );
+      newVelocity = UnitConverter.toFpm(
+        currentInput.targetVelocity,
+        currentInput.unitSystem,
+      );
+      newFriction = UnitConverter.toInWg(
+        currentInput.frictionRate,
+        currentInput.unitSystem,
+      );
     } else {
       newFlow = UnitConverter.fromCfm(currentInput.flowRate, system);
       newVelocity = UnitConverter.fromFpm(currentInput.targetVelocity, system);
@@ -73,66 +85,83 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
     }
 
     state = state.copyWith(
-      input: DuctInput(
+      input: HvacInput(
         flowRate: newFlow,
         targetVelocity: newVelocity,
         frictionRate: newFriction,
         method: currentInput.method,
         unitSystem: system,
-        ductType: currentInput.ductType,
+        systemType: currentInput.systemType,
       ),
     );
     _triggerCalculation();
   }
 
-  void onDuctTypeChanged(DuctType type) {
+  void onDuctTypeChanged(SystemType type) {
     double suggestedVelocity = state.input.targetVelocity;
     if (state.input.unitSystem == UnitSystem.imperial) {
-      if (type == DuctType.supplyMain) suggestedVelocity = 900;
-      if (type == DuctType.supplyBranch) suggestedVelocity = 600;
-      if (type == DuctType.returnMain) suggestedVelocity = 700;
-      if (type == DuctType.exhaust) suggestedVelocity = 800;
+      suggestedVelocity = VelocityTable.getRecommendedVelocityFpm(type);
     } else {
-      if (type == DuctType.supplyMain) suggestedVelocity = 4.5;
-      if (type == DuctType.supplyBranch) suggestedVelocity = 3.0;
-      if (type == DuctType.returnMain) suggestedVelocity = 3.5;
-      if (type == DuctType.exhaust) suggestedVelocity = 4.0;
+      switch (type) {
+        case SystemType.supplyMain:
+          suggestedVelocity = 4.5;
+          break;
+        case SystemType.supplyBranch:
+          suggestedVelocity = 3.0;
+          break;
+        case SystemType.returnMain:
+          suggestedVelocity = 3.5;
+          break;
+        case SystemType.exhaust:
+          suggestedVelocity = 4.0;
+          break;
+        case SystemType.custom:
+          suggestedVelocity = 4.0;
+          break;
+        case SystemType.hotWaterPipe:
+        case SystemType.chilledWaterPipe:
+          suggestedVelocity = 2.0;
+          break;
+      }
     }
 
     state = state.copyWith(
-      input: DuctInput(
+      input: HvacInput(
         flowRate: state.input.flowRate,
         targetVelocity: suggestedVelocity,
         frictionRate: state.input.frictionRate,
         method: state.input.method,
         unitSystem: state.input.unitSystem,
-        ductType: type,
+        systemType: type,
       ),
     );
     _triggerCalculation();
   }
 
-  DuctInput _updateInput({
+  HvacInput _updateInput({
     double? flowRate,
     double? targetVelocity,
     double? frictionRate,
     CalculationMethod? method,
     UnitSystem? unitSystem,
-    DuctType? ductType,
+    SystemType? systemType,
   }) {
-    return DuctInput(
+    return HvacInput(
       flowRate: flowRate ?? state.input.flowRate,
       targetVelocity: targetVelocity ?? state.input.targetVelocity,
       frictionRate: frictionRate ?? state.input.frictionRate,
       method: method ?? state.input.method,
       unitSystem: unitSystem ?? state.input.unitSystem,
-      ductType: ductType ?? state.input.ductType,
+      systemType: systemType ?? state.input.systemType,
     );
   }
 
   void _debounceCalculate() {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 250), _triggerCalculation);
+    _debounceTimer = Timer(
+      const Duration(milliseconds: 250),
+      _triggerCalculation,
+    );
   }
 
   void _triggerCalculation() {
