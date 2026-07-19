@@ -257,7 +257,7 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
         children: [
           DropdownButtonFormField<DuctType>(
             key: const Key('ductTypeDropdown'),
-            value: state.input.ductType,
+            initialValue: state.input.ductType,
             dropdownColor: AppColors.bgCard,
             style: const TextStyle(color: Colors.white, fontSize: 15),
             decoration: const InputDecoration(
@@ -407,7 +407,7 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildSpecItem('Vận tốc', '${round.velocity.toStringAsFixed(1)} ${isMetric ? 'm/s' : 'fpm'}'),
-              _buildSpecItem('Ma sát', '${round.frictionRate.toStringAsFixed(2)} ${isMetric ? 'Pa/m' : 'in/100ft'}'),
+              _buildSpecItem('Ma sát', '${round.frictionRate.toStringAsFixed(2)} ${isMetric ? 'Pa/m' : 'in.wg/100ft'}'),
             ],
           )
         ],

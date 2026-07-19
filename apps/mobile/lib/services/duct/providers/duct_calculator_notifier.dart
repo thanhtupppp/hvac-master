@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:state_notifier/state_notifier.dart';
 import '../models/enums.dart';
 import '../models/duct_input.dart';
 import '../models/duct_calculator_state.dart';

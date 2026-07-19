@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/screens/tools/duct_calculator_screen.dart';
-import 'package:mobile/services/duct/models/enums.dart';
 import 'package:mobile/services/duct/providers/duct_calculator_notifier.dart';
 
 void main() {
