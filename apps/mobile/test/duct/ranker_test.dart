@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/services/duct/engine/standard_sizes.dart';
 import 'package:mobile/services/duct/engine/preferred_rect_sizes.dart';
@@ -64,13 +63,8 @@ void main() {
         score: 0, stars: 0, preferred: true,
         velocityError: 0, equivalentDiameterError: 0
       );
-      const input = DuctInput(
-        flowRate: 1000, targetVelocity: 800, frictionRate: 0.1,
-        method: CalculationMethod.velocity, unitSystem: UnitSystem.imperial,
-        ductType: DuctType.supplyMain
-      );
       final s = RectangleRanker.score(
-        option: option, input: input,
+        option: option,
         targetVelocityFpm: 800, targetEquivDiamIn: 10.2
       );
       expect(s, closeTo(100.0, 5.0));

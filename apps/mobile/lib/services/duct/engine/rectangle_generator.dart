@@ -1,4 +1,3 @@
-import '../models/enums.dart';
 import '../models/rectangle_option.dart';
 import '../models/duct_input.dart';
 import 'standard_sizes.dart';
@@ -27,11 +26,11 @@ class RectangleGenerator {
         final ar = w / h;
         if (ar > 4.0) continue; // Hard filter on Aspect Ratio
 
-        final velocity = flowRateCfm / (area / 144.0);
+        final velocity = HvacFormulas.velocity(cfm: flowRateCfm, areaSqFt: area / 144.0);
         final de = HvacFormulas.equivalentDiameter(a: w, b: h);
 
-        final velErr = (velocity - targetVelocityFpm).abs() / targetVelocityFpm;
-        final deErr = (de - targetDiameterIn).abs() / targetDiameterIn;
+        final velErr = targetVelocityFpm <= 0 ? 1.0 : (velocity - targetVelocityFpm).abs() / targetVelocityFpm;
+        final deErr = targetDiameterIn <= 0 ? 1.0 : (de - targetDiameterIn).abs() / targetDiameterIn;
 
         final preferred = PreferredRectSizes.contains(w, h, false);
 
@@ -43,7 +42,7 @@ class RectangleGenerator {
         );
 
         final finalScore = RectangleRanker.score(
-          option: mockOption, input: input,
+          option: mockOption,
           targetVelocityFpm: targetVelocityFpm, targetEquivDiamIn: targetDiameterIn
         );
 

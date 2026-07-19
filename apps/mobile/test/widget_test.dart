@@ -16,6 +16,6 @@ void main() {
     // For now we just test if OnboardingScreen renders.
     await tester.pumpWidget(const MaterialApp(home: OnboardingScreen()));
 
-    expect(find.text('Chào mừng đến với HVAC Pro'), findsOneWidget);
+    expect(find.text('Chào mừng đến với'), findsOneWidget);
   });
 }

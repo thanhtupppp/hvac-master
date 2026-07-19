@@ -1,5 +1,4 @@
 import '../models/rectangle_option.dart';
-import '../models/duct_input.dart';
 import 'preferred_rect_sizes.dart';
 
 class RectangleRanker {
@@ -10,7 +9,6 @@ class RectangleRanker {
 
   static double score({
     required RectangleOption option,
-    required DuctInput input,
     required double targetVelocityFpm,
     required double targetEquivDiamIn,
   }) {
@@ -30,10 +28,11 @@ class RectangleRanker {
     final deScore = (1.0 - option.equivalentDiameterError.clamp(0.0, 1.0)) * 100.0;
 
     // 4. Preferred Size Bonus
-    final preferredBonus = PreferredRectSizes.contains(option.width, option.height, false) ? 10.0 : 0.0;
+    final preferred = PreferredRectSizes.contains(option.width, option.height, false);
+    final prefScore = preferred ? 100.0 : 0.0;
 
-    final raw = velScore * _wVelocity + arScore * _wAspect + deScore * _wEquivDiam;
-    return (raw + preferredBonus).clamp(0.0, 100.0);
+    final raw = velScore * _wVelocity + arScore * _wAspect + deScore * _wEquivDiam + prefScore * _wPreferred;
+    return raw.clamp(0.0, 100.0);
   }
 
   static int toStars(double score) {
