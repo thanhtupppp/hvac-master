@@ -11,7 +11,9 @@ import 'rectangle_generator.dart';
 
 class DuctEngine {
   static DuctResult calculate(DuctInput imperialInput) {
-    assert(imperialInput.unitSystem == UnitSystem.imperial, 'Engine requires imperial system');
+    if (imperialInput.unitSystem != UnitSystem.imperial) {
+      throw ArgumentError('DuctEngine calculations require imperial input system.');
+    }
 
     double calculatedDiameter = 0.0;
     double velocity = 0.0;
@@ -56,7 +58,7 @@ class DuctEngine {
     );
 
     final warnings = <DuctWarning>[];
-    if (velocity > 1200.0) {
+    if (actualRoundVelocity > 1200.0) {
       warnings.add(const DuctWarning(
         type: WarningType.highVelocity,
         message: 'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',

@@ -146,7 +146,7 @@ void main() {
   });
 
   group('DuctEngine Tests', () {
-    test('DuctEngine asserts imperial system', () {
+    test('DuctEngine throws ArgumentError for metric system', () {
       const metricInput = DuctInput(
         flowRate: 1000,
         targetVelocity: 800,
@@ -155,7 +155,7 @@ void main() {
         unitSystem: UnitSystem.metric,
         ductType: DuctType.supplyMain,
       );
-      expect(() => DuctEngine.calculate(metricInput), throwsA(isA<AssertionError>()));
+      expect(() => DuctEngine.calculate(metricInput), throwsA(isA<ArgumentError>()));
     });
 
     test('DuctEngine calculates correctly for Velocity Method', () {
@@ -237,6 +237,22 @@ void main() {
         ductType: DuctType.supplyMain,
       );
       final res = DuctEngine.calculate(normalVelocityInput);
+      expect(res.warnings.isEmpty, isTrue);
+    });
+
+    test('DuctEngine evaluates actualRoundVelocity instead of targetVelocity for high velocity warning', () {
+      // Flow rate 940 CFM, targetVelocity 1250 FPM (> 1200 FPM)
+      // stdRoundArea = pi * (6)^2 = 113.097 sqin = 0.7854 sqft
+      // actualRoundVelocity = 940 / 0.7854 = 1196.8 FPM (<= 1200 FPM)
+      const input = DuctInput(
+        flowRate: 940,
+        targetVelocity: 1250,
+        frictionRate: 0.1,
+        method: CalculationMethod.velocity,
+        unitSystem: UnitSystem.imperial,
+        ductType: DuctType.supplyMain,
+      );
+      final res = DuctEngine.calculate(input);
       expect(res.warnings.isEmpty, isTrue);
     });
   });
