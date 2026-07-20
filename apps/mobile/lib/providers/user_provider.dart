@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
+import '../services/api_service.dart';
 
 /// Exposes the real-time user profile state from Firestore.
 final userProfileProvider = StreamProvider<UserModel?>((ref) {
@@ -103,57 +104,51 @@ class UserProfileService {
     });
   }
 
-  /// Request deletion of the user account.
-  /// Google Play policy (2024+): must actually delete all user data.
-  /// Steps: (1) delete all user subcollection docs, (2) delete user doc,
-  /// (3) delete Firebase Auth account.
+  /// Delete the user account via the trusted backend endpoint.
+  ///
+  /// The backend (Admin SDK) handles:
+  ///  1. ID token verification (checkRevoked: true).
+  ///  2. recent-login check via adminAuth.getUser().
+  ///  3. Recursive deletion of all subcollections.
+  ///  4. Deletion of the user Firestore document.
+  ///  5. Deletion of the Firebase Auth account.
+  ///
+  /// Throws with a message containing 'đăng nhập lại' when the backend
+  /// reports auth/requires-recent-login, so the UI can prompt re-auth.
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
 
-    final uid = user.uid;
-    final userDoc = _db.collection('users').doc(uid);
+    // Force-refresh the ID token so the backend can verify it with
+    // checkRevoked: true (checks token has not been invalidated since issue).
+    final idToken = await user.getIdToken(true);
+    if (idToken == null) {
+      throw Exception('Không lấy được token xác thực. Vui lòng đăng nhập lại.');
+    }
 
-    // 1. Delete all subcollection docs (bookmarks, history, settings, etc.)
-    // Recursively delete everything under the user doc.
-    // Use a write batch to delete in batches of 500 (Firestore limit).
-    await _deleteCollection(userDoc.collection('bookmarks'));
-    await _deleteCollection(userDoc.collection('history'));
-    // Add more subcollections here as they are created (e.g. 'notes', 'settings')
-
-    // 2. Delete the user profile document
-    await userDoc.delete();
-
-    // 3. Delete Firebase Auth account
+    final api = ApiService();
     try {
-      await user.delete();
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
+      final res = await api.post(
+        '/api/profile/delete',
+        body: {'uid': user.uid},
+        idToken: idToken,
+      );
+
+      if (res.requiresRecentLogin) {
         throw Exception(
           'Hành động nhạy cảm - Vui lòng đăng nhập lại trước khi xóa tài khoản.',
         );
       }
-      rethrow;
-    }
-  }
 
-  /// Recursively deletes all documents in a collection using batched writes.
-  Future<void> _deleteCollection(CollectionReference ref) async {
-    try {
-      while (true) {
-        final batch = _db.batch();
-        final docs = await ref.limit(500).get();
-
-        if (docs.size == 0) break;
-
-        for (final doc in docs.docs) {
-          batch.delete(doc.reference);
-        }
-
-        await batch.commit();
+      if (!res.ok) {
+        throw Exception(
+          res.errorMessage ?? 'Xóa tài khoản thất bại. Vui lòng thử lại.',
+        );
       }
-    } catch (e) {
-      // Subcollection may not exist yet — skip silently
+      // Backend succeeded — local sign-out is handled by the caller
+      // (_executeDeleteAccount in profile_screen.dart).
+    } finally {
+      api.dispose();
     }
   }
 }

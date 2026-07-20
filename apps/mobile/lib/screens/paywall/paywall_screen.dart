@@ -4,12 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/routes/app_routes.dart';
+import '../../models/plan.dart';
+import '../../services/plans_service.dart';
 import '../../services/revenuecat_service.dart';
 
-class PaywallScreen extends ConsumerStatefulWidget {
-  /// Route name
-  static const routeName = '/paywall';
+/// Provider that fetches active plans from the admin backend.
+final backendPlansProvider = FutureProvider<List<Plan>?>((ref) async {
+  final service = PlansService();
+  try {
+    return await service.getActivePlans();
+  } finally {
+    service.dispose();
+  }
+});
 
+class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
   @override
@@ -22,23 +31,47 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _isLoading = true;
   bool _isPurchasing = false;
   String? _error;
+  List<Plan> _backendPlans = [];
 
   @override
   void initState() {
     super.initState();
-    _loadOfferings();
+    _loadData();
   }
 
-  Future<void> _loadOfferings() async {
-    final offerings = await RevenueCatService.instance.getOfferings();
-    if (!mounted) return;
-    setState(() {
-      _offerings = offerings;
-      _selectedPackage = RevenueCatService.instance.getDefaultPackage(
-        offerings,
-      );
-      _isLoading = false;
-    });
+  Future<void> _loadData() async {
+    // Fetch backend plans and RevenueCat offerings in parallel
+    final backendPlansFuture = _fetchBackendPlans();
+    final offeringsFuture = RevenueCatService.instance.getOfferings();
+
+    try {
+      final results = await Future.wait([backendPlansFuture, offeringsFuture]);
+      if (!mounted) return;
+
+      setState(() {
+        _backendPlans = results[0] as List<Plan>;
+        _offerings = results[1] as Offerings;
+        _selectedPackage = RevenueCatService.instance.getDefaultPackage(
+          _offerings,
+        );
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Không tải được thông tin gói VIP.';
+      });
+    }
+  }
+
+  Future<List<Plan>> _fetchBackendPlans() async {
+    final service = PlansService();
+    try {
+      return await service.getActivePlans() ?? [];
+    } finally {
+      service.dispose();
+    }
   }
 
   Future<void> _purchase() async {
@@ -116,6 +149,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     Navigator.pushNamed(context, AppRoutes.terms);
   }
 
+  /// Match a RevenueCat package to a backend Plan by productId.
+  Plan? _matchPlan(Package pkg) {
+    final productId = pkg.storeProduct.identifier;
+    try {
+      return _backendPlans.firstWhere((p) => p.productId == productId);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,7 +225,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               ),
               onPressed: () {
                 setState(() => _isLoading = true);
-                _loadOfferings();
+                _loadData();
               },
               child: const Text('Thử lại'),
             ),
@@ -197,10 +240,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
     return Column(
       children: [
-        // ── Header ────────────────────────────────────────────────────────
         _buildHeader(),
-
-        // ── Benefits ─────────────────────────────────────────────────────
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -208,51 +248,14 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               children: [
                 _buildBenefits(),
                 const SizedBox(height: 20),
-
-                // ── Package selector ──────────────────────────────────────
                 if (packages.isNotEmpty) ...[
                   _buildPackageSelector(packages),
                   const SizedBox(height: 16),
                 ],
-
-                // ── Error message ────────────────────────────────────────
-                if (_error != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.red.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.redAccent,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _error!,
-                            style: const TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // ── Purchase CTA ───────────────────────────────────────────
+                if (_error != null) _buildErrorBanner(),
+                const SizedBox(height: 4),
                 _buildPurchaseButton(),
                 const SizedBox(height: 12),
-
-                // ── Restore & legal ───────────────────────────────────────
                 _buildFooter(),
               ],
             ),
@@ -263,11 +266,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildHeader() {
+    // Find the featured plan from backend to show its name in header
+    final featuredPlan = _backendPlans.where((p) => p.isFeatured).firstOrNull;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
       child: Column(
         children: [
-          // Close button
           Align(
             alignment: Alignment.centerRight,
             child: IconButton(
@@ -275,8 +280,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-
-          // VIP badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
@@ -301,12 +304,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
-          const Text(
-            'Mở khóa toàn bộ\ncông cụ kỹ thuật',
-            style: TextStyle(
+          Text(
+            featuredPlan != null
+                ? 'Mở khóa ${featuredPlan.name}'
+                : 'Mở khóa toàn bộ\ncông cụ kỹ thuật',
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -314,12 +317,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-
           const SizedBox(height: 8),
-
-          const Text(
-            'Truy cập không giới hạn tất cả công cụ, sơ đồ mạch điện và tài liệu kỹ thuật chuyên nghiệp.',
-            style: TextStyle(color: Colors.white60, fontSize: 14, height: 1.5),
+          Text(
+            featuredPlan?.description ??
+                'Truy cập không giới hạn tất cả công cụ, sơ đồ mạch điện và tài liệu kỹ thuật chuyên nghiệp.',
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 14,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -328,33 +334,30 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildBenefits() {
-    final benefits = [
-      _Benefit(
-        icon: Icons.construction,
-        title: 'Tất cả công cụ chuyên nghiệp',
-        desc:
-            'Equal Friction, Velocity, Pipe Sizer, Pump Selection, và 40+ công cụ khác',
-      ),
-      _Benefit(
-        icon: Icons.electrical_services,
-        title: 'Sơ đồ mạch điện đầy đủ',
-        desc: 'Sơ đồ mạch điều hòa các hãng Daikin, Panasonic, LG, Samsung...',
-      ),
-      _Benefit(
-        icon: Icons.download_outlined,
-        title: 'Tài liệu kỹ thuật PDF',
-        desc: 'Catalog, manual, brochure các dòng điều hòa thông dụng',
-      ),
-      _Benefit(
-        icon: Icons.history,
-        title: 'Lịch sử tính toán',
-        desc: 'Lưu lại kết quả tính toán để tra cứu nhanh',
-      ),
-      _Benefit(
-        icon: Icons.offline_bolt_outlined,
-        title: 'Dùng offline',
-        desc: 'Truy cập nội dung đã bookmark không cần mạng',
-      ),
+    // Collect all unique features from backend plans, or fall back to hardcoded list
+    final allFeatures = <String>{};
+    for (final plan in _backendPlans) {
+      for (final feature in plan.features) {
+        allFeatures.add(feature);
+      }
+    }
+
+    final benefits = allFeatures.isNotEmpty
+        ? allFeatures.take(5).toList()
+        : [
+            'Tất cả công cụ chuyên nghiệp',
+            'Sơ đồ mạch điện đầy đủ',
+            'Tài liệu kỹ thuật PDF',
+            'Lịch sử tính toán',
+            'Dùng offline',
+          ];
+
+    final benefitIcons = [
+      Icons.construction,
+      Icons.electrical_services,
+      Icons.download_outlined,
+      Icons.history,
+      Icons.offline_bolt_outlined,
     ];
 
     return Container(
@@ -365,7 +368,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       child: Column(
         children: [
           for (int i = 0; i < benefits.length; i++) ...[
-            _BenefitRow(benefit: benefits[i]),
+            _BenefitRow(
+              icon: benefitIcons[i % benefitIcons.length],
+              title: benefits[i],
+            ),
             if (i != benefits.length - 1)
               const Divider(color: AppColors.divider, height: 1, indent: 60),
           ],
@@ -390,8 +396,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ...packages.map((pkg) {
           final isSelected = _selectedPackage?.identifier == pkg.identifier;
           final price = pkg.storeProduct.priceString;
-          final period = _packagePeriod(pkg.packageType);
           final intro = pkg.storeProduct.introductoryPrice;
+          final plan = _matchPlan(pkg);
+
+          // Determine period label from matched plan or RevenueCat package
+          String periodLabel;
+          if (plan != null) {
+            periodLabel = plan.periodLabel;
+          } else {
+            periodLabel = _packagePeriod(pkg.packageType);
+          }
+
+          // Determine badge and theme from matched plan
+          final badge = plan?.badge;
+          final theme = plan?.theme ?? PlanTheme.blue;
+          final themeColor = _themeColor(theme);
 
           return GestureDetector(
             onTap: () => setState(() => _selectedPackage = pkg),
@@ -400,24 +419,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.amber.withValues(alpha: 0.1)
+                    ? themeColor.withValues(alpha: 0.12)
                     : AppColors.bgCard,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? Colors.amber : AppColors.divider,
+                  color: isSelected ? themeColor : AppColors.divider,
                   width: isSelected ? 2 : 1,
                 ),
               ),
               child: Row(
                 children: [
-                  // Radio
+                  // Radio indicator
                   Container(
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? Colors.amber : Colors.white38,
+                        color: isSelected ? themeColor : Colors.white38,
                         width: 2,
                       ),
                     ),
@@ -426,9 +445,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                             child: Container(
                               width: 12,
                               height: 12,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.amber,
+                                color: themeColor,
                               ),
                             ),
                           )
@@ -436,36 +455,59 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ),
                   const SizedBox(width: 14),
 
-                  // Package info
+                  // Plan info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Text(
-                              _packageLabel(pkg.packageType),
-                              style: TextStyle(
-                                color: isSelected ? Colors.amber : Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                            Flexible(
+                              child: Text(
+                                plan?.name ?? _packageLabel(pkg.packageType),
+                                style: TextStyle(
+                                  color: isSelected ? themeColor : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (intro != null) ...[
-                              const SizedBox(width: 8),
+                            if (badge != null) ...[
+                              const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
                                   vertical: 1,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.15),
+                                  color: themeColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  badge,
+                                  style: TextStyle(
+                                    color: themeColor,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ] else if (plan?.isFeatured == true) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: themeColor.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
-                                  'DÙNG THỬ',
+                                  'PHỔ BIẾN',
                                   style: TextStyle(
-                                    color: Colors.greenAccent,
+                                    color: Colors.amber,
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -476,8 +518,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          period,
-                          style: TextStyle(color: Colors.white54, fontSize: 12),
+                          periodLabel,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -490,7 +535,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       Text(
                         price,
                         style: TextStyle(
-                          color: isSelected ? Colors.amber : Colors.white,
+                          color: isSelected ? themeColor : Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -567,7 +612,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   Widget _buildFooter() {
     return Column(
       children: [
-        // Restore purchases
         TextButton.icon(
           onPressed: _isPurchasing ? null : _restore,
           icon: const Icon(Icons.restore, color: Colors.white54, size: 18),
@@ -576,10 +620,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             style: TextStyle(color: Colors.white54, fontSize: 13),
           ),
         ),
-
         const SizedBox(height: 4),
-
-        // Legal links
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -603,9 +644,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
             ),
           ],
         ),
-
         const SizedBox(height: 8),
-
         const Text(
           'Thanh toán qua Google Play. Hủy bất cứ lúc nào trong cài đặt Google Play.',
           style: TextStyle(color: Colors.white24, fontSize: 11),
@@ -613,6 +652,41 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildErrorBanner() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _error!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _themeColor(PlanTheme theme) {
+    switch (theme) {
+      case PlanTheme.gold:
+        return Colors.amber;
+      case PlanTheme.purple:
+        return Colors.deepPurpleAccent;
+      case PlanTheme.blue:
+        return Colors.lightBlueAccent;
+    }
   }
 
   String _packageLabel(PackageType type) {
@@ -651,7 +725,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       case PackageType.sixMonth:
         return '6 tháng';
       case PackageType.annual:
-        return '12 tháng (tiết kiệm nhất)';
+        return '12 tháng';
       case PackageType.lifetime:
         return 'Vĩnh viễn';
       case PackageType.custom:
@@ -663,18 +737,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
 // ─── Benefit row widget ────────────────────────────────────────────────────────
 
-class _Benefit {
+class _BenefitRow extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String desc;
 
-  const _Benefit({required this.icon, required this.title, required this.desc});
-}
-
-class _BenefitRow extends StatelessWidget {
-  final _Benefit benefit;
-
-  const _BenefitRow({required this.benefit});
+  const _BenefitRow({required this.icon, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -689,31 +756,17 @@ class _BenefitRow extends StatelessWidget {
               color: Colors.amber.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(benefit.icon, color: Colors.amber, size: 20),
+            child: Icon(icon, color: Colors.amber, size: 20),
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  benefit.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  benefit.desc,
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    height: 1.3,
-                  ),
-                ),
-              ],
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
             ),
           ),
           const Icon(Icons.check_circle, color: Colors.amber, size: 20),

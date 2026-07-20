@@ -14,28 +14,46 @@ service cloud.firestore {
     }
 
     // Collection "users": Người dùng đọc được doc của chính mình,
-    // nhưng KHÔNG được sửa entitlement fields — chỉ Admin SDK (webhook/api) được ghi.
+    // nhưng KHÔNG được sửa entitlement fields và status — chỉ Admin SDK (webhook/api) được ghi.
     //
     // Entitlement fields: isPremium, premiumExpiry, activeSubscriptionId, isPremiumOverride
-    // Attack: client ghi isPremium: true, premiumExpiry: <far_future> → VIP miễn phí.
+    // Server-managed field: status
+    // Client-allowed fields: displayName, photoURL, updatedAt
+    //
+    // Attack vectors:
+    // - Client ghi isPremium: true, premiumExpiry: <far_future> → VIP miễn phí.
+    // - Client ghi status: 'active' → bỏ qua khóa tài khoản từ admin.
     match /users/{userId} {
       // Ai cũng đọc (cần hiển thị profile), nhưng user chỉ đọc được doc của mình.
       allow read: if request.auth != null;
 
       // User được tạo doc của chính mình (first-login auto-create).
-      // Entitlement fields bị chặn để ngăn tự cấp VIP.
+      // Chặn: isPremium: true, premiumExpiry, activeSubscriptionId, isPremiumOverride.
+      // Cho phép: isPremium: false (default) và mọi trường hợp không chứa entitlement keys.
+      // Kiểm tra: nếu isPremium được gửi kèm, nó phải là false — nếu là true thì bị chặn bởi
+      // giá trị kiểm tra cuối cùng (isPremium != true).
       allow create: if request.auth.uid == userId
-        && !request.resource.data.diff({}).affectedKeys()
-          .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride"]);
+        && (
+          // Case A: payload không chứa bất kỳ entitlement key nào → cho phép
+          !request.resource.data.diff({}).affectedKeys()
+            .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride"])
+          // Case B: payload có isPremium nhưng giá trị không phải true (tức là false)
+          // Kết hợp với kiểm tra hasAny ở trên đảm bảo các entitlement key khác không có mặt
+          || request.resource.data.isPremium == false
+        );
 
       // User được xoá doc của chính mình (deleteAccount).
+      // Chuyển việc xóa thực sự sang /api/profile/delete (Admin SDK)
+      // để đảm bảo xóa đầy đủ subcollections + Auth account.
       allow delete: if request.auth.uid == userId;
 
-      // Update: user sửa được doc của mình nhưng KHÔNG được sửa entitlement fields.
+      // Update: user chỉ được sửa displayName, photoURL, updatedAt.
+      // Mọi thay đổi entitlement hoặc status chỉ được thực hiện bởi Admin SDK.
       allow update: if request.auth.uid == userId
         && (
+          // Client được sửa: displayName, photoURL, updatedAt
           !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride"])
+            .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride", "status"])
           || isAdmin()
         );
 

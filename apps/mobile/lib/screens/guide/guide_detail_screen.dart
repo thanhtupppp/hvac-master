@@ -1615,12 +1615,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                                     elevation: 0,
                                   ),
                                   onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Tính năng thanh toán Premium đang phát triển...',
-                                        ),
-                                      ),
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppRoutes.paywall,
                                     );
                                   },
                                   child: const Text(

@@ -24,6 +24,7 @@ import '../../screens/tools/humidity_calculator_screen.dart';
 import '../../screens/paywall/paywall_screen.dart';
 import '../../screens/paywall/privacy_policy_screen.dart';
 import '../../screens/paywall/terms_screen.dart';
+import '../../screens/subscription/subscription_screen.dart';
 import '../../models/article.dart';
 
 class AppRoutes {
@@ -51,6 +52,7 @@ class AppRoutes {
   static const String dewPointCalculator = '/tools/dew-point';
   static const String humidityCalculator = '/tools/humidity';
   static const String paywall = '/paywall';
+  static const String subscription = '/subscription';
   static const String privacyPolicy = '/privacy-policy';
   static const String terms = '/terms';
 
@@ -112,6 +114,8 @@ class AppRoutes {
         );
       case paywall:
         return MaterialPageRoute(builder: (_) => const PaywallScreen());
+      case subscription:
+        return MaterialPageRoute(builder: (_) => const SubscriptionScreen());
       case privacyPolicy:
         return MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen());
       case terms:

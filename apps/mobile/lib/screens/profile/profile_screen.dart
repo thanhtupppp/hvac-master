@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/routes/app_routes.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user_model.dart';
 
@@ -53,17 +54,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     try {
       await ref.read(userProfileServiceProvider).updateDisplayName(newName);
+      if (!mounted) return;
       setState(() {
         _successMessage = 'Cập nhật thông tin thành công!';
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Cập nhật thất bại. Vui lòng thử lại.';
       });
     } finally {
-      setState(() {
-        _isSaving = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 
@@ -322,58 +327,90 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 32),
 
                 // VIP Status Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgCard,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: user.isPremium
-                          ? Colors.amber.withValues(alpha: 0.3)
-                          : AppColors.divider,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        user.isPremium ? Icons.stars : Icons.star_outline,
+                GestureDetector(
+                  onTap: () {
+                    if (user.isPremium) {
+                      Navigator.pushNamed(context, AppRoutes.subscription);
+                    } else {
+                      Navigator.pushNamed(context, AppRoutes.paywall);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.bgCard,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
                         color: user.isPremium
-                            ? Colors.amber
-                            : AppColors.textMuted,
-                        size: 32,
+                            ? Colors.amber.withValues(alpha: 0.3)
+                            : AppColors.divider,
+                        width: 1.5,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user.isPremium
-                                  ? 'Tài khoản Premium (VIP)'
-                                  : 'Tài khoản Miễn phí',
-                              style: TextStyle(
-                                color: user.isPremium
-                                    ? Colors.amber
-                                    : Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user.isPremium
-                                  ? 'Hết hạn ngày: $expiryText'
-                                  : 'Nâng cấp để mở khóa mọi tài liệu kỹ thuật.',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          user.isPremium ? Icons.stars : Icons.star_outline,
+                          color: user.isPremium
+                              ? Colors.amber
+                              : AppColors.textMuted,
+                          size: 32,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.isPremium
+                                    ? 'Tài khoản Premium (VIP)'
+                                    : 'Tài khoản Miễn phí',
+                                style: TextStyle(
+                                  color: user.isPremium
+                                      ? Colors.amber
+                                      : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                user.isPremium
+                                    ? 'Hết hạn ngày: $expiryText'
+                                    : 'Nâng cấp để mở khóa mọi tài liệu kỹ thuật.',
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: user.isPremium
+                                ? Colors.amber.withValues(alpha: 0.15)
+                                : Colors.amber,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.isPremium ? 'Quản lý' : 'Nâng cấp',
+                            style: TextStyle(
+                              color: user.isPremium
+                                  ? Colors.amber
+                                  : Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 32),
