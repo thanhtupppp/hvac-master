@@ -11,7 +11,6 @@ class RevenueCatService {
 
   /// RevenueCat API key passed via --dart-define=REVENUECAT_API_KEY=...
   /// Prefix with "goog_" for Google Play, "appl_" for App Store.
-  /// Falls back to a development key only in debug mode (never production).
   String get _apiKey {
     // ignore: avoid_dynamic_calls
     const apiKey = String.fromEnvironment(
@@ -29,6 +28,19 @@ class RevenueCatService {
       );
       return true;
     }());
+
+    // In release builds, a missing key is a configuration error.
+    // Fail fast rather than silently doing nothing on purchase attempts.
+    assert(() {
+      // debugPrint in release is a no-op, but the key check below throws.
+      return true;
+    }());
+    if (!kDebugMode && apiKey.isEmpty) {
+      throw StateError(
+        '[RevenueCat] REVENUECAT_API_KEY is not set. '
+        'Pass --dart-define=REVENUECAT_API_KEY=goog_... when building.',
+      );
+    }
     return 'YOUR_REVENUECAT_API_KEY';
   }
 
