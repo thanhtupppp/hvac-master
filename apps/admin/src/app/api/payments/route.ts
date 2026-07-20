@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/firebase-admin";
 import { adminDb } from "@/lib/firebase-admin";
 import { z } from "zod";
-import { FieldValue } from "firebase-admin/firestore";
-import { verifySubscription, verifyProduct, mapSubscriptionStatus } from "@/lib/google-play";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import {
+  verifySubscription,
+  verifyProduct,
+  mapSubscriptionStatus,
+} from "@/lib/google-play";
+import { createHash } from "crypto";
 
 const syncSchema = z.object({
   purchaseToken: z.string().min(10),
@@ -26,7 +31,10 @@ export async function GET(req: Request) {
   try {
     await requireAdmin(req);
   } catch (authError: any) {
-    return NextResponse.json({ error: authError.message }, { status: authError.status || 401 });
+    return NextResponse.json(
+      { error: authError.message },
+      { status: authError.status || 401 },
+    );
   }
 
   try {
@@ -36,10 +44,14 @@ export async function GET(req: Request) {
     const limitParam = parseInt(url.searchParams.get("limit") || "100", 10);
     const limit = Math.min(limitParam, 200);
 
-    let query: FirebaseFirestore.Query = adminDb.collection("payments").orderBy("purchaseTime", "desc").limit(limit);
+    let query: FirebaseFirestore.Query = adminDb
+      .collection("payments")
+      .orderBy("purchaseTime", "desc")
+      .limit(limit);
 
     if (filter !== "all") {
-      query = adminDb.collection("payments")
+      query = adminDb
+        .collection("payments")
         .where("status", "==", filter)
         .orderBy("purchaseTime", "desc")
         .limit(limit);
@@ -50,10 +62,11 @@ export async function GET(req: Request) {
 
     if (search) {
       const q = search.toLowerCase();
-      payments = payments.filter((p: any) =>
-        p.userEmail?.toLowerCase().includes(q) ||
-        p.orderId?.toLowerCase().includes(q) ||
-        p.productId?.toLowerCase().includes(q)
+      payments = payments.filter(
+        (p: any) =>
+          p.userEmail?.toLowerCase().includes(q) ||
+          p.orderId?.toLowerCase().includes(q) ||
+          p.productId?.toLowerCase().includes(q),
       );
     }
 
@@ -62,7 +75,10 @@ export async function GET(req: Request) {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const allActiveSnap = await adminDb.collection("payments").where("status", "==", "active").get();
+    const allActiveSnap = await adminDb
+      .collection("payments")
+      .where("status", "==", "active")
+      .get();
     const activeSubscribers = allActiveSnap.size;
 
     let revenueThisMonth = 0;
@@ -74,14 +90,25 @@ export async function GET(req: Request) {
       if (pt >= startOfWeek) newThisWeek++;
     });
 
-    const pendingSnap = await adminDb.collection("payments").where("status", "==", "pending").get();
+    const pendingSnap = await adminDb
+      .collection("payments")
+      .where("status", "==", "pending")
+      .get();
 
-    const stats = { activeSubscribers, revenueThisMonth, newThisWeek, pendingCount: pendingSnap.size };
+    const stats = {
+      activeSubscribers,
+      revenueThisMonth,
+      newThisWeek,
+      pendingCount: pendingSnap.size,
+    };
 
     return NextResponse.json({ payments, total: payments.length, stats });
   } catch (error) {
     console.error("Error listing payments:", error);
-    return NextResponse.json({ error: "Failed to fetch payments." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch payments." },
+      { status: 500 },
+    );
   }
 }
 
@@ -92,70 +119,84 @@ export async function POST(req: Request) {
   try {
     await requireAdmin(req);
   } catch (authError: any) {
-    return NextResponse.json({ error: authError.message }, { status: authError.status || 401 });
+    return NextResponse.json(
+      { error: authError.message },
+      { status: authError.status || 401 },
+    );
   }
 
   try {
     const body = await req.json().catch(() => null);
     const parsed = syncSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Dữ liệu không hợp lệ.", details: parsed.error.format() }, { status: 400 });
+      return NextResponse.json(
+        { error: "Dữ liệu không hợp lệ.", details: parsed.error.format() },
+        { status: 400 },
+      );
     }
 
-    const { purchaseToken, productId, purchaseType, userId, userEmail } = parsed.data;
+    const { purchaseToken, productId, purchaseType, userId, userEmail } =
+      parsed.data;
 
-    let orderId: string;
+    // Stable payment doc ID based on purchaseToken (not latestOrderId which changes on renewal)
+    const paymentDocId = createHash("sha256")
+      .update(purchaseToken)
+      .digest("hex")
+      .slice(0, 40);
     let status: string;
-    let expiryTime: any = null;
+    let expiryTime: Timestamp | null = null;
 
     if (purchaseType === "subscription") {
       const sub = await verifySubscription(productId, purchaseToken);
-      orderId = sub.latestOrderId || purchaseToken.slice(0, 40);
       status = mapSubscriptionStatus(sub.subscriptionState);
       const expiryMillis = sub.lineItems?.[0]?.expiryTime
         ? new Date(sub.lineItems[0].expiryTime).getTime()
         : null;
-      if (expiryMillis) {
-        const { Timestamp } = await import("firebase-admin/firestore");
-        expiryTime = Timestamp.fromMillis(expiryMillis);
-      }
+      if (expiryMillis) expiryTime = Timestamp.fromMillis(expiryMillis);
     } else {
       const product = await verifyProduct(productId, purchaseToken);
-      orderId = product.orderId || purchaseToken.slice(0, 40);
       status = product.purchaseState === 0 ? "active" : "pending";
     }
 
-    const paymentRef = adminDb.collection("payments").doc(orderId);
-    await paymentRef.set({
-      orderId,
-      purchaseToken,
-      productId,
-      purchaseType,
-      status,
-      userId: userId || null,
-      userEmail: userEmail || null,
-      amount: 0,
-      currency: "VND",
-      expiryTime,
-      purchaseTime: FieldValue.serverTimestamp(),
-      verifiedAt: FieldValue.serverTimestamp(),
-      createdAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
+    const paymentRef = adminDb.collection("payments").doc(paymentDocId);
+    await paymentRef.set(
+      {
+        purchaseToken,
+        productId,
+        purchaseType,
+        status,
+        userId: userId || null,
+        userEmail: userEmail || null,
+        amount: 0,
+        currency: "VND",
+        expiryTime,
+        purchaseTime: FieldValue.serverTimestamp(),
+        verifiedAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
 
-    // If userId known and active → grant VIP
+    // If userId known, subscription active with expiry → grant VIP
     if (userId && status === "active" && expiryTime) {
-      await adminDb.collection("users").doc(userId).set({
-        isPremium: true,
-        premiumExpiry: expiryTime,
-        activeSubscriptionId: orderId,
-        updatedAt: FieldValue.serverTimestamp(),
-      }, { merge: true });
+      await adminDb.collection("users").doc(userId).set(
+        {
+          isPremium: true,
+          premiumExpiry: expiryTime,
+          activeSubscriptionId: paymentDocId,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
     }
 
-    return NextResponse.json({ success: true, orderId, status });
+    return NextResponse.json({ success: true, orderId: paymentDocId, status });
   } catch (error: any) {
     console.error("Error syncing payment:", error);
-    return NextResponse.json({ error: error.message || "Failed to sync payment." }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to sync payment." },
+      { status: 500 },
+    );
   }
 }
 
@@ -166,18 +207,27 @@ export async function PATCH(req: Request) {
   try {
     await requireAdmin(req);
   } catch (authError: any) {
-    return NextResponse.json({ error: authError.message }, { status: authError.status || 401 });
+    return NextResponse.json(
+      { error: authError.message },
+      { status: authError.status || 401 },
+    );
   }
 
   try {
     const body = await req.json().catch(() => null);
     const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Dữ liệu không hợp lệ.", details: parsed.error.format() }, { status: 400 });
+      return NextResponse.json(
+        { error: "Dữ liệu không hợp lệ.", details: parsed.error.format() },
+        { status: 400 },
+      );
     }
 
     const { id, status, note } = parsed.data;
-    const update: Record<string, any> = { status, updatedAt: FieldValue.serverTimestamp() };
+    const update: Record<string, any> = {
+      status,
+      updatedAt: FieldValue.serverTimestamp(),
+    };
     if (note) update.note = note;
 
     await adminDb.collection("payments").doc(id).update(update);
@@ -187,18 +237,24 @@ export async function PATCH(req: Request) {
       const payDoc = await adminDb.collection("payments").doc(id).get();
       const userId = payDoc.data()?.userId;
       if (userId) {
-        await adminDb.collection("users").doc(userId).set({
-          isPremium: false,
-          premiumExpiry: null,
-          activeSubscriptionId: null,
-          updatedAt: FieldValue.serverTimestamp(),
-        }, { merge: true });
+        await adminDb.collection("users").doc(userId).set(
+          {
+            isPremium: false,
+            premiumExpiry: null,
+            activeSubscriptionId: null,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
       }
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error updating payment:", error);
-    return NextResponse.json({ error: "Failed to update payment." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update payment." },
+      { status: 500 },
+    );
   }
 }

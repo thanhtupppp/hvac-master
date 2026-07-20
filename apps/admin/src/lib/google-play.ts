@@ -4,7 +4,8 @@ const PACKAGE_NAME = process.env.GOOGLE_PLAY_PACKAGE_NAME || "";
 
 function getAndroidPublisher() {
   const keyRaw = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_KEY;
-  if (!keyRaw) throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_KEY is not configured.");
+  if (!keyRaw)
+    throw new Error("GOOGLE_PLAY_SERVICE_ACCOUNT_KEY is not configured.");
 
   const key = typeof keyRaw === "string" ? JSON.parse(keyRaw) : keyRaw;
 
@@ -20,7 +21,10 @@ function getAndroidPublisher() {
  * Verify a Google Play subscription purchase.
  * Returns the subscription object or throws if invalid.
  */
-export async function verifySubscription(subscriptionId: string, purchaseToken: string) {
+export async function verifySubscription(
+  subscriptionId: string,
+  purchaseToken: string,
+) {
   const androidpublisher = getAndroidPublisher();
   const res = await androidpublisher.purchases.subscriptionsv2.get({
     packageName: PACKAGE_NAME,
@@ -44,8 +48,12 @@ export async function verifyProduct(productId: string, purchaseToken: string) {
 
 /**
  * Acknowledge a subscription purchase (required within 3 days).
+ * v3 API — uses subscriptions.acknowledge.
  */
-export async function acknowledgeSubscription(subscriptionId: string, purchaseToken: string) {
+export async function acknowledgeSubscription(
+  subscriptionId: string,
+  purchaseToken: string,
+) {
   const androidpublisher = getAndroidPublisher();
   await androidpublisher.purchases.subscriptions.acknowledge({
     packageName: PACKAGE_NAME,
@@ -56,10 +64,29 @@ export async function acknowledgeSubscription(subscriptionId: string, purchaseTo
 }
 
 /**
+ * Acknowledge a one-time in-app product purchase (required within 3 days).
+ * Google auto-refunds after 3 days if not acknowledged.
+ */
+export async function acknowledgeProduct(
+  productId: string,
+  purchaseToken: string,
+) {
+  const androidpublisher = getAndroidPublisher();
+  await androidpublisher.purchases.products.acknowledge({
+    packageName: PACKAGE_NAME,
+    productId,
+    token: purchaseToken,
+    requestBody: {},
+  });
+}
+
+/**
  * Parse priceMicros to VND integer.
  * Google Play stores prices in micros (1 VND = 1_000_000 micros).
  */
-export function microsToCurrency(priceMicros: string | null | undefined): number {
+export function microsToCurrency(
+  priceMicros: string | null | undefined,
+): number {
   if (!priceMicros) return 0;
   return Math.round(parseInt(priceMicros, 10) / 1_000_000);
 }
@@ -69,7 +96,7 @@ export function microsToCurrency(priceMicros: string | null | undefined): number
  * subscriptionState: ACTIVE | CANCELED | IN_GRACE_PERIOD | ON_HOLD | PAUSED | EXPIRED
  */
 export function mapSubscriptionStatus(
-  state: string | null | undefined
+  state: string | null | undefined,
 ): "active" | "cancelled" | "expired" | "pending" {
   switch (state) {
     case "SUBSCRIPTION_STATE_ACTIVE":

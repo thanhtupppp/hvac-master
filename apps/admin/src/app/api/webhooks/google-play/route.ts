@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import {
   verifySubscription,
-  verifyProduct,
   acknowledgeSubscription,
+  acknowledgeProduct,
   mapSubscriptionStatus,
 } from "@/lib/google-play";
+import { createHash } from "crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 // Validate Pub/Sub push token to prevent unauthorized calls.
@@ -77,7 +78,6 @@ export async function POST(req: Request) {
     JSON.stringify(notification),
   );
 
-  const packageName = notification.packageName as string;
   const subscriptionNotification = notification.subscriptionNotification;
   const oneTimeProductNotification = notification.oneTimeProductNotification;
 
@@ -108,12 +108,21 @@ export async function POST(req: Request) {
 
 /**
  * Handle subscription lifecycle notifications.
- * Types: PURCHASED=1, RENEWED=2, RECOVERED=3, PAUSED=5, RESTARTED=7,
- *        PRICE_CHANGE=8, DEFERRED=9, ON_HOLD=12, CANCELED=13, EXPIRED=13, GRACE_PERIOD=6
+ * Key by purchaseToken (stable ID across renewals) instead of latestOrderId
+ * (which changes each billing cycle and causes doc duplication/collision).
+ *
+ * notificationType: PURCHASED=1, RENEWED=2, RECOVERED=3, PAUSED=5, RESTARTED=7,
+ *                   PRICE_CHANGE=8, DEFERRED=9, ON_HOLD=12, CANCELED=13, EXPIRED=13, GRACE_PERIOD=6
  */
 async function handleSubscriptionNotification(notification: any, raw: any) {
-  const { purchaseToken, subscriptionId, notificationType } = notification;
+  const { purchaseToken, subscriptionId } = notification;
   if (!purchaseToken || !subscriptionId) return;
+
+  // Stable payment doc ID — purchaseToken stays the same across all renewals
+  const paymentDocId = createHash("sha256")
+    .update(purchaseToken)
+    .digest("hex")
+    .slice(0, 40);
 
   // Verify purchase with Google Play Developer API
   const subscription = await verifySubscription(subscriptionId, purchaseToken);
@@ -123,31 +132,30 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
     : null;
   const status = mapSubscriptionStatus(subscription.subscriptionState);
 
+  // autoRenewingPlan: present only when user HAS enabled auto-renew
+  // (absent when user has already cancelled — even if sub is still ACTIVE)
+  const autoRenewing = !!lineItem?.autoRenewingPlan;
+
   // Find userId from obfuscatedExternalAccountId (set by Android app on purchase)
   const userId =
     subscription.externalAccountIdentifiers?.obfuscatedExternalAccountId ||
     null;
-  const orderId = subscription.latestOrderId || purchaseToken.slice(0, 40);
 
   // Upsert payment record
-  const paymentRef = adminDb.collection("payments").doc(orderId);
+  const paymentRef = adminDb.collection("payments").doc(paymentDocId);
   const paymentData: Record<string, any> = {
-    orderId,
     purchaseToken,
     productId: subscriptionId,
     purchaseType: "subscription",
     status,
-    autoRenewing:
-      subscription.subscriptionState === "SUBSCRIPTION_STATE_ACTIVE",
+    autoRenewing,
     expiryTime: expiryMillis ? Timestamp.fromMillis(expiryMillis) : null,
     verifiedAt: FieldValue.serverTimestamp(),
-    rawNotification: raw,
     updatedAt: FieldValue.serverTimestamp(),
   };
 
   if (userId) {
     paymentData.userId = userId;
-    // Lookup email
     try {
       const userDoc = await adminDb.collection("users").doc(userId).get();
       if (userDoc.exists) paymentData.userEmail = userDoc.data()?.email || "";
@@ -156,10 +164,13 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
 
   const existingDoc = await paymentRef.get();
   if (existingDoc.exists) {
+    // Preserve original orderId for reference
+    paymentData.orderId = existingDoc.data()?.orderId || paymentDocId;
     await paymentRef.update(paymentData);
   } else {
     await paymentRef.set({
       ...paymentData,
+      orderId: paymentDocId,
       purchaseTime: FieldValue.serverTimestamp(),
       amount: 0,
       currency: "VND",
@@ -186,7 +197,7 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
     };
     if (isPremium && expiryMillis) {
       userUpdate.premiumExpiry = Timestamp.fromMillis(expiryMillis);
-      userUpdate.activeSubscriptionId = orderId;
+      userUpdate.activeSubscriptionId = paymentDocId;
     } else if (!isPremium) {
       userUpdate.premiumExpiry = null;
       userUpdate.activeSubscriptionId = null;
@@ -201,30 +212,44 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
 
 /**
  * Handle one-time in-app product purchase notifications.
+ * In-app purchases have no expiry but still need acknowledgement within 3 days
+ * (Google auto-refunds otherwise). VIP grant is NOT given for one-time purchases
+ * unless the app explicitly maps specific SKUs to lifetime VIP via a separate rule.
  */
 async function handleOneTimeProductNotification(notification: any, raw: any) {
-  const { purchaseToken, sku, notificationType } = notification;
+  const { purchaseToken, sku } = notification;
   if (!purchaseToken || !sku) return;
 
-  const product = await verifyProduct(sku, purchaseToken);
-  const orderId = product.orderId || purchaseToken.slice(0, 40);
-  const status = product.purchaseState === 0 ? "active" : "pending";
+  // Stable doc ID based on purchaseToken
+  const paymentDocId = createHash("sha256")
+    .update(purchaseToken)
+    .digest("hex")
+    .slice(0, 40);
+  const status = "active"; // one-time products are always active after purchase
 
-  const paymentRef = adminDb.collection("payments").doc(orderId);
+  const paymentRef = adminDb.collection("payments").doc(paymentDocId);
   await paymentRef.set(
     {
-      orderId,
       purchaseToken,
       productId: sku,
       purchaseType: "inapp",
       status,
       amount: 0,
       currency: "VND",
-      purchaseTime: FieldValue.serverTimestamp(),
       verifiedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
       rawNotification: raw,
-      createdAt: FieldValue.serverTimestamp(),
     },
     { merge: true },
   );
+
+  // Acknowledge in-app purchase (required within 3 days, prevents auto-refund)
+  try {
+    await acknowledgeProduct(sku, purchaseToken);
+  } catch (err) {
+    console.warn(
+      "[GooglePlay Webhook] In-app acknowledge failed (may already be acknowledged):",
+      err,
+    );
+  }
 }

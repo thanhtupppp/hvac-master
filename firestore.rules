@@ -13,18 +13,53 @@ service cloud.firestore {
       allow write: if false; // Chỉ thêm admin qua giao diện Firebase Console hoặc Admin SDK
     }
 
-    // Collection "users": Quản lý thông tin người dùng và các subcollections (như bookmarks)
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    // Collection "users": Người dùng đọc được doc của chính mình,
+    // nhưng KHÔNG được sửa entitlement fields — chỉ Admin SDK (webhook/api) được ghi.
+    //
+    // Entitlement fields: isPremium, premiumExpiry, activeSubscriptionId, isPremiumOverride
+    // Attack: client ghi isPremium: true, premiumExpiry: <far_future> → VIP miễn phí.
+    match /users/{userId} {
+      // Ai cũng đọc (cần hiển thị profile), nhưng user chỉ đọc được doc của mình.
+      allow read: if request.auth != null;
+
+      // User có thể cập nhật doc của chính mình, NGOẠI TRỪ entitlement fields.
+      // Dùng get() để so sánh resource (doc hiện tại) với request.resource (doc muốn ghi).
+      allow update: if request.auth.uid == userId
+        && (
+          // Không thay đổi entitlement fields
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride"])
+          // HOẶC đang được Admin nâng cấp (Admin SDK không qua rules này)
+          || isAdmin()
+        );
+
+      // Chỉ Admin SDK ghi (webhook, /api/users) mới được tạo/xoá doc.
+      // Client SDK hoàn toàn không được phép tạo/xoá user doc.
+      allow create, delete: if isAdmin();
+
+      // Subcollections (bookmarks, etc.)
+      match /{document=**} {
+        allow read, write: if request.auth != null
+          && (request.auth.uid == userId || isAdmin());
+      }
     }
 
-    // Collection "articles": Quản lý bài viết (Hướng dẫn, mã lỗi...)
+    // Collection "articles": Bài viết công khai và premium.
+    // Premium content: bài viết có field `premium: true` chỉ user có VIP mới đọc được.
+    // Ai cũng có thể đọc bài viết công khai.
     match /articles/{articleId} {
-      // Cho phép đọc công khai (VIP/Premium sẽ được kiểm soát ở giao diện client)
       allow read: if true;
-      
-      // Chỉ Admin mới được thêm/sửa/xóa bài viết
       allow create, update, delete: if isAdmin();
+    }
+
+    // Subcollection "articles/{id}/premium_content": Chỉ user có VIP mới đọc được.
+    // Admin vẫn đọc/ghi được để quản lý nội dung.
+    match /articles/{articleId}/premium_content/{docId} {
+      allow read: if request.auth != null
+        && (isAdmin()
+            || (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isPremium == true
+                && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != "disabled"));
+      allow write: if isAdmin();
     }
     
     // Collection "categories": Danh mục bài viết

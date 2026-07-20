@@ -13,10 +13,15 @@ if (serviceAccountKey) {
       projectId: serviceAccount.project_id,
     };
   } catch (parseError) {
-    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY JSON:", parseError);
+    console.error(
+      "Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY JSON:",
+      parseError,
+    );
   }
 } else {
-  const fallbackProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+  const fallbackProjectId =
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+    process.env.GOOGLE_CLOUD_PROJECT;
   if (fallbackProjectId) {
     appOptions = {
       projectId: fallbackProjectId,
@@ -28,7 +33,7 @@ if (getApps().length === 0) {
   initializeApp(appOptions);
 }
 
-export const adminAuth = getAuth();
+const adminAuth = getAuth();
 export const adminDb = getFirestore();
 export { initializeApp, getApps, cert };
 
@@ -79,10 +84,14 @@ export async function requireAdmin(req: Request): Promise<string> {
 
   // 2. Fallback to Firestore REST API using user's ID token if Admin SDK is unconfigured/credentials missing
   if (!isAdminActive) {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT;
+    const projectId =
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT;
     if (projectId) {
       try {
-        console.log(`Checking admin status via Firestore REST API fallback for UID: ${userUid}`);
+        console.log(
+          `Admin status check via Firestore REST fallback for UID: ${userUid}`,
+        );
         const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/admins/${userUid}`;
         const res = await fetch(url, {
           headers: {
@@ -98,7 +107,9 @@ export async function requireAdmin(req: Request): Promise<string> {
             isAdminActive = true;
           }
         } else {
-          console.warn(`Firestore REST API fallback check returned status: ${res.status}`);
+          console.warn(
+            `Firestore REST API fallback check returned status: ${res.status}`,
+          );
         }
       } catch (fetchError) {
         console.error("Firestore REST API fallback check failed:", fetchError);
