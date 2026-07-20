@@ -1,18 +1,51 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, FileText, ArrowRight } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Users,
+  FileText,
+  ArrowRight,
+  TrendingUp,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useArticles, useUserStats, useCategories } from "@/hooks";
+import {
+  useArticles,
+  useUserStats,
+  useCategories,
+  usePaymentsAnalytics,
+  useRevenueCatAnalytics,
+} from "@/hooks";
 import { getCategoryName } from "@/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
 export default function Dashboard() {
-  const { articles: latestArticles, totalCount: articlesCount, isLoading: isArticlesLoading, error: articlesError } = useArticles(5);
-  const { usersCount, vipCount, isLoading: isStatsLoading, error: statsError } = useUserStats();
+  const {
+    articles: latestArticles,
+    totalCount: articlesCount,
+    isLoading: isArticlesLoading,
+    error: articlesError,
+  } = useArticles(5);
+  const {
+    usersCount,
+    vipCount,
+    isLoading: isStatsLoading,
+    error: statsError,
+  } = useUserStats();
   const { categoriesMap, error: categoriesError } = useCategories();
+  const { analytics: firestoreAnalytics, isLoading: isFirestoreLoading } =
+    usePaymentsAnalytics();
+  const { analytics: revenueCatAnalytics, isLoading: isRCLoading } =
+    useRevenueCatAnalytics();
 
   return (
     <>
@@ -25,16 +58,20 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         {/* Card 1: Users Count */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng số người dùng</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Tổng số người dùng
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent aria-busy={isStatsLoading} aria-live="polite">
             {statsError ? (
-              <span className="text-sm font-medium text-red-500">Lỗi tải dữ liệu</span>
+              <span className="text-sm font-medium text-red-500">
+                Lỗi tải dữ liệu
+              </span>
             ) : isStatsLoading ? (
               <>
                 <Skeleton className="h-8 w-20" aria-hidden="true" />
@@ -43,30 +80,40 @@ export default function Dashboard() {
             ) : (
               <div className="text-2xl font-bold">{usersCount}</div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">Đăng ký trong hệ thống</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Đăng ký trong hệ thống
+            </p>
           </CardContent>
         </Card>
 
         {/* Card 2: VIP Count */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hội viên VIP (Premium)</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Hội viên VIP (Premium)
+            </CardTitle>
             <span className="text-amber-500 font-bold text-lg">★</span>
           </CardHeader>
           <CardContent aria-busy={isStatsLoading} aria-live="polite">
             {statsError ? (
-              <span className="text-sm font-medium text-red-500">Lỗi tải dữ liệu</span>
+              <span className="text-sm font-medium text-red-500">
+                Lỗi tải dữ liệu
+              </span>
             ) : isStatsLoading ? (
               <>
                 <Skeleton className="h-8 w-20" aria-hidden="true" />
                 <Skeleton className="h-3 w-32 mt-2" aria-hidden="true" />
-                <span className="sr-only">Đang tải số lượng hội viên VIP...</span>
+                <span className="sr-only">
+                  Đang tải số lượng hội viên VIP...
+                </span>
               </>
             ) : (
               <>
                 <div className="text-2xl font-bold">{vipCount}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {usersCount > 0 ? `${Math.round((vipCount / usersCount) * 100)}% tổng số người dùng` : "0%"}
+                  {usersCount > 0
+                    ? `${Math.round((vipCount / usersCount) * 100)}% tổng số người dùng`
+                    : "0%"}
                 </p>
               </>
             )}
@@ -76,12 +123,16 @@ export default function Dashboard() {
         {/* Card 3: Articles Count */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng số bài viết</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Tổng số bài viết
+            </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent aria-busy={isArticlesLoading} aria-live="polite">
             {articlesError ? (
-              <span className="text-sm font-medium text-red-500">Lỗi tải dữ liệu</span>
+              <span className="text-sm font-medium text-red-500">
+                Lỗi tải dữ liệu
+              </span>
             ) : isArticlesLoading ? (
               <>
                 <Skeleton className="h-8 w-20" aria-hidden="true" />
@@ -90,7 +141,9 @@ export default function Dashboard() {
             ) : (
               <div className="text-2xl font-bold">{articlesCount}</div>
             )}
-            <p className="text-xs text-muted-foreground mt-1">Tài liệu và mã lỗi HVAC</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tài liệu và mã lỗi HVAC
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -112,7 +165,11 @@ export default function Dashboard() {
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <CardTitle>Bài viết mới nhất</CardTitle>
             <Link href="/articles">
-              <Button variant="ghost" size="sm" className="text-xs text-blue-600 gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-blue-600 gap-1"
+              >
                 Xem tất cả <ArrowRight className="h-3 w-3" />
               </Button>
             </Link>
@@ -142,17 +199,26 @@ export default function Dashboard() {
                 <TableBody>
                   {latestArticles.map((article, index) => (
                     <TableRow key={article.id ?? `article-${index}`}>
-                      <TableCell className="font-medium max-w-[150px] truncate" title={article.titleVi}>
+                      <TableCell
+                        className="font-medium max-w-[150px] truncate"
+                        title={article.titleVi}
+                      >
                         {article.titleVi}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {categoriesError ? "Lỗi tải mục" : getCategoryName(article.category, categoriesMap)}
+                        {categoriesError
+                          ? "Lỗi tải mục"
+                          : getCategoryName(article.category, categoriesMap)}
                       </TableCell>
                       <TableCell className="text-right">
                         {article.isPremium ? (
-                          <span className="text-xs font-semibold text-amber-600">VIP</span>
+                          <span className="text-xs font-semibold text-amber-600">
+                            VIP
+                          </span>
                         ) : (
-                          <span className="text-xs font-semibold text-green-600">Free</span>
+                          <span className="text-xs font-semibold text-green-600">
+                            Free
+                          </span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -163,6 +229,81 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* RevenueCat Analytics Row */}
+      {!isRCLoading && revenueCatAnalytics && (
+        <div className="grid gap-4 md:grid-cols-3 mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                RevenueCat Active
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {revenueCatAnalytics.activeEntitlements}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {revenueCatAnalytics.trialCount} trial ·{" "}
+                {revenueCatAnalytics.gracePeriodCount} grace period
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                MRR (RevenueCat)
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {revenueCatAnalytics.mrrFormatted}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                ARR: {revenueCatAnalytics.arrFormatted}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Firestore MRR
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              {isFirestoreLoading ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {firestoreAnalytics?.mrrFormatted ?? "—"}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {firestoreAnalytics?.activeSubscriptions ?? 0} subscribers ·{" "}
+                {firestoreAnalytics?.churnRate ?? 0}% churn
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!isRCLoading && !revenueCatAnalytics && (
+        <Card className="mt-6">
+          <CardContent className="flex items-center gap-3 py-4">
+            <AlertCircle className="h-4 w-4 text-yellow-500" />
+            <p className="text-sm text-muted-foreground">
+              RevenueCat chưa được cấu hình — set{" "}
+              <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                REVENUECAT_API_KEY
+              </code>{" "}
+              để hiển thị analytics.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 }
