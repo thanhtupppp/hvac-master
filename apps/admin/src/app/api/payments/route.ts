@@ -44,17 +44,21 @@ export async function GET(req: Request) {
     const limitParam = parseInt(url.searchParams.get("limit") || "100", 10);
     const limit = Math.min(limitParam, 200);
 
+    // When search is active, fetch more docs to reduce false negatives — limit(limit)
+    // grabs only newest N docs, so older matches are never found.
+    const fetchLimit = search ? Math.min(limit * 10, 2000) : limit;
+
     let query: FirebaseFirestore.Query = adminDb
       .collection("payments")
       .orderBy("purchaseTime", "desc")
-      .limit(limit);
+      .limit(fetchLimit);
 
     if (filter !== "all") {
       query = adminDb
         .collection("payments")
         .where("status", "==", filter)
         .orderBy("purchaseTime", "desc")
-        .limit(limit);
+        .limit(fetchLimit);
     }
 
     const snapshot = await query.get();

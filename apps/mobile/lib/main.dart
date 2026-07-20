@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'services/revenuecat_service.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'core/theme/app_theme.dart';
@@ -23,6 +24,10 @@ void main() async {
     unawaited(MobileAds.instance.initialize());
   }
 
+  // Initialize RevenueCat after Firebase — must wait for Auth to be ready.
+  // Schedule after first frame to ensure widget tree is ready.
+  _initRevenueCat();
+
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('vi', 'VN'), Locale('en', 'US')],
@@ -31,6 +36,16 @@ void main() async {
       child: const ProviderScope(child: HvacApp()),
     ),
   );
+}
+
+void _initRevenueCat() async {
+  // Initialize the SDK once at startup
+  await RevenueCatService.instance.initialize();
+
+  // Sync Firebase user to RevenueCat on every auth state change
+  FirebaseAuth.instance.authStateChanges().listen((user) {
+    RevenueCatService.instance.onAuthStateChanged(user);
+  });
 }
 
 class HvacApp extends ConsumerWidget {

@@ -21,6 +21,9 @@ import '../../screens/tools/saturation_temperature_screen.dart';
 import '../../screens/tools/subcooling_calculator_screen.dart';
 import '../../screens/tools/dew_point_calculator_screen.dart';
 import '../../screens/tools/humidity_calculator_screen.dart';
+import '../../screens/paywall/paywall_screen.dart';
+import '../../screens/paywall/privacy_policy_screen.dart';
+import '../../screens/paywall/terms_screen.dart';
 import '../../models/article.dart';
 
 class AppRoutes {
@@ -47,6 +50,9 @@ class AppRoutes {
   static const String subcoolingCalculator = '/tools/subcooling-calculator';
   static const String dewPointCalculator = '/tools/dew-point';
   static const String humidityCalculator = '/tools/humidity';
+  static const String paywall = '/paywall';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String terms = '/terms';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -104,6 +110,12 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const HumidityCalculatorScreen(),
         );
+      case paywall:
+        return MaterialPageRoute(builder: (_) => const PaywallScreen());
+      case privacyPolicy:
+        return MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen());
+      case terms:
+        return MaterialPageRoute(builder: (_) => const TermsScreen());
       case brandList:
         {
           final args = _extractArgs(

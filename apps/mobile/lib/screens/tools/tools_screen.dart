@@ -776,7 +776,10 @@ class _ToolCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRoutes.paywall);
+            },
             child: const Text(
               'Nâng cấp ngay',
               style: TextStyle(fontWeight: FontWeight.bold),

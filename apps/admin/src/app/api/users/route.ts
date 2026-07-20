@@ -31,29 +31,34 @@ export async function GET(req: Request) {
     const limitParam = parseInt(url.searchParams.get("limit") || "100", 10);
     const limit = Math.min(limitParam, 200);
 
+    // Firestore composite indexes don't support full-text search on email/displayName.
+    // When search is active, fetch more docs to reduce false negatives — otherwise
+    // the limit(limit) grabs only the newest N docs and older matches are never found.
+    const fetchLimit = search ? Math.min(limit * 10, 2000) : limit;
+
     let query: FirebaseFirestore.Query = adminDb
       .collection("users")
       .orderBy("createdAt", "desc")
-      .limit(limit);
+      .limit(fetchLimit);
 
     if (filter === "vip") {
       query = adminDb
         .collection("users")
         .where("isPremium", "==", true)
         .orderBy("createdAt", "desc")
-        .limit(limit);
+        .limit(fetchLimit);
     } else if (filter === "free") {
       query = adminDb
         .collection("users")
         .where("isPremium", "==", false)
         .orderBy("createdAt", "desc")
-        .limit(limit);
+        .limit(fetchLimit);
     } else if (filter === "disabled") {
       query = adminDb
         .collection("users")
         .where("status", "==", "disabled")
         .orderBy("createdAt", "desc")
-        .limit(limit);
+        .limit(fetchLimit);
     }
 
     const snapshot = await query.get();

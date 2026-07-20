@@ -72,7 +72,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
     if (userModel == null) return true;
     if (userModel.status == 'disabled') return true;
     if (userModel.isPremium) {
+      // null expiry = lifetime subscription (not expired)
       if (userModel.premiumExpiry == null) return false;
+      // locked if expiry has already passed
       return userModel.premiumExpiry!.isBefore(DateTime.now());
     }
     return true;

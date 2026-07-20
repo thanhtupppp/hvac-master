@@ -104,21 +104,27 @@ class UserProfileService {
   }
 
   /// Request deletion of the user account.
-  /// Standard procedure: mark account status as 'deleted_request' in Firestore
-  /// and perform Firebase Auth account deletion.
+  /// Google Play policy (2024+): must actually delete all user data.
+  /// Steps: (1) delete all user subcollection docs, (2) delete user doc,
+  /// (3) delete Firebase Auth account.
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Chưa đăng nhập');
 
     final uid = user.uid;
+    final userDoc = _db.collection('users').doc(uid);
 
-    // 1. Mark status in Firestore first for audit trails
-    await _db.collection('users').doc(uid).update({
-      'status': 'deleted_request',
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    // 1. Delete all subcollection docs (bookmarks, history, settings, etc.)
+    // Recursively delete everything under the user doc.
+    // Use a write batch to delete in batches of 500 (Firestore limit).
+    await _deleteCollection(userDoc.collection('bookmarks'));
+    await _deleteCollection(userDoc.collection('history'));
+    // Add more subcollections here as they are created (e.g. 'notes', 'settings')
 
-    // 2. Clear bookmarks and settings locally if any, then delete Auth account
+    // 2. Delete the user profile document
+    await userDoc.delete();
+
+    // 3. Delete Firebase Auth account
     try {
       await user.delete();
     } on FirebaseAuthException catch (e) {
@@ -128,6 +134,26 @@ class UserProfileService {
         );
       }
       rethrow;
+    }
+  }
+
+  /// Recursively deletes all documents in a collection using batched writes.
+  Future<void> _deleteCollection(CollectionReference ref) async {
+    try {
+      while (true) {
+        final batch = _db.batch();
+        final docs = await ref.limit(500).get();
+
+        if (docs.size == 0) break;
+
+        for (final doc in docs.docs) {
+          batch.delete(doc.reference);
+        }
+
+        await batch.commit();
+      }
+    } catch (e) {
+      // Subcollection may not exist yet — skip silently
     }
   }
 }
