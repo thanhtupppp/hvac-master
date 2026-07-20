@@ -17,11 +17,15 @@ export default function Header() {
     { label: "Hãng sản xuất", href: "/brands" },
     { label: "Người dùng", href: "/users" },
     { label: "Thanh toán", href: "/payments" },
+    { label: "Gói VIP", href: "/plans" },
   ];
 
   return (
     <header className="flex h-16 items-center border-b bg-white dark:bg-gray-950 px-6">
-      <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-600">
+      <Link
+        href="/"
+        className="flex items-center gap-2 font-bold text-xl text-blue-600"
+      >
         HVAC Pro Admin
       </Link>
       <nav className="ml-10 flex gap-6 text-sm font-medium">

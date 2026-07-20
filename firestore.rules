@@ -82,5 +82,13 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Collection "subscription_plans": Cấu hình gói VIP hiển thị trên paywall.
+    // Mobile đọc PUBLIC để hiển thị. Tất cả write chỉ qua Admin SDK
+    // (đã có /api/plans CRUD dùng Admin SDK).
+    match /subscription_plans/{planId} {
+      allow read: if true;
+      allow write: if false; // chỉ Admin SDK / Cloud Function
+    }
   }
 }

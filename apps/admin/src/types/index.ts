@@ -11,3 +11,9 @@ export {
   type RevenueCatSubscriber,
   type RevenueCatAnalytics,
 } from "./revenuecat";
+export {
+  type SubscriptionPlan,
+  type PlanInterval,
+  type PlanProvider,
+  type PlanStats,
+} from "./plan";

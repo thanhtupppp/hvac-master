@@ -6,3 +6,4 @@ export { useUsers } from "./useUsers";
 export { usePayments } from "./usePayments";
 export { usePaymentsAnalytics } from "./usePaymentsAnalytics";
 export { useRevenueCatAnalytics } from "./useRevenueCatAnalytics";
+export { usePlans } from "./usePlans";

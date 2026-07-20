@@ -1,0 +1,46 @@
+node_modules/**
+.next/**
+build/**
+dist/**
+out/**
+.gradle/**
+.dart_tool/**
+.flutter-plugins**
+.flutter-plugins-dependencies**
+.idea/**
+.vscode/**
+ios/Pods/**
+ios/Runner.xcworkspace/**
+android/.gradle/**
+android/build/**
+android/app/build/**
+**/*.g.dart
+**/*.freezed.dart
+**/*.mocks.dart
+**/*.gen.dart
+**/*.gr.dart
+**/generated/**
+**/*.pb.dart
+**/*.pbenum.dart
+**/*.pbjson.dart
+**/*.pbserver.dart
+**/*.pbclient.dart
+**/Pods/**
+**/DerivedData/**
+**/xcuserdata/**
+**/*.xcuserstate
+**/__pycache__/**
+**/*.pyc
+**/.git/**
+**/.code-review-graph/**
+
+# Generated admin files
+apps/admin/.next/dev/types/**
+apps/admin/scripts/service-account.json
+
+# Firestore emulator data
+firebase-export/**
+
+# Test outputs
+**/coverage/**
+**/test_results/**
