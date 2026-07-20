@@ -15,14 +15,16 @@ class CoolProp {
     required String pressureUnit,
     required bool isGauge,
     bool isDew = false,
-  }) =>
-      _delegateToThermo('getTempFromPressure', args: {
-        'refrigerant': refrigerant,
-        'pressure': pressure,
-        'pressureUnit': pressureUnit,
-        'isGauge': isGauge,
-        'isDew': isDew,
-      });
+  }) => _delegateToThermo(
+    'getTempFromPressure',
+    args: {
+      'refrigerant': refrigerant,
+      'pressure': pressure,
+      'pressureUnit': pressureUnit,
+      'isGauge': isGauge,
+      'isDew': isDew,
+    },
+  );
 
   static double getPressureFromTemp({
     required String refrigerant,
@@ -30,20 +32,29 @@ class CoolProp {
     required String pressureUnit,
     required bool isGauge,
     bool isDew = false,
-  }) =>
-      _delegateToThermo('getPressureFromTemp', args: {
-        'refrigerant': refrigerant,
-        'tempCelsius': tempCelsius,
-        'pressureUnit': pressureUnit,
-        'isGauge': isGauge,
-        'isDew': isDew,
-      });
+  }) => _delegateToThermo(
+    'getPressureFromTemp',
+    args: {
+      'refrigerant': refrigerant,
+      'tempCelsius': tempCelsius,
+      'pressureUnit': pressureUnit,
+      'isGauge': isGauge,
+      'isDew': isDew,
+    },
+  );
 
-  static double _delegateToThermo(String method, {required Map<String, dynamic> args}) {
-    throw UnimplementedError('CoolProp.$method is deprecated. Use Thermodynamics from core/hvac/thermo/thermo.dart');
+  static double _delegateToThermo(
+    String method, {
+    required Map<String, dynamic> args,
+  }) {
+    throw UnimplementedError(
+      'CoolProp.$method is deprecated. Use Thermodynamics from core/hvac/thermo/thermo.dart',
+    );
   }
 
-  @Deprecated('Use PressureConverter.convert from core/hvac/units/pressure.dart')
+  @Deprecated(
+    'Use PressureConverter.convert from core/hvac/units/pressure.dart',
+  )
   static double toBarAbs(double val, String unit, bool isGauge) {
     double barAbs = val;
     if (unit == 'PSI') {
@@ -57,7 +68,9 @@ class CoolProp {
     return barAbs;
   }
 
-  @Deprecated('Use PressureConverter.convert from core/hvac/units/pressure.dart')
+  @Deprecated(
+    'Use PressureConverter.convert from core/hvac/units/pressure.dart',
+  )
   static double fromBarAbs(double barAbs, String unit, bool isGauge) {
     double target = barAbs;
     if (isGauge) {
@@ -71,7 +84,9 @@ class CoolProp {
     return target;
   }
 
-  @Deprecated('Use PressureConverter.convert from core/hvac/units/pressure.dart')
+  @Deprecated(
+    'Use PressureConverter.convert from core/hvac/units/pressure.dart',
+  )
   static double toPascalAbs(double val, String unit, bool isGauge) {
     double paAbs = val;
     if (unit == 'PSI') {
@@ -87,7 +102,9 @@ class CoolProp {
     return paAbs;
   }
 
-  @Deprecated('Use PressureConverter.convert from core/hvac/units/pressure.dart')
+  @Deprecated(
+    'Use PressureConverter.convert from core/hvac/units/pressure.dart',
+  )
   static double fromPascalAbs(double paAbs, String unit, bool isGauge) {
     double target = paAbs;
     if (isGauge) {
@@ -111,7 +128,9 @@ class CoolProp {
     return PowerConverter.convert(val, fromUnit, toUnit);
   }
 
-  @Deprecated('Use TemperatureConverter.convert from core/hvac/units/temperature.dart')
+  @Deprecated(
+    'Use TemperatureConverter.convert from core/hvac/units/temperature.dart',
+  )
   static double convertTemperature(double val, String from, String to) {
     final fromUnit = _tempUnitFromString(from);
     final toUnit = _tempUnitFromString(to);
@@ -119,7 +138,9 @@ class CoolProp {
     return _tempConvert(val, fromUnit, toUnit);
   }
 
-  @Deprecated('Use PressureConverter.convert from core/hvac/units/pressure.dart')
+  @Deprecated(
+    'Use PressureConverter.convert from core/hvac/units/pressure.dart',
+  )
   static double convertPressure(double val, String from, String to) {
     final fromUnit = _pressureUnitFromString(from);
     final toUnit = _pressureUnitFromString(to);
@@ -136,7 +157,8 @@ class CoolProp {
     if (roundDiameter <= 0 || sideA <= 0) return 0.0;
     double b = roundDiameter;
     for (int i = 0; i < 20; i++) {
-      final double currentD = 1.30 * _pow(sideA * b, 0.625) / _pow(sideA + b, 0.25);
+      final double currentD =
+          1.30 * _pow(sideA * b, 0.625) / _pow(sideA + b, 0.25);
       final double diff = currentD - roundDiameter;
       if (diff.abs() < 0.01) break;
       b -= diff * 0.5;
@@ -148,23 +170,35 @@ class CoolProp {
 
 PowerUnit? _powerUnitFromString(String s) {
   switch (s) {
-    case 'HP':      return PowerUnit.hp;
-    case 'BTU/h':  return PowerUnit.btuHr;
-    case 'kW':     return PowerUnit.kw;
-    case 'Tons':   return PowerUnit.ton;
-    case 'W':      return PowerUnit.w;
-    case 'MW':     return PowerUnit.mw;
-    case 'kcal/h': return PowerUnit.kcalHr;
-    default:       return null;
+    case 'HP':
+      return PowerUnit.hp;
+    case 'BTU/h':
+      return PowerUnit.btuHr;
+    case 'kW':
+      return PowerUnit.kw;
+    case 'Tons':
+      return PowerUnit.ton;
+    case 'W':
+      return PowerUnit.w;
+    case 'MW':
+      return PowerUnit.mw;
+    case 'kcal/h':
+      return PowerUnit.kcalHr;
+    default:
+      return null;
   }
 }
 
 _AmbTempUnit? _tempUnitFromString(String s) {
   switch (s) {
-    case '°C': return _AmbTempUnit.celsius;
-    case '°F': return _AmbTempUnit.fahrenheit;
-    case 'K':  return _AmbTempUnit.kelvin;
-    default:   return null;
+    case '°C':
+      return _AmbTempUnit.celsius;
+    case '°F':
+      return _AmbTempUnit.fahrenheit;
+    case 'K':
+      return _AmbTempUnit.kelvin;
+    default:
+      return null;
   }
 }
 
@@ -174,28 +208,43 @@ double _tempConvert(double value, _AmbTempUnit from, _AmbTempUnit to) {
   if (from == to) return value;
   double celsius;
   switch (from) {
-    case _AmbTempUnit.celsius:    celsius = value;
-    case _AmbTempUnit.fahrenheit: celsius = (value - 32) * 5 / 9;
-    case _AmbTempUnit.kelvin:    celsius = value - 273.15;
+    case _AmbTempUnit.celsius:
+      celsius = value;
+    case _AmbTempUnit.fahrenheit:
+      celsius = (value - 32) * 5 / 9;
+    case _AmbTempUnit.kelvin:
+      celsius = value - 273.15;
   }
   switch (to) {
-    case _AmbTempUnit.celsius:    return celsius;
-    case _AmbTempUnit.fahrenheit: return (celsius * 9 / 5) + 32;
-    case _AmbTempUnit.kelvin:    return celsius + 273.15;
+    case _AmbTempUnit.celsius:
+      return celsius;
+    case _AmbTempUnit.fahrenheit:
+      return (celsius * 9 / 5) + 32;
+    case _AmbTempUnit.kelvin:
+      return celsius + 273.15;
   }
 }
 
 _AmbPressureUnit? _pressureUnitFromString(String s) {
   switch (s) {
-    case 'Bar':    return _AmbPressureUnit.bar;
-    case 'PSI':    return _AmbPressureUnit.psi;
-    case 'kPa':    return _AmbPressureUnit.kpa;
-    case 'MPa':    return _AmbPressureUnit.mpa;
-    case 'Pa':     return _AmbPressureUnit.pa;
-    case 'inHg':   return _AmbPressureUnit.inhg;
-    case 'mmHg':   return _AmbPressureUnit.mmhg;
-    case 'inH₂O':  return _AmbPressureUnit.inh2o;
-    default:       return null;
+    case 'Bar':
+      return _AmbPressureUnit.bar;
+    case 'PSI':
+      return _AmbPressureUnit.psi;
+    case 'kPa':
+      return _AmbPressureUnit.kpa;
+    case 'MPa':
+      return _AmbPressureUnit.mpa;
+    case 'Pa':
+      return _AmbPressureUnit.pa;
+    case 'inHg':
+      return _AmbPressureUnit.inhg;
+    case 'mmHg':
+      return _AmbPressureUnit.mmhg;
+    case 'inH₂O':
+      return _AmbPressureUnit.inh2o;
+    default:
+      return null;
   }
 }
 
@@ -209,28 +258,48 @@ const _paPerInHg = 3386.39;
 const _paPerMmHg = 133.322;
 const _paPerInH2o = 249.089;
 
-double _pressureConvert(double value, _AmbPressureUnit from, _AmbPressureUnit to) {
+double _pressureConvert(
+  double value,
+  _AmbPressureUnit from,
+  _AmbPressureUnit to,
+) {
   if (from == to) return value;
   double pa;
   switch (from) {
-    case _AmbPressureUnit.pa:   pa = value;
-    case _AmbPressureUnit.kpa:   pa = value * _paPerKpa;
-    case _AmbPressureUnit.mpa:   pa = value * _paPerMpa;
-    case _AmbPressureUnit.bar:   pa = value * _paPerBar;
-    case _AmbPressureUnit.psi:   pa = value * _paPerPsi;
-    case _AmbPressureUnit.inhg:  pa = value * _paPerInHg;
-    case _AmbPressureUnit.mmhg: pa = value * _paPerMmHg;
-    case _AmbPressureUnit.inh2o: pa = value * _paPerInH2o;
+    case _AmbPressureUnit.pa:
+      pa = value;
+    case _AmbPressureUnit.kpa:
+      pa = value * _paPerKpa;
+    case _AmbPressureUnit.mpa:
+      pa = value * _paPerMpa;
+    case _AmbPressureUnit.bar:
+      pa = value * _paPerBar;
+    case _AmbPressureUnit.psi:
+      pa = value * _paPerPsi;
+    case _AmbPressureUnit.inhg:
+      pa = value * _paPerInHg;
+    case _AmbPressureUnit.mmhg:
+      pa = value * _paPerMmHg;
+    case _AmbPressureUnit.inh2o:
+      pa = value * _paPerInH2o;
   }
   switch (to) {
-    case _AmbPressureUnit.pa:    return pa;
-    case _AmbPressureUnit.kpa:    return pa / _paPerKpa;
-    case _AmbPressureUnit.mpa:   return pa / _paPerMpa;
-    case _AmbPressureUnit.bar:    return pa / _paPerBar;
-    case _AmbPressureUnit.psi:    return pa / _paPerPsi;
-    case _AmbPressureUnit.inhg:  return pa / _paPerInHg;
-    case _AmbPressureUnit.mmhg:  return pa / _paPerMmHg;
-    case _AmbPressureUnit.inh2o: return pa / _paPerInH2o;
+    case _AmbPressureUnit.pa:
+      return pa;
+    case _AmbPressureUnit.kpa:
+      return pa / _paPerKpa;
+    case _AmbPressureUnit.mpa:
+      return pa / _paPerMpa;
+    case _AmbPressureUnit.bar:
+      return pa / _paPerBar;
+    case _AmbPressureUnit.psi:
+      return pa / _paPerPsi;
+    case _AmbPressureUnit.inhg:
+      return pa / _paPerInHg;
+    case _AmbPressureUnit.mmhg:
+      return pa / _paPerMmHg;
+    case _AmbPressureUnit.inh2o:
+      return pa / _paPerInH2o;
   }
 }
 

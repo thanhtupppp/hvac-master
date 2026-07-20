@@ -3,27 +3,26 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile/core/theme/app_colors.dart';
 
 class AppTheme {
-  static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.bgPrimary,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.accentPrimary,
-        brightness: Brightness.light,
-      ),
-      textTheme: GoogleFonts.loraTextTheme(ThemeData.light().textTheme),
-    );
-  }
+  AppTheme._();
 
-  static ThemeData get darkTheme {
+  static final ThemeData _light = _build(Brightness.light);
+  static final ThemeData _dark = _build(Brightness.dark);
+
+  static ThemeData get lightTheme => _light;
+  static ThemeData get darkTheme => _dark;
+
+  static ThemeData _build(Brightness brightness) {
+    final base = brightness == Brightness.light
+        ? ThemeData.light()
+        : ThemeData.dark();
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.bgPrimary,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.accentPrimary,
-        brightness: Brightness.dark,
+        brightness: brightness,
       ),
-      textTheme: GoogleFonts.loraTextTheme(ThemeData.dark().textTheme),
+      textTheme: GoogleFonts.loraTextTheme(base.textTheme),
     );
   }
 }

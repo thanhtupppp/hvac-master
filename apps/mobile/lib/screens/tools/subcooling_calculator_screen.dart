@@ -7,10 +7,12 @@ class SubcoolingCalculatorScreen extends StatefulWidget {
   const SubcoolingCalculatorScreen({super.key});
 
   @override
-  State<SubcoolingCalculatorScreen> createState() => _SubcoolingCalculatorScreenState();
+  State<SubcoolingCalculatorScreen> createState() =>
+      _SubcoolingCalculatorScreenState();
 }
 
-class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen> {
+class _SubcoolingCalculatorScreenState
+    extends State<SubcoolingCalculatorScreen> {
   final _thermo = Thermodynamics();
   final _liquidPressureController = TextEditingController(text: '335');
   final _liquidTempController = TextEditingController(text: '30');
@@ -62,12 +64,20 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Độ Quá Lạnh (Subcooling)',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -107,13 +117,19 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
                 value: r.name,
                 child: Text(
                   '${r.name} — ${r.typeClass}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
           ],
           onChanged: (val) {
             if (val != null) {
-              setState(() { _refrigerant = val; _recalculate(); });
+              setState(() {
+                _refrigerant = val;
+                _recalculate();
+              });
             }
           },
         ),
@@ -132,9 +148,21 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('ĐẦU VÀO', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'ĐẦU VÀO',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 16),
-          _buildField('Áp suất đường lỏng', _liquidPressureController, _pressureUnit),
+          _buildField(
+            'Áp suất đường lỏng',
+            _liquidPressureController,
+            _pressureUnit,
+          ),
           const SizedBox(height: 12),
           _buildField('Nhiệt độ đường lỏng', _liquidTempController, '°C'),
         ],
@@ -145,12 +173,24 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
   Widget _buildField(String label, TextEditingController ctrl, String unit) {
     return Row(
       children: [
-        Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
         SizedBox(
           width: 140,
           child: TextField(
             controller: ctrl,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.right,
             decoration: InputDecoration(
@@ -158,7 +198,10 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
               isDense: true,
               contentPadding: EdgeInsets.zero,
               suffixText: unit,
-              suffixStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              suffixStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -169,7 +212,10 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
   Widget _buildUnitToggle() {
     return Row(
       children: [
-        const Text('Đơn vị áp suất:', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text(
+          'Đơn vị áp suất:',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
         const SizedBox(width: 12),
         SegmentedButton<String>(
           segments: const [
@@ -182,9 +228,13 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
             setState(() {
               _pressureUnit = s.first;
               if (_pressureUnit == 'Bar') {
-                _liquidPressureController.text = (p / 14.5038).toStringAsFixed(2);
+                _liquidPressureController.text = (p / 14.5038).toStringAsFixed(
+                  2,
+                );
               } else {
-                _liquidPressureController.text = (p * 14.5038).toStringAsFixed(1);
+                _liquidPressureController.text = (p * 14.5038).toStringAsFixed(
+                  1,
+                );
               }
               _recalculate();
             });
@@ -197,7 +247,10 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
             ButtonSegment(value: false, label: Text('Abs')),
           ],
           selected: {_isGauge},
-          onSelectionChanged: (s) => setState(() { _isGauge = s.first; _recalculate(); }),
+          onSelectionChanged: (s) => setState(() {
+            _isGauge = s.first;
+            _recalculate();
+          }),
         ),
       ],
     );
@@ -218,9 +271,20 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
       ),
       child: Column(
         children: [
-          const Text('KẾT QUẢ', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'KẾT QUẢ',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 12),
-          _resultRow('Nhiệt độ bão hòa', isNan ? '—' : '${satC.toStringAsFixed(1)} °C'),
+          _resultRow(
+            'Nhiệt độ bão hòa',
+            isNan ? '—' : '${satC.toStringAsFixed(1)} °C',
+          ),
           const Divider(color: AppColors.divider),
           const SizedBox(height: 8),
           Text(
@@ -247,7 +311,14 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
               children: [
                 Icon(_scIcon(sc), color: _scColor(sc), size: 18),
                 const SizedBox(width: 8),
-                Text(rating, style: TextStyle(color: _scColor(sc), fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(
+                  rating,
+                  style: TextStyle(
+                    color: _scColor(sc),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -262,8 +333,21 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -280,14 +364,29 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('THAM KHẢO SUB coOLING', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'THAM KHẢO SUB coOLING',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 12),
           _refRow('Hệ thống Residential A/C', '8–14 K'),
           _refRow('Hệ thống Commercial A/C', '5–15 K'),
           _refRow('Hệ thống Heat Pump', '6–12 K'),
           _refRow('Low temp Refrigeration', '3–8 K'),
           const SizedBox(height: 8),
-          const Text('* Giá trị tham khảo, phụ thuộc thiết kế hệ thống', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic)),
+          const Text(
+            '* Giá trị tham khảo, phụ thuộc thiết kế hệ thống',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ],
       ),
     );
@@ -299,8 +398,23 @@ class _SubcoolingCalculatorScreenState extends State<SubcoolingCalculatorScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12))),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

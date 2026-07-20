@@ -6,7 +6,8 @@ class HumidityCalculatorScreen extends StatefulWidget {
   const HumidityCalculatorScreen({super.key});
 
   @override
-  State<HumidityCalculatorScreen> createState() => _HumidityCalculatorScreenState();
+  State<HumidityCalculatorScreen> createState() =>
+      _HumidityCalculatorScreenState();
 }
 
 class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
@@ -36,7 +37,12 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
     final t = double.tryParse(_tempController.text);
     final rh = double.tryParse(_rhController.text);
     if (t == null || rh == null || rh <= 0 || rh > 100) {
-      setState(() { _w = double.nan; _pv = double.nan; _wb = double.nan; _dp = double.nan; });
+      setState(() {
+        _w = double.nan;
+        _pv = double.nan;
+        _wb = double.nan;
+        _dp = double.nan;
+      });
       return;
     }
 
@@ -62,12 +68,20 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Độ Ẩm',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -93,7 +107,15 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('ĐẦU VÀO', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'ĐẦU VÀO',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 16),
           _buildField('Nhiệt độ không khí', _tempController, '°C'),
           const SizedBox(height: 12),
@@ -103,15 +125,32 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, String unit, {double? max}) {
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl,
+    String unit, {
+    double? max,
+  }) {
     return Row(
       children: [
-        Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
         SizedBox(
           width: 120,
           child: TextField(
             controller: ctrl,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.right,
             decoration: InputDecoration(
@@ -119,7 +158,10 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
               isDense: true,
               contentPadding: EdgeInsets.zero,
               suffixText: unit,
-              suffixStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              suffixStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -138,15 +180,39 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('KẾT QUẢ', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'KẾT QUẢ',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 16),
-          _resultRow('Áp suất hơi nước', _pv.isNaN ? '—' : '${_pv.toStringAsFixed(2)} hPa', Icons.water_drop),
+          _resultRow(
+            'Áp suất hơi nước',
+            _pv.isNaN ? '—' : '${_pv.toStringAsFixed(2)} hPa',
+            Icons.water_drop,
+          ),
           const Divider(color: AppColors.divider),
-          _resultRow('Tỷ lệ ẩm (W)', _w.isNaN ? '—' : '${_w.toStringAsFixed(4)} kg/kg', Icons.opacity),
+          _resultRow(
+            'Tỷ lệ ẩm (W)',
+            _w.isNaN ? '—' : '${_w.toStringAsFixed(4)} kg/kg',
+            Icons.opacity,
+          ),
           const Divider(color: AppColors.divider),
-          _resultRow('Nhiệt độ bầu ướt', _wb.isNaN ? '—' : '${_wb.toStringAsFixed(1)} °C', Icons.thermostat),
+          _resultRow(
+            'Nhiệt độ bầu ướt',
+            _wb.isNaN ? '—' : '${_wb.toStringAsFixed(1)} °C',
+            Icons.thermostat,
+          ),
           const Divider(color: AppColors.divider),
-          _resultRow('Điểm sương', _dp.isNaN ? '—' : '${_dp.toStringAsFixed(1)} °C', Icons.ac_unit),
+          _resultRow(
+            'Điểm sương',
+            _dp.isNaN ? '—' : '${_dp.toStringAsFixed(1)} °C',
+            Icons.ac_unit,
+          ),
         ],
       ),
     );
@@ -159,8 +225,23 @@ class _HumidityCalculatorScreenState extends State<HumidityCalculatorScreen> {
         children: [
           Icon(icon, color: AppColors.textMuted, size: 20),
           const SizedBox(width: 12),
-          Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

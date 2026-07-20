@@ -8,7 +8,8 @@ class RefrigerantSelectorScreen extends StatefulWidget {
   const RefrigerantSelectorScreen({super.key, this.selectedRefrigerant});
 
   @override
-  State<RefrigerantSelectorScreen> createState() => _RefrigerantSelectorScreenState();
+  State<RefrigerantSelectorScreen> createState() =>
+      _RefrigerantSelectorScreenState();
 }
 
 class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
@@ -27,7 +28,9 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
     _refrigerants = List.from(defaultRefrigerants);
     if (widget.selectedRefrigerant != null) {
       // Keep match
-      final index = _refrigerants.indexWhere((r) => r.name == widget.selectedRefrigerant!.name);
+      final index = _refrigerants.indexWhere(
+        (r) => r.name == widget.selectedRefrigerant!.name,
+      );
       if (index != -1) {
         _refrigerants[index] = widget.selectedRefrigerant!;
       }
@@ -38,7 +41,8 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
   List<RefrigerantModel> get _filteredList {
     return _refrigerants.where((ref) {
       // 1. Search Query
-      if (_searchQuery.isNotEmpty && !ref.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
+      if (_searchQuery.isNotEmpty &&
+          !ref.name.toLowerCase().contains(_searchQuery.toLowerCase())) {
         return false;
       }
       // 2. Favorites Tab
@@ -46,11 +50,13 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
         return false;
       }
       // 3. Safety Group Filter
-      if (_selectedSafetyGroups.isNotEmpty && !_selectedSafetyGroups.contains(ref.safetyGroup)) {
+      if (_selectedSafetyGroups.isNotEmpty &&
+          !_selectedSafetyGroups.contains(ref.safetyGroup)) {
         return false;
       }
       // 4. Class Type Filter
-      if (_selectedClasses.isNotEmpty && !_selectedClasses.contains(ref.typeClass)) {
+      if (_selectedClasses.isNotEmpty &&
+          !_selectedClasses.contains(ref.typeClass)) {
         return false;
       }
       return true;
@@ -82,12 +88,20 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Chọn môi chất lạnh',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -108,14 +122,24 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                        const Icon(
+                          Icons.search,
+                          color: AppColors.textMuted,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
-                            style: const TextStyle(color: Colors.white, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                             decoration: const InputDecoration(
                               hintText: 'Tìm kiếm...',
-                              hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                              hintStyle: TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 14,
+                              ),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
                             ),
@@ -170,7 +194,9 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                       onTap: () => setState(() => _showFavoritesOnly = false),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: !_showFavoritesOnly ? AppColors.bgCard : Colors.transparent,
+                          color: !_showFavoritesOnly
+                              ? AppColors.bgCard
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -178,14 +204,18 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                           children: [
                             Icon(
                               Icons.format_list_bulleted,
-                              color: !_showFavoritesOnly ? Colors.white : AppColors.textMuted,
+                              color: !_showFavoritesOnly
+                                  ? Colors.white
+                                  : AppColors.textMuted,
                               size: 16,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Tất cả',
                               style: TextStyle(
-                                color: !_showFavoritesOnly ? Colors.white : AppColors.textMuted,
+                                color: !_showFavoritesOnly
+                                    ? Colors.white
+                                    : AppColors.textMuted,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -200,7 +230,9 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                       onTap: () => setState(() => _showFavoritesOnly = true),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _showFavoritesOnly ? AppColors.bgCard : Colors.transparent,
+                          color: _showFavoritesOnly
+                              ? AppColors.bgCard
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -208,14 +240,18 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                           children: [
                             Icon(
                               Icons.star,
-                              color: _showFavoritesOnly ? Colors.amber : AppColors.textMuted,
+                              color: _showFavoritesOnly
+                                  ? Colors.amber
+                                  : AppColors.textMuted,
                               size: 16,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Yêu thích',
                               style: TextStyle(
-                                color: _showFavoritesOnly ? Colors.white : AppColors.textMuted,
+                                color: _showFavoritesOnly
+                                    ? Colors.white
+                                    : AppColors.textMuted,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -237,30 +273,45 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                 ? const Center(
                     child: Text(
                       'Không tìm thấy môi chất lạnh nào.',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                      ),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final item = filtered[index];
                       // Find actual index in raw list to toggle favorite correctly
-                      final rawIndex = _refrigerants.indexWhere((r) => r.name == item.name);
+                      final rawIndex = _refrigerants.indexWhere(
+                        (r) => r.name == item.name,
+                      );
 
                       return GestureDetector(
                         onTap: () => Navigator.pop(context, item),
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.bgCard,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: widget.selectedRefrigerant?.name == item.name
+                              color:
+                                  widget.selectedRefrigerant?.name == item.name
                                   ? item.color.withValues(alpha: 0.4)
                                   : AppColors.divider,
-                              width: widget.selectedRefrigerant?.name == item.name ? 1.5 : 1.0,
+                              width:
+                                  widget.selectedRefrigerant?.name == item.name
+                                  ? 1.5
+                                  : 1.0,
                             ),
                           ),
                           child: Row(
@@ -278,8 +329,12 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                                 constraints: const BoxConstraints(),
                                 padding: EdgeInsets.zero,
                                 icon: Icon(
-                                  item.isFavorite ? Icons.star : Icons.star_border,
-                                  color: item.isFavorite ? Colors.amber : Colors.white60,
+                                  item.isFavorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: item.isFavorite
+                                      ? Colors.amber
+                                      : Colors.white60,
                                   size: 20,
                                 ),
                                 onPressed: () => _toggleFavorite(rawIndex),
@@ -313,10 +368,12 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
           builder: (BuildContext context, StateSetter setModalState) {
             // Count total matches in real time based on active modal filters
             final tempFiltered = _refrigerants.where((ref) {
-              if (_selectedSafetyGroups.isNotEmpty && !_selectedSafetyGroups.contains(ref.safetyGroup)) {
+              if (_selectedSafetyGroups.isNotEmpty &&
+                  !_selectedSafetyGroups.contains(ref.safetyGroup)) {
                 return false;
               }
-              if (_selectedClasses.isNotEmpty && !_selectedClasses.contains(ref.typeClass)) {
+              if (_selectedClasses.isNotEmpty &&
+                  !_selectedClasses.contains(ref.typeClass)) {
                 return false;
               }
               return true;
@@ -325,22 +382,85 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
             final totalFound = tempFiltered.length;
 
             final List<Map<String, dynamic>> safetyGroupOptions = [
-              {'name': 'A1', 'count': _refrigerants.where((r) => r.safetyGroup == 'A1').length},
-              {'name': 'A2', 'count': _refrigerants.where((r) => r.safetyGroup == 'A2').length},
-              {'name': 'A2L', 'count': _refrigerants.where((r) => r.safetyGroup == 'A2L').length},
-              {'name': 'A3', 'count': _refrigerants.where((r) => r.safetyGroup == 'A3').length},
-              {'name': 'B1', 'count': _refrigerants.where((r) => r.safetyGroup == 'B1').length},
-              {'name': 'B2', 'count': _refrigerants.where((r) => r.safetyGroup == 'B2').length},
-              {'name': 'B2L', 'count': _refrigerants.where((r) => r.safetyGroup == 'B2L').length},
-              {'name': 'B3', 'count': _refrigerants.where((r) => r.safetyGroup == 'B3').length},
+              {
+                'name': 'A1',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'A1')
+                    .length,
+              },
+              {
+                'name': 'A2',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'A2')
+                    .length,
+              },
+              {
+                'name': 'A2L',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'A2L')
+                    .length,
+              },
+              {
+                'name': 'A3',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'A3')
+                    .length,
+              },
+              {
+                'name': 'B1',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'B1')
+                    .length,
+              },
+              {
+                'name': 'B2',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'B2')
+                    .length,
+              },
+              {
+                'name': 'B2L',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'B2L')
+                    .length,
+              },
+              {
+                'name': 'B3',
+                'count': _refrigerants
+                    .where((r) => r.safetyGroup == 'B3')
+                    .length,
+              },
             ];
 
             final List<Map<String, dynamic>> classOptions = [
-              {'name': 'CFC', 'count': _refrigerants.where((r) => r.typeClass == 'CFC').length},
-              {'name': 'HC', 'count': _refrigerants.where((r) => r.typeClass == 'HC').length},
-              {'name': 'HCF/CO2', 'count': _refrigerants.where((r) => r.typeClass == 'HCF/CO2').length},
-              {'name': 'HCFC', 'count': _refrigerants.where((r) => r.typeClass == 'HCFC').length},
-              {'name': 'HFC', 'count': _refrigerants.where((r) => r.typeClass == 'HFC').length},
+              {
+                'name': 'CFC',
+                'count': _refrigerants
+                    .where((r) => r.typeClass == 'CFC')
+                    .length,
+              },
+              {
+                'name': 'HC',
+                'count': _refrigerants.where((r) => r.typeClass == 'HC').length,
+              },
+              {
+                'name': 'HCF/CO2',
+                'count': _refrigerants
+                    .where((r) => r.typeClass == 'HCF/CO2')
+                    .length,
+              },
+              {
+                'name': 'HCFC',
+                'count': _refrigerants
+                    .where((r) => r.typeClass == 'HCFC')
+                    .length,
+              },
+              {
+                'name': 'HFC',
+                'count': _refrigerants
+                    .where((r) => r.typeClass == 'HFC')
+                    .length,
+              },
             ];
 
             return Container(
@@ -361,14 +481,18 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Header Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '$totalFound Tìm thấy sản phẩm',
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white60),
@@ -394,7 +518,10 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                       },
                       child: const Text(
                         'CÀI ĐẶT LẠI BỘ LỌC',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -408,7 +535,11 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                         // Nhóm an toàn Section
                         const Text(
                           'Nhóm an toàn',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -422,7 +553,9 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                             children: safetyGroupOptions.map((opt) {
                               final name = opt['name'] as String;
                               final count = opt['count'] as int;
-                              final isChecked = _selectedSafetyGroups.contains(name);
+                              final isChecked = _selectedSafetyGroups.contains(
+                                name,
+                              );
                               if (count == 0) return const SizedBox.shrink();
 
                               return CheckboxListTile(
@@ -432,10 +565,14 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                                 checkColor: Colors.white,
                                 title: Text(
                                   '$name ($count)',
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                 ),
                                 value: isChecked,
-                                controlAffinity: ListTileControlAffinity.leading,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
                                 onChanged: (val) {
                                   setModalState(() {
                                     if (val == true) {
@@ -455,7 +592,11 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                         // Lớp Section
                         const Text(
                           'Lớp',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Container(
@@ -479,10 +620,14 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                                 checkColor: Colors.white,
                                 title: Text(
                                   '$name ($count)',
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                 ),
                                 value: isChecked,
-                                controlAffinity: ListTileControlAffinity.leading,
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
                                 onChanged: (val) {
                                   setModalState(() {
                                     if (val == true) {
@@ -517,7 +662,10 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
                     },
                     child: Text(
                       'Xem $totalFound Sản phẩm',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ],

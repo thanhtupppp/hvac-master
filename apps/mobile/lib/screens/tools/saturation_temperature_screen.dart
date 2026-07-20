@@ -7,10 +7,12 @@ class SaturationTemperatureScreen extends StatefulWidget {
   const SaturationTemperatureScreen({super.key});
 
   @override
-  State<SaturationTemperatureScreen> createState() => _SaturationTemperatureScreenState();
+  State<SaturationTemperatureScreen> createState() =>
+      _SaturationTemperatureScreenState();
 }
 
-class _SaturationTemperatureScreenState extends State<SaturationTemperatureScreen> {
+class _SaturationTemperatureScreenState
+    extends State<SaturationTemperatureScreen> {
   final _thermo = Thermodynamics();
   final _pressureController = TextEditingController(text: '200');
   String _pressureUnit = 'PSI';
@@ -69,12 +71,20 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Nhiệt độ Bão hòa',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -114,13 +124,19 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
                 value: r.name,
                 child: Text(
                   '${r.name} — ${r.typeClass}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
           ],
           onChanged: (val) {
             if (val != null) {
-              setState(() { _refrigerant = val; _recalculate(); });
+              setState(() {
+                _refrigerant = val;
+                _recalculate();
+              });
             }
           },
         ),
@@ -144,13 +160,23 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
               children: [
                 const Text(
                   'ÁP SUẤT',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _pressureController,
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
@@ -166,7 +192,10 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
               GestureDetector(
                 onTap: _toggleUnit,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.bgSecondary,
                     borderRadius: BorderRadius.circular(12),
@@ -174,12 +203,21 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
                   ),
                   child: Text(
                     _pressureUnit,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 4),
-              Text(_isGauge ? 'Gauge' : 'Absolute', style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+              Text(
+                _isGauge ? 'Gauge' : 'Absolute',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 10,
+                ),
+              ),
             ],
           ),
         ],
@@ -190,7 +228,10 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
   Widget _buildGaugeToggle() {
     return Row(
       children: [
-        const Text('Kiểu đo:', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text(
+          'Kiểu đo:',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
         const SizedBox(width: 12),
         SegmentedButton<bool>(
           segments: const [
@@ -198,7 +239,10 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
             ButtonSegment(value: false, label: Text('Absolute')),
           ],
           selected: {_isGauge},
-          onSelectionChanged: (s) => setState(() { _isGauge = s.first; _recalculate(); }),
+          onSelectionChanged: (s) => setState(() {
+            _isGauge = s.first;
+            _recalculate();
+          }),
         ),
       ],
     );
@@ -218,16 +262,31 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
       ),
       child: Column(
         children: [
-          const Text('NHIỆT ĐỘ BÃO HÒA', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'NHIỆT ĐỘ BÃO HÒA',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             isNan ? '—' : '${tempC.toStringAsFixed(1)} °C',
-            style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             isNan ? '—' : '${tempF.toStringAsFixed(1)} °F',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 18),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 18,
+            ),
           ),
           if (isNan) ...[
             const SizedBox(height: 12),
@@ -242,7 +301,10 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
                 children: [
                   Icon(Icons.warning, color: Colors.orange, size: 16),
                   SizedBox(width: 8),
-                  Text('Giá trị nằm ngoài phạm vi Antoine / CoolProp', style: TextStyle(color: Colors.orange, fontSize: 12)),
+                  Text(
+                    'Giá trị nằm ngoài phạm vi Antoine / CoolProp',
+                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -253,7 +315,10 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
   }
 
   Widget _buildPTGuide() {
-    final ref = defaultRefrigerants.firstWhere((r) => r.name == _refrigerant, orElse: () => defaultRefrigerants.first);
+    final ref = defaultRefrigerants.firstWhere(
+      (r) => r.name == _refrigerant,
+      orElse: () => defaultRefrigerants.first,
+    );
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -264,13 +329,27 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('THÔNG TIN MÔI CHẤT', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'THÔNG TIN MÔI CHẤT',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 12),
           _infoRow('Loại', ref.typeClass),
           _infoRow('GWP', ref.gwp.toString()),
           _infoRow('ODP', ref.odp.toString()),
-          _infoRow('Nhiệt độ sôi (1 atm)', '${ref.boilingPoint.toStringAsFixed(1)} °C'),
-          _infoRow('Nhiệt độ tới hạn', '${ref.criticalTemp.toStringAsFixed(1)} °C'),
+          _infoRow(
+            'Nhiệt độ sôi (1 atm)',
+            '${ref.boilingPoint.toStringAsFixed(1)} °C',
+          ),
+          _infoRow(
+            'Nhiệt độ tới hạn',
+            '${ref.criticalTemp.toStringAsFixed(1)} °C',
+          ),
         ],
       ),
     );
@@ -282,8 +361,21 @@ class _SaturationTemperatureScreenState extends State<SaturationTemperatureScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

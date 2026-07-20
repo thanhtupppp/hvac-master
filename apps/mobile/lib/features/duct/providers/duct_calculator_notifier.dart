@@ -61,9 +61,9 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
     final currentInput = state.input;
     if (currentInput.unitSystem == system) return;
 
-    double newFlow = currentInput.flowRate;
-    double newVelocity = currentInput.targetVelocity;
-    double newFriction = currentInput.frictionRate;
+    double newFlow;
+    double newVelocity;
+    double newFriction;
 
     if (system == UnitSystem.imperial) {
       newFlow = UnitConverter.toCfm(
@@ -106,14 +106,7 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
     }
 
     state = state.copyWith(
-      input: HvacInput(
-        flowRate: state.input.flowRate,
-        targetVelocity: suggestedVelocity,
-        frictionRate: state.input.frictionRate,
-        method: state.input.method,
-        unitSystem: state.input.unitSystem,
-        systemType: type,
-      ),
+      input: _updateInput(targetVelocity: suggestedVelocity, systemType: type),
     );
     _triggerCalculation();
   }
@@ -153,11 +146,6 @@ class DuctCalculatorNotifier extends StateNotifier<DuctCalculatorState> {
       );
       return;
     }
-    state = state.copyWith(
-      status: CalculationStatus.calculating,
-      result: () => null,
-      errorMessage: () => null,
-    );
     try {
       final service = _ref.read(ductCalculatorServiceProvider);
       final result = service.calculate(state.input);

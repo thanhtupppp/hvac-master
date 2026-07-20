@@ -41,7 +41,9 @@ class MeasurementCards extends StatelessWidget {
               onTap: () => _showInputDialog(
                 context,
                 title: 'Nhập áp suất',
-                defaultValue: pressureVal.isNaN ? '' : getPressureDisplayValue(pressureVal),
+                defaultValue: pressureVal.isNaN
+                    ? ''
+                    : getPressureDisplayValue(pressureVal),
                 validator: validatePressure,
                 onSubmitted: onPressureSubmitted,
               ),
@@ -200,12 +202,19 @@ class _InputDialogState extends State<_InputDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
         widget.title,
-        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       content: TextField(
         controller: _controller,
         style: const TextStyle(color: Colors.white),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+        keyboardType: const TextInputType.numberWithOptions(
+          decimal: true,
+          signed: true,
+        ),
         textInputAction: TextInputAction.done,
         onSubmitted: (_) => _handleConfirm(),
         onChanged: (value) {
@@ -218,8 +227,12 @@ class _InputDialogState extends State<_InputDialog> {
         decoration: InputDecoration(
           errorText: _errorText,
           errorMaxLines: 2,
-          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.divider)),
-          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accentPrimary)),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.divider),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.accentPrimary),
+          ),
         ),
         autofocus: true,
       ),
@@ -229,7 +242,9 @@ class _InputDialogState extends State<_InputDialog> {
           child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentPrimary),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.accentPrimary,
+          ),
           onPressed: _handleConfirm,
           child: const Text('Xác nhận', style: TextStyle(color: Colors.white)),
         ),

@@ -58,14 +58,16 @@ class PopularArticlesSection extends ConsumerWidget {
   }
 
   Widget _buildPopularCard(
-      BuildContext context, WidgetRef ref, Article article, int rank) {
+    BuildContext context,
+    WidgetRef ref,
+    Article article,
+    int rank,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.06),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -110,8 +112,8 @@ class PopularArticlesSection extends ConsumerWidget {
                 // Thumbnail
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: article.imageUrl != null &&
-                          article.imageUrl!.isNotEmpty
+                  child:
+                      article.imageUrl != null && article.imageUrl!.isNotEmpty
                       ? Image.network(
                           article.imageUrl!,
                           width: 48,
@@ -153,7 +155,9 @@ class PopularArticlesSection extends ConsumerWidget {
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 5, vertical: 1),
+                                horizontal: 5,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.amber[800],
                                 borderRadius: BorderRadius.circular(3),

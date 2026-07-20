@@ -5,10 +5,7 @@ import '../pt_calculator_controller.dart';
 class SettingsBottomSheet extends StatelessWidget {
   final PTCalculatorController controller;
 
-  const SettingsBottomSheet({
-    super.key,
-    required this.controller,
-  });
+  const SettingsBottomSheet({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +45,11 @@ class SettingsBottomSheet extends StatelessWidget {
                       onTap: () => Navigator.pop(context),
                       child: const Padding(
                         padding: EdgeInsets.all(6),
-                        child: Icon(Icons.close, color: Colors.white70, size: 18),
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -58,7 +59,10 @@ class SettingsBottomSheet extends StatelessWidget {
 
               // Item 1: Pressure unit dropdown
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.bgCard,
                   borderRadius: BorderRadius.circular(16),
@@ -72,7 +76,10 @@ class SettingsBottomSheet extends StatelessWidget {
                       children: [
                         const Text(
                           'Áp suất',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -89,7 +96,10 @@ class SettingsBottomSheet extends StatelessWidget {
                       child: DropdownButton<String>(
                         value: controller.pressureUnit,
                         dropdownColor: AppColors.bgCard,
-                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.white54,
+                        ),
                         items: ['Bar', 'PSI', 'kPa'].map((String val) {
                           return DropdownMenuItem<String>(
                             value: val,
@@ -183,7 +193,8 @@ class SettingsBottomSheet extends StatelessWidget {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (context) => AmbientPressureBottomSheet(controller: controller),
+                      builder: (context) =>
+                          AmbientPressureBottomSheet(controller: controller),
                     );
                   },
                   child: const Padding(
@@ -193,15 +204,26 @@ class SettingsBottomSheet extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.landscape, color: Colors.white70, size: 20),
+                            Icon(
+                              Icons.landscape,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
                             SizedBox(width: 12),
                             Text(
                               'Áp suất môi trường và máy đo',
-                              style: TextStyle(color: Colors.white, fontSize: 14),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
-                        Icon(Icons.arrow_forward_ios, color: Colors.white30, size: 14),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white30,
+                          size: 14,
+                        ),
                       ],
                     ),
                   ),
@@ -223,10 +245,7 @@ class SettingsBottomSheet extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
-        ),
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 14)),
         Container(
           height: 38,
           decoration: BoxDecoration(
@@ -238,7 +257,9 @@ class SettingsBottomSheet extends StatelessWidget {
             children: options.map((opt) {
               final isSelected = opt == value;
               return Material(
-                color: isSelected ? const Color(0xFF334155) : Colors.transparent,
+                color: isSelected
+                    ? const Color(0xFF334155)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
@@ -250,7 +271,9 @@ class SettingsBottomSheet extends StatelessWidget {
                       opt,
                       style: TextStyle(
                         color: isSelected ? Colors.white : Colors.white30,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         fontSize: 13,
                       ),
                     ),
@@ -268,16 +291,15 @@ class SettingsBottomSheet extends StatelessWidget {
 class AmbientPressureBottomSheet extends StatefulWidget {
   final PTCalculatorController controller;
 
-  const AmbientPressureBottomSheet({
-    super.key,
-    required this.controller,
-  });
+  const AmbientPressureBottomSheet({super.key, required this.controller});
 
   @override
-  State<AmbientPressureBottomSheet> createState() => _AmbientPressureBottomSheetState();
+  State<AmbientPressureBottomSheet> createState() =>
+      _AmbientPressureBottomSheetState();
 }
 
-class _AmbientPressureBottomSheetState extends State<AmbientPressureBottomSheet> {
+class _AmbientPressureBottomSheetState
+    extends State<AmbientPressureBottomSheet> {
   late String _tempGaugeType;
   late bool _tempUseBarometer;
   late double _tempElevation;
@@ -389,10 +411,7 @@ class _AmbientPressureBottomSheetState extends State<AmbientPressureBottomSheet>
               children: [
                 const Text(
                   'Độ cao',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -409,10 +428,7 @@ class _AmbientPressureBottomSheetState extends State<AmbientPressureBottomSheet>
                     const SizedBox(width: 4),
                     const Text(
                       'm',
-                      style: TextStyle(
-                        color: Colors.white30,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.white30, fontSize: 12),
                     ),
                   ],
                 ),
@@ -445,8 +461,14 @@ class _AmbientPressureBottomSheetState extends State<AmbientPressureBottomSheet>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('0 m', style: TextStyle(color: Colors.white30, fontSize: 12)),
-                Text('5500 m', style: TextStyle(color: Colors.white30, fontSize: 12)),
+                Text(
+                  '0 m',
+                  style: TextStyle(color: Colors.white30, fontSize: 12),
+                ),
+                Text(
+                  '5500 m',
+                  style: TextStyle(color: Colors.white30, fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -516,7 +538,10 @@ class _AmbientPressureBottomSheetState extends State<AmbientPressureBottomSheet>
     );
   }
 
-  Widget _buildGaugeTypeSegmentedControl(String selectedType, ValueChanged<String> onChanged) {
+  Widget _buildGaugeTypeSegmentedControl(
+    String selectedType,
+    ValueChanged<String> onChanged,
+  ) {
     return Container(
       height: 48,
       decoration: BoxDecoration(
@@ -540,7 +565,9 @@ class _AmbientPressureBottomSheetState extends State<AmbientPressureBottomSheet>
                     type,
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.white30,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       fontSize: 14,
                     ),
                   ),

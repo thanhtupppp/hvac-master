@@ -5,10 +5,7 @@ import '../pt_calculator_controller.dart';
 class PressureRuler extends StatefulWidget {
   final PTCalculatorController controller;
 
-  const PressureRuler({
-    super.key,
-    required this.controller,
-  });
+  const PressureRuler({super.key, required this.controller});
 
   @override
   State<PressureRuler> createState() => _PressureRulerState();
@@ -65,7 +62,9 @@ class _PressureRulerState extends State<PressureRuler> {
 
     final double offset = _scrollController.offset;
     final double tempDiff = offset / _itemHeight;
-    final double tempCelsius = widget.controller.reverseSlider ? (_maxTemp - tempDiff) : (_minTemp + tempDiff);
+    final double tempCelsius = widget.controller.reverseSlider
+        ? (_maxTemp - tempDiff)
+        : (_minTemp + tempDiff);
     final double clamped = tempCelsius.clamp(_minTemp, _maxTemp);
 
     // Debounce/avoid redundant calculations if change is extremely small (< 0.05°C)
@@ -79,7 +78,10 @@ class _PressureRulerState extends State<PressureRuler> {
   }
 
   void _syncRulerToTemp() {
-    if (!_scrollController.hasClients || widget.controller.tempNotifier.value.isNaN) return;
+    if (!_scrollController.hasClients ||
+        widget.controller.tempNotifier.value.isNaN) {
+      return;
+    }
 
     final double tempDiff = widget.controller.reverseSlider
         ? (_maxTemp - widget.controller.tempNotifier.value)
@@ -87,16 +89,17 @@ class _PressureRulerState extends State<PressureRuler> {
     final double targetOffset = tempDiff * _itemHeight;
 
     _isProgrammaticScroll = true;
-    _scrollController.jumpTo(targetOffset.clamp(
-      _scrollController.position.minScrollExtent,
-      _scrollController.position.maxScrollExtent,
-    ));
+    _scrollController.jumpTo(
+      targetOffset.clamp(
+        _scrollController.position.minScrollExtent,
+        _scrollController.position.maxScrollExtent,
+      ),
+    );
     _isProgrammaticScroll = false;
   }
 
   @override
   Widget build(BuildContext context) {
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final rulerHeight = constraints.maxHeight;
@@ -120,7 +123,9 @@ class _PressureRulerState extends State<PressureRuler> {
                   // Scrollable ticks list
                   ListView.builder(
                     controller: _scrollController,
-                    padding: EdgeInsets.symmetric(vertical: halfRulerHeight - (_itemHeight / 2)),
+                    padding: EdgeInsets.symmetric(
+                      vertical: halfRulerHeight - (_itemHeight / 2),
+                    ),
                     itemCount: (_maxTemp - _minTemp).toInt() + 1,
                     itemExtent: _itemHeight,
                     addAutomaticKeepAlives: false,
@@ -138,7 +143,8 @@ class _PressureRulerState extends State<PressureRuler> {
                       final isMediumTemp = tempInt % 5 == 0;
 
                       // Saturation pressure at this temperature (read from lazy cache)
-                      final double currentPress = widget.controller.getPressureForTemp(currentTemp);
+                      final double currentPress = widget.controller
+                          .getPressureForTemp(currentTemp);
 
                       return SizedBox(
                         height: _itemHeight,
@@ -150,7 +156,9 @@ class _PressureRulerState extends State<PressureRuler> {
                                   ? Align(
                                       alignment: Alignment.centerRight,
                                       child: Text(
-                                        currentPress.isNaN ? '--' : currentPress.toStringAsFixed(1),
+                                        currentPress.isNaN
+                                            ? '--'
+                                            : currentPress.toStringAsFixed(1),
                                         style: const TextStyle(
                                           color: Colors.white70,
                                           fontSize: 12,
@@ -167,23 +175,25 @@ class _PressureRulerState extends State<PressureRuler> {
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
-                                  Container(
-                                    width: 1,
-                                    color: Colors.white10,
-                                  ),
+                                  Container(width: 1, color: Colors.white10),
                                   Positioned(
                                     left: 0,
                                     right: 0,
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
-                                          width: isMajorTemp ? 12 : (isMediumTemp ? 8 : 4),
+                                          width: isMajorTemp
+                                              ? 12
+                                              : (isMediumTemp ? 8 : 4),
                                           height: 1,
                                           color: Colors.white30,
                                         ),
                                         Container(
-                                          width: isMajorTemp ? 12 : (isMediumTemp ? 8 : 4),
+                                          width: isMajorTemp
+                                              ? 12
+                                              : (isMediumTemp ? 8 : 4),
                                           height: 1,
                                           color: Colors.white30,
                                         ),
@@ -203,7 +213,9 @@ class _PressureRulerState extends State<PressureRuler> {
                                       child: Text(
                                         widget.controller.tempUnit == '°C'
                                             ? currentTemp.toInt().toString()
-                                            : ((currentTemp * 9 / 5) + 32).round().toString(),
+                                            : ((currentTemp * 9 / 5) + 32)
+                                                  .round()
+                                                  .toString(),
                                         style: const TextStyle(
                                           color: Colors.white70,
                                           fontSize: 12,
@@ -229,12 +241,18 @@ class _PressureRulerState extends State<PressureRuler> {
                         Text(
                           '${widget.controller.pressureUnit.toLowerCase()}${widget.controller.isGauge ? '(g)' : '(a)'}',
                           style: const TextStyle(
-                              color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold),
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           widget.controller.tempUnit,
                           style: const TextStyle(
-                              color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold),
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),

@@ -60,7 +60,11 @@ class LatestArticlesSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildLatestArticleCard(BuildContext context, WidgetRef ref, Article article) {
+  Widget _buildLatestArticleCard(
+    BuildContext context,
+    WidgetRef ref,
+    Article article,
+  ) {
     final hasImage = article.imageUrl != null && article.imageUrl!.isNotEmpty;
 
     return Container(
@@ -68,9 +72,7 @@ class LatestArticlesSection extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
@@ -85,7 +87,9 @@ class LatestArticlesSection extends ConsumerWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              ref.read(historyProvider.notifier).addArticleToHistory(article.id);
+              ref
+                  .read(historyProvider.notifier)
+                  .addArticleToHistory(article.id);
               Navigator.pushNamed(
                 context,
                 AppRoutes.guideDetail,
@@ -136,10 +140,14 @@ class LatestArticlesSection extends ConsumerWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentPrimary.withValues(alpha: 0.25),
+                              color: AppColors.accentPrimary.withValues(
+                                alpha: 0.25,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: AppColors.accentPrimary.withValues(alpha: 0.4),
+                                color: AppColors.accentPrimary.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                             ),
                             child: Text(
@@ -154,7 +162,9 @@ class LatestArticlesSection extends ConsumerWidget {
                           if (article.isPremium)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.amber[800],
                                 borderRadius: BorderRadius.circular(4),

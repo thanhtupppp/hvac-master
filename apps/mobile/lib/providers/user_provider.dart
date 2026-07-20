@@ -7,7 +7,7 @@ import '../models/user_model.dart';
 /// Exposes the real-time user profile state from Firestore.
 final userProfileProvider = StreamProvider<UserModel?>((ref) {
   final authState = FirebaseAuth.instance.authStateChanges();
-  
+
   // Transform auth state change stream into Firestore user document stream
   final controller = StreamController<UserModel?>();
   StreamSubscription? sub;
@@ -22,42 +22,49 @@ final userProfileProvider = StreamProvider<UserModel?>((ref) {
     // Reference to user document
     final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-    sub = docRef.snapshots().listen((snapshot) async {
-      if (!snapshot.exists) {
-        // Automatically create user document if it doesn't exist yet
-        final email = user.email ?? '';
-        final defaultDisplayName = email.isNotEmpty ? email.split('@').first : 'Kỹ thuật viên';
-        
-        final initialData = {
-          'email': email,
-          'displayName': defaultDisplayName,
-          'photoURL': 'purple',
-          'isPremium': false,
-          'status': 'active',
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        };
+    sub = docRef.snapshots().listen(
+      (snapshot) async {
+        if (!snapshot.exists) {
+          // Automatically create user document if it doesn't exist yet
+          final email = user.email ?? '';
+          final defaultDisplayName = email.isNotEmpty
+              ? email.split('@').first
+              : 'Kỹ thuật viên';
 
-        try {
-          await docRef.set(initialData);
-        } catch (e) {
-          // If fail (e.g. offline), add a temporary model to stream
+          final initialData = {
+            'email': email,
+            'displayName': defaultDisplayName,
+            'photoURL': 'purple',
+            'isPremium': false,
+            'status': 'active',
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+
+          try {
+            await docRef.set(initialData);
+          } catch (e) {
+            // If fail (e.g. offline), add a temporary model to stream
+          }
+
+          controller.add(
+            UserModel(
+              uid: user.uid,
+              email: email,
+              displayName: defaultDisplayName,
+              photoURL: 'purple',
+              isPremium: false,
+              status: 'active',
+            ),
+          );
+        } else {
+          controller.add(UserModel.fromFirestore(snapshot));
         }
-
-        controller.add(UserModel(
-          uid: user.uid,
-          email: email,
-          displayName: defaultDisplayName,
-          photoURL: 'purple',
-          isPremium: false,
-          status: 'active',
-        ));
-      } else {
-        controller.add(UserModel.fromFirestore(snapshot));
-      }
-    }, onError: (err) {
-      controller.addError(err);
-    });
+      },
+      onError: (err) {
+        controller.addError(err);
+      },
+    );
   });
 
   ref.onDispose(() {
@@ -116,7 +123,9 @@ class UserProfileService {
       await user.delete();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
-        throw Exception('Hành động nhạy cảm - Vui lòng đăng nhập lại trước khi xóa tài khoản.');
+        throw Exception(
+          'Hành động nhạy cảm - Vui lòng đăng nhập lại trước khi xóa tài khoản.',
+        );
       }
       rethrow;
     }

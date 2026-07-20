@@ -7,9 +7,14 @@ import '../../../core/hvac/validation/input_validator.dart';
 import '../../../core/hvac/warnings/warning_builder.dart';
 
 class DuctEngine {
-  static HvacResult calculate(HvacInput imperialInput, List<double> standardRectSizesInInches) {
+  static HvacResult calculate(
+    HvacInput imperialInput,
+    List<double> standardRectSizesInInches,
+  ) {
     if (imperialInput.unitSystem != UnitSystem.imperial) {
-      throw ArgumentError('DuctEngine calculations require imperial input system.');
+      throw ArgumentError(
+        'DuctEngine calculations require imperial input system.',
+      );
     }
 
     final validationError = InputValidator.validateInput(imperialInput);

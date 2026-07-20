@@ -40,12 +40,15 @@ class CoolingLoad {
     final airflowLs = sensibleLoadW / (_rhoAir * _cpAir * supplyAirTempDiffK);
 
     final infiltrationLoad = infiltrationRate != null
-        ? infiltrationRate * volume * _rhoAir * _cpAir * supplyAirTempDiffK / 3600
+        ? infiltrationRate *
+              volume *
+              _rhoAir *
+              _cpAir *
+              supplyAirTempDiffK /
+              3600
         : 0.0;
 
-    final occupantLoad = occupantCount != null
-        ? occupantCount * 100.0
-        : 0.0;
+    final occupantLoad = occupantCount != null ? occupantCount * 100.0 : 0.0;
 
     final totalWithExtras = totalLoadW + infiltrationLoad + occupantLoad;
     final flowRateLs = chilledWaterDeltaTK > 0

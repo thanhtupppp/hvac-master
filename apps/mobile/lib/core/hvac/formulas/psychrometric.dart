@@ -22,5 +22,9 @@ double humidityRatio(double tempC, double rh, {double pressureKpa = 101.325}) {
 double wetBulbTemperature(double tempC, double rh) {
   if (rh <= 0 || rh > 100) return double.nan;
   if (tempC.isNaN) return double.nan;
-  return tempC * (1 - exp(-0.0007 * humidityRatio(tempC, 100) * (tempC - dewPoint(tempC, rh))));
+  return tempC *
+      (1 -
+          exp(
+            -0.0007 * humidityRatio(tempC, 100) * (tempC - dewPoint(tempC, rh)),
+          ));
 }

@@ -26,16 +26,8 @@ class FanSelection {
       'powerFactor': 1.10,
       'maxSpeed': 30,
     },
-    'axial': {
-      'maxEfficiency': 0.70,
-      'powerFactor': 1.20,
-      'maxSpeed': 20,
-    },
-    'vane_axial': {
-      'maxEfficiency': 0.78,
-      'powerFactor': 1.12,
-      'maxSpeed': 25,
-    },
+    'axial': {'maxEfficiency': 0.70, 'powerFactor': 1.20, 'maxSpeed': 20},
+    'vane_axial': {'maxEfficiency': 0.78, 'powerFactor': 1.12, 'maxSpeed': 25},
   };
 
   static FanDutyPoint select({
@@ -45,7 +37,9 @@ class FanSelection {
   }) {
     final spec = _fanTypes[fanType] ?? _fanTypes['centrifugal_forward']!;
     final airflow = airflowLs / 1000;
-    final fanPower = (airflow * totalPressurePa) / (spec['maxEfficiency']! * spec['powerFactor']!);
+    final fanPower =
+        (airflow * totalPressurePa) /
+        (spec['maxEfficiency']! * spec['powerFactor']!);
 
     return FanDutyPoint(
       airflowLs: airflowLs,

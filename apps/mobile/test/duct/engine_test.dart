@@ -9,35 +9,74 @@ import 'package:mobile/features/duct/services/duct_engine.dart';
 void main() {
   group('UnitConverter Tests', () {
     test('Flow rate conversions (CFM <-> m3/h)', () {
-      expect(UnitConverter.toCfm(100, UnitSystem.imperial), closeTo(100, 0.001));
-      expect(UnitConverter.toCfm(100, UnitSystem.metric), closeTo(58.86, 0.001));
+      expect(
+        UnitConverter.toCfm(100, UnitSystem.imperial),
+        closeTo(100, 0.001),
+      );
+      expect(
+        UnitConverter.toCfm(100, UnitSystem.metric),
+        closeTo(58.86, 0.001),
+      );
 
-      expect(UnitConverter.fromCfm(58.86, UnitSystem.imperial), closeTo(58.86, 0.001));
-      expect(UnitConverter.fromCfm(58.86, UnitSystem.metric), closeTo(100, 0.001));
+      expect(
+        UnitConverter.fromCfm(58.86, UnitSystem.imperial),
+        closeTo(58.86, 0.001),
+      );
+      expect(
+        UnitConverter.fromCfm(58.86, UnitSystem.metric),
+        closeTo(100, 0.001),
+      );
     });
 
     test('Velocity conversions (fpm <-> m/s)', () {
       expect(UnitConverter.toFpm(10, UnitSystem.imperial), closeTo(10, 0.001));
-      expect(UnitConverter.toFpm(10, UnitSystem.metric), closeTo(1968.5, 0.001));
+      expect(
+        UnitConverter.toFpm(10, UnitSystem.metric),
+        closeTo(1968.5, 0.001),
+      );
 
-      expect(UnitConverter.fromFpm(1968.5, UnitSystem.imperial), closeTo(1968.5, 0.001));
-      expect(UnitConverter.fromFpm(1968.5, UnitSystem.metric), closeTo(10, 0.001));
+      expect(
+        UnitConverter.fromFpm(1968.5, UnitSystem.imperial),
+        closeTo(1968.5, 0.001),
+      );
+      expect(
+        UnitConverter.fromFpm(1968.5, UnitSystem.metric),
+        closeTo(10, 0.001),
+      );
     });
 
     test('Length conversions (inches <-> mm)', () {
-      expect(UnitConverter.toInches(254, UnitSystem.imperial), closeTo(254, 0.001));
-      expect(UnitConverter.toInches(254, UnitSystem.metric), closeTo(10, 0.001));
+      expect(
+        UnitConverter.toInches(254, UnitSystem.imperial),
+        closeTo(254, 0.001),
+      );
+      expect(
+        UnitConverter.toInches(254, UnitSystem.metric),
+        closeTo(10, 0.001),
+      );
 
-      expect(UnitConverter.fromInches(10, UnitSystem.imperial), closeTo(10, 0.001));
-      expect(UnitConverter.fromInches(10, UnitSystem.metric), closeTo(254, 0.001));
+      expect(
+        UnitConverter.fromInches(10, UnitSystem.imperial),
+        closeTo(10, 0.001),
+      );
+      expect(
+        UnitConverter.fromInches(10, UnitSystem.metric),
+        closeTo(254, 0.001),
+      );
     });
 
     test('Friction conversions (in.wg/100ft <-> Pa/m)', () {
       expect(UnitConverter.toInWg(8, UnitSystem.imperial), closeTo(8, 0.001));
       expect(UnitConverter.toInWg(8, UnitSystem.metric), closeTo(0.98, 0.001));
 
-      expect(UnitConverter.fromInWg(0.98, UnitSystem.imperial), closeTo(0.98, 0.001));
-      expect(UnitConverter.fromInWg(0.98, UnitSystem.metric), closeTo(8, 0.001));
+      expect(
+        UnitConverter.fromInWg(0.98, UnitSystem.imperial),
+        closeTo(0.98, 0.001),
+      );
+      expect(
+        UnitConverter.fromInWg(0.98, UnitSystem.metric),
+        closeTo(8, 0.001),
+      );
     });
 
     test('toImperial input conversion', () {
@@ -100,7 +139,8 @@ void main() {
         warnings: [
           const HvacWarning(
             type: WarningType.highVelocity,
-            message: 'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',
+            message:
+                'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',
             severity: WarningSeverity.warning,
           ),
         ],
@@ -113,10 +153,19 @@ void main() {
 
       final metricResult = UnitConverter.resultToMetric(imperialResult);
 
-      expect(metricResult.roundResult.calculatedDiameter, closeTo(10.0 * 25.4, 0.01));
-      expect(metricResult.roundResult.standardDiameter, closeTo(10.0 * 25.4, 0.01));
+      expect(
+        metricResult.roundResult.calculatedDiameter,
+        closeTo(10.0 * 25.4, 0.01),
+      );
+      expect(
+        metricResult.roundResult.standardDiameter,
+        closeTo(10.0 * 25.4, 0.01),
+      );
       expect(metricResult.roundResult.velocity, closeTo(800.0 / 196.85, 0.01));
-      expect(metricResult.roundResult.frictionRate, closeTo(0.1 / 0.1225, 0.01));
+      expect(
+        metricResult.roundResult.frictionRate,
+        closeTo(0.1 / 0.1225, 0.01),
+      );
       expect(metricResult.roundResult.area, closeTo(78.54 * 645.16, 0.01));
 
       expect(metricResult.rectangleOptions.length, 1);
@@ -134,7 +183,10 @@ void main() {
       expect(opt.equivalentDiameterError, 0.05);
 
       expect(metricResult.warnings.first.type, WarningType.highVelocity);
-      expect(metricResult.warnings.first.message, 'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.');
+      expect(
+        metricResult.warnings.first.message,
+        'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',
+      );
       expect(metricResult.metadata.algorithmVersion, '1.2.0');
     });
   });
@@ -149,7 +201,10 @@ void main() {
         unitSystem: UnitSystem.metric,
         systemType: SystemType.supplyMain,
       );
-      expect(() => DuctEngine.calculate(metricInput, StandardSizes.imperialRect), throwsA(isA<ArgumentError>()));
+      expect(
+        () => DuctEngine.calculate(metricInput, StandardSizes.imperialRect),
+        throwsA(isA<ArgumentError>()),
+      );
     });
 
     test('DuctEngine calculates correctly for Velocity Method', () {
@@ -171,7 +226,10 @@ void main() {
 
       expect(res.rectangleOptions.isNotEmpty, isTrue);
       for (int i = 0; i < res.rectangleOptions.length - 1; i++) {
-        expect(res.rectangleOptions[i].score, greaterThanOrEqualTo(res.rectangleOptions[i + 1].score));
+        expect(
+          res.rectangleOptions[i].score,
+          greaterThanOrEqualTo(res.rectangleOptions[i + 1].score),
+        );
       }
     });
 
@@ -204,10 +262,16 @@ void main() {
         unitSystem: UnitSystem.imperial,
         systemType: SystemType.supplyMain,
       );
-      final res = DuctEngine.calculate(highVelocityInput, StandardSizes.imperialRect);
+      final res = DuctEngine.calculate(
+        highVelocityInput,
+        StandardSizes.imperialRect,
+      );
       expect(res.warnings.length, 1);
       expect(res.warnings.first.type, WarningType.highVelocity);
-      expect(res.warnings.first.message, 'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.');
+      expect(
+        res.warnings.first.message,
+        'Vận tốc gió cao hơn mức khuyến nghị, có thể gây tiếng ồn lớn.',
+      );
       expect(res.warnings.first.severity, WarningSeverity.warning);
     });
 
@@ -220,22 +284,28 @@ void main() {
         unitSystem: UnitSystem.imperial,
         systemType: SystemType.supplyMain,
       );
-      final res = DuctEngine.calculate(normalVelocityInput, StandardSizes.imperialRect);
+      final res = DuctEngine.calculate(
+        normalVelocityInput,
+        StandardSizes.imperialRect,
+      );
       expect(res.warnings.isEmpty, isTrue);
     });
 
-    test('DuctEngine evaluates actualRoundVelocity instead of targetVelocity for high velocity warning', () {
-      final input = HvacInput(
-        flowRate: 940,
-        targetVelocity: 1250,
-        frictionRate: 0.1,
-        method: CalculationMethod.velocity,
-        unitSystem: UnitSystem.imperial,
-        systemType: SystemType.supplyMain,
-      );
-      final res = DuctEngine.calculate(input, StandardSizes.imperialRect);
-      expect(res.warnings.isEmpty, isTrue);
-    });
+    test(
+      'DuctEngine evaluates actualRoundVelocity instead of targetVelocity for high velocity warning',
+      () {
+        final input = HvacInput(
+          flowRate: 940,
+          targetVelocity: 1250,
+          frictionRate: 0.1,
+          method: CalculationMethod.velocity,
+          unitSystem: UnitSystem.imperial,
+          systemType: SystemType.supplyMain,
+        );
+        final res = DuctEngine.calculate(input, StandardSizes.imperialRect);
+        expect(res.warnings.isEmpty, isTrue);
+      },
+    );
 
     test('DuctEngine throws for invalid flow rate (InputValidator)', () {
       final invalidInput = HvacInput(
@@ -246,7 +316,10 @@ void main() {
         unitSystem: UnitSystem.imperial,
         systemType: SystemType.supplyMain,
       );
-      expect(() => DuctEngine.calculate(invalidInput, StandardSizes.imperialRect), throwsA(isA<ArgumentError>()));
+      expect(
+        () => DuctEngine.calculate(invalidInput, StandardSizes.imperialRect),
+        throwsA(isA<ArgumentError>()),
+      );
     });
 
     test('DuctEngine throws for zero target velocity in velocity method', () {
@@ -258,25 +331,52 @@ void main() {
         unitSystem: UnitSystem.imperial,
         systemType: SystemType.supplyMain,
       );
-      expect(() => DuctEngine.calculate(invalidInput, StandardSizes.imperialRect), throwsA(isA<ArgumentError>()));
+      expect(
+        () => DuctEngine.calculate(invalidInput, StandardSizes.imperialRect),
+        throwsA(isA<ArgumentError>()),
+      );
     });
   });
 
   group('VelocityTable Tests', () {
     test('getRecommendedVelocityFpm returns correct imperial values', () {
       // values imported from velocity_table.dart
-      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.supplyMain), closeTo(900.0, 1e-9));
-      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.supplyBranch), closeTo(600.0, 1e-9));
-      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.returnMain), closeTo(700.0, 1e-9));
-      expect(VelocityTable.getRecommendedVelocityFpm(SystemType.exhaust), closeTo(800.0, 1e-9));
+      expect(
+        VelocityTable.getRecommendedVelocityFpm(SystemType.supplyMain),
+        closeTo(900.0, 1e-9),
+      );
+      expect(
+        VelocityTable.getRecommendedVelocityFpm(SystemType.supplyBranch),
+        closeTo(600.0, 1e-9),
+      );
+      expect(
+        VelocityTable.getRecommendedVelocityFpm(SystemType.returnMain),
+        closeTo(700.0, 1e-9),
+      );
+      expect(
+        VelocityTable.getRecommendedVelocityFpm(SystemType.exhaust),
+        closeTo(800.0, 1e-9),
+      );
     });
 
     test('getRecommendedVelocityMs converts fpm correctly', () {
       // 900 fpm / 196.85 ≈ 4.572 m/s
-      expect(VelocityTable.getRecommendedVelocityMs(SystemType.supplyMain), closeTo(900 / 196.85, 0.001));
-      expect(VelocityTable.getRecommendedVelocityMs(SystemType.supplyBranch), closeTo(600 / 196.85, 0.001));
-      expect(VelocityTable.getRecommendedVelocityMs(SystemType.returnMain), closeTo(700 / 196.85, 0.001));
-      expect(VelocityTable.getRecommendedVelocityMs(SystemType.exhaust), closeTo(800 / 196.85, 0.001));
+      expect(
+        VelocityTable.getRecommendedVelocityMs(SystemType.supplyMain),
+        closeTo(900 / 196.85, 0.001),
+      );
+      expect(
+        VelocityTable.getRecommendedVelocityMs(SystemType.supplyBranch),
+        closeTo(600 / 196.85, 0.001),
+      );
+      expect(
+        VelocityTable.getRecommendedVelocityMs(SystemType.returnMain),
+        closeTo(700 / 196.85, 0.001),
+      );
+      expect(
+        VelocityTable.getRecommendedVelocityMs(SystemType.exhaust),
+        closeTo(800 / 196.85, 0.001),
+      );
     });
   });
 
@@ -305,7 +405,10 @@ void main() {
         frictionRate: 0.01,
         unitSystem: UnitSystem.imperial,
       );
-      expect(warnings.any((w) => w.type == WarningType.frictionOutOfRange), isTrue);
+      expect(
+        warnings.any((w) => w.type == WarningType.frictionOutOfRange),
+        isTrue,
+      );
     });
 
     test('buildWarnings no warnings for normal values', () {

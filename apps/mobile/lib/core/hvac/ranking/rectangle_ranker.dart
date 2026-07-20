@@ -1,5 +1,4 @@
 import '../models/models.dart';
-import '../standards/preferred_rect_sizes.dart';
 
 class RectangleRanker {
   static const _wVelocity = 0.40;
@@ -25,12 +24,7 @@ class RectangleRanker {
     final deScore =
         (1.0 - option.equivalentDiameterError.clamp(0.0, 1.0)) * 100.0;
 
-    final preferred = PreferredRectSizes.contains(
-      option.width,
-      option.height,
-      false,
-    );
-    final prefScore = preferred ? 100.0 : 0.0;
+    final prefScore = option.preferred ? 100.0 : 0.0;
 
     final raw =
         velScore * _wVelocity +

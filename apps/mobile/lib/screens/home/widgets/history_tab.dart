@@ -45,7 +45,9 @@ class HistoryTab extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (historyAsync.hasValue && historyAsync.value != null && historyAsync.value!.isNotEmpty)
+              if (historyAsync.hasValue &&
+                  historyAsync.value != null &&
+                  historyAsync.value!.isNotEmpty)
                 TextButton(
                   onPressed: () {
                     ref.read(historyProvider.notifier).clearHistory();
@@ -65,7 +67,10 @@ class HistoryTab extends ConsumerWidget {
           child: historyAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(
-              child: Text('Lỗi: $err', style: const TextStyle(color: Colors.red)),
+              child: Text(
+                'Lỗi: $err',
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
             data: (historyIds) {
               if (historyIds.isEmpty) {
@@ -95,11 +100,17 @@ class HistoryTab extends ConsumerWidget {
               return allArticlesAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(
-                  child: Text('Lỗi: $err', style: const TextStyle(color: Colors.red)),
+                  child: Text(
+                    'Lỗi: $err',
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
                 data: (allArticles) {
                   final historyArticles = historyIds
-                      .map((id) => allArticles.where((a) => a.id == id).firstOrNull)
+                      .map(
+                        (id) =>
+                            allArticles.where((a) => a.id == id).firstOrNull,
+                      )
                       .where((a) => a != null)
                       .cast<Article>()
                       .toList();
@@ -121,12 +132,12 @@ class HistoryTab extends ConsumerWidget {
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              }
+                    );
+                  }
 
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
@@ -152,7 +163,9 @@ class HistoryTab extends ConsumerWidget {
                             color: Colors.transparent,
                             child: InkWell(
                               onTap: () {
-                                ref.read(historyProvider.notifier).addArticleToHistory(article.id);
+                                ref
+                                    .read(historyProvider.notifier)
+                                    .addArticleToHistory(article.id);
                                 Navigator.pushNamed(
                                   context,
                                   AppRoutes.guideDetail,
@@ -168,7 +181,9 @@ class HistoryTab extends ConsumerWidget {
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: const Color(0xFF5BA4F8).withValues(alpha: 0.1),
+                                        color: const Color(
+                                          0xFF5BA4F8,
+                                        ).withValues(alpha: 0.1),
                                       ),
                                       child: Icon(
                                         getCategoryIcon(article.category),
@@ -179,7 +194,8 @@ class HistoryTab extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
@@ -187,7 +203,8 @@ class HistoryTab extends ConsumerWidget {
                                                 child: Text(
                                                   article.titleVi,
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                   style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 15,
@@ -198,20 +215,25 @@ class HistoryTab extends ConsumerWidget {
                                               if (article.isPremium) ...[
                                                 const SizedBox(width: 8),
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.amber[800],
-                                                    borderRadius: BorderRadius.circular(4),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                   ),
                                                   child: const Text(
                                                     'VIP',
                                                     style: TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 9,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),

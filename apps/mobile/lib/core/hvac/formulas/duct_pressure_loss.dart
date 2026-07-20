@@ -32,7 +32,8 @@ class DuctPressureLoss {
     final velocityMs = flowRateLs / area;
     final reynolds = _reynolds(velocityMs, ductDiameterMm);
     final f = _frictionFactor(reynolds, roughnessMm, ductDiameterMm);
-    final frictionPaPerM = f * _rho * velocityMs * velocityMs / (2 * ductDiameterMm / 1000);
+    final frictionPaPerM =
+        f * _rho * velocityMs * velocityMs / (2 * ductDiameterMm / 1000);
 
     return DuctPressureLossResult(
       frictionLossPaPerM: frictionPaPerM,
@@ -54,7 +55,11 @@ class DuctPressureLoss {
     return velocityMs * diameterMm / 1000 / (_mu / _rho);
   }
 
-  static double _frictionFactor(double re, double roughnessMm, double diameterMm) {
+  static double _frictionFactor(
+    double re,
+    double roughnessMm,
+    double diameterMm,
+  ) {
     if (re <= 0 || diameterMm <= 0) return 0;
     if (re < 2300) return 64 / re;
     final e = roughnessMm / diameterMm;

@@ -1,11 +1,100 @@
 class StandardSizes {
-  static const List<double> imperialRound = [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24];
-  static const List<double> imperialRect = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 40, 42, 48, 54, 60];
-  static const List<double> metricRound = [100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 600, 700, 800];
-  static const List<double> metricRect = [100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500];
+  static const List<double> imperialRound = [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+  ];
+  static const List<double> imperialRect = [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
+    32,
+    34,
+    36,
+    40,
+    42,
+    48,
+    54,
+    60,
+  ];
+  static const List<double> metricRound = [
+    100,
+    125,
+    150,
+    175,
+    200,
+    225,
+    250,
+    300,
+    350,
+    400,
+    450,
+    500,
+    600,
+    700,
+    800,
+  ];
+  static const List<double> metricRect = [
+    100,
+    150,
+    200,
+    250,
+    300,
+    350,
+    400,
+    450,
+    500,
+    550,
+    600,
+    650,
+    700,
+    750,
+    800,
+    900,
+    1000,
+    1100,
+    1200,
+    1300,
+    1400,
+    1500,
+  ];
 
-  static double findNearestStandardRound(double rawDiameter, List<double> standardList) {
+  static double findNearestStandardRound(
+    double rawDiameter,
+    List<double> standardList,
+  ) {
     if (standardList.isEmpty) return rawDiameter;
-    return standardList.reduce((a, b) => (a - rawDiameter).abs() < (b - rawDiameter).abs() ? a : b);
+    return standardList.reduce(
+      (a, b) => (a - rawDiameter).abs() < (b - rawDiameter).abs() ? a : b,
+    );
   }
 }

@@ -6,7 +6,8 @@ class DewPointCalculatorScreen extends StatefulWidget {
   const DewPointCalculatorScreen({super.key});
 
   @override
-  State<DewPointCalculatorScreen> createState() => _DewPointCalculatorScreenState();
+  State<DewPointCalculatorScreen> createState() =>
+      _DewPointCalculatorScreenState();
 }
 
 class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
@@ -33,11 +34,15 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
     final t = double.tryParse(_tempController.text);
     final rh = double.tryParse(_rhController.text);
     if (t == null || rh == null) {
-      setState(() { _dewPoint = double.nan; });
+      setState(() {
+        _dewPoint = double.nan;
+      });
       return;
     }
     final dp = dewPoint(t, rh);
-    setState(() { _dewPoint = dp; });
+    setState(() {
+      _dewPoint = dp;
+    });
   }
 
   @override
@@ -48,12 +53,20 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Điểm Sương',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -81,7 +94,15 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('ĐẦU VÀO', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'ĐẦU VÀO',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 16),
           _buildField('Nhiệt độ không khí', _tempController, '°C'),
           const SizedBox(height: 12),
@@ -91,15 +112,32 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, String unit, {double? max}) {
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl,
+    String unit, {
+    double? max,
+  }) {
     return Row(
       children: [
-        Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
         SizedBox(
           width: 120,
           child: TextField(
             controller: ctrl,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.right,
             decoration: InputDecoration(
@@ -107,7 +145,10 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
               isDense: true,
               contentPadding: EdgeInsets.zero,
               suffixText: unit,
-              suffixStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              suffixStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -130,16 +171,31 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
       ),
       child: Column(
         children: [
-          const Text('ĐIỂM SƯƠNG', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'ĐIỂM SƯƠNG',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 16),
           Text(
             isNan ? '—' : '${dp.toStringAsFixed(1)} °C',
-            style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             isNan ? '—' : '${dpF.toStringAsFixed(1)} °F',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 18),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 18,
+            ),
           ),
           const SizedBox(height: 16),
           Container(
@@ -154,7 +210,14 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
                 Icon(Icons.info, color: _dpColor(dp), size: 18),
                 const SizedBox(width: 8),
                 Flexible(
-                  child: Text(rating, style: TextStyle(color: _dpColor(dp), fontSize: 13, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    rating,
+                    style: TextStyle(
+                      color: _dpColor(dp),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -175,14 +238,29 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('THAM KHẢO ĐIỂM SƯƠNG', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'THAM KHẢO ĐIỂM SƯƠNG',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 12),
           _refRow('< 10 °C', 'Thoải mái — ít ngưng tụ'),
           _refRow('10–16 °C', 'Bình thường — có thể hơi ẩm'),
           _refRow('16–20 °C', 'Cao — có nguy cơ ngưng tụ'),
           _refRow('> 20 °C', 'Rất cao — cần giảm độ ẩm hoặc tăng nhiệt'),
           const SizedBox(height: 12),
-          const Text('Điểm sương = nhiệt độ mà không khí cần làm lạnh để đạt RH 100%.', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic)),
+          const Text(
+            'Điểm sương = nhiệt độ mà không khí cần làm lạnh để đạt RH 100%.',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ],
       ),
     );
@@ -194,8 +272,23 @@ class _DewPointCalculatorScreenState extends State<DewPointCalculatorScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(range, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-          Flexible(child: Text(desc, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12))),
+          Text(
+            range,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              desc,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ),
         ],
       ),
     );

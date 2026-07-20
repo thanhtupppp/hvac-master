@@ -7,7 +7,7 @@ class RefrigerantModel {
   final double odp;
   final double criticalTemp; // in °C
   final double boilingPoint; // in °C at 1 atm
-  final String typeClass;    // CFC, HC, HCFC, HFC
+  final String typeClass; // CFC, HC, HCFC, HFC
   final Color color;
   bool isFavorite;
 

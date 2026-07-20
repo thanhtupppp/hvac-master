@@ -5,11 +5,7 @@ class PdfViewerScreen extends StatelessWidget {
   final String pdfUrl;
   final String title;
 
-  const PdfViewerScreen({
-    super.key,
-    required this.pdfUrl,
-    required this.title,
-  });
+  const PdfViewerScreen({super.key, required this.pdfUrl, required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -31,42 +27,47 @@ class PdfViewerScreen extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: const PDF(
-        swipeHorizontal: false,
-        enableSwipe: true,
-        autoSpacing: true,
-        pageFling: true,
-        fitEachPage: true,
-      ).fromUrl(
-        pdfUrl,
-        placeholder: (double progress) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(color: Color(0xFF388AF6)),
-              const SizedBox(height: 16),
-              Text(
-                'Đang tải tài liệu... ${progress.toInt()}%',
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+      body:
+          const PDF(
+            swipeHorizontal: false,
+            enableSwipe: true,
+            autoSpacing: true,
+            pageFling: true,
+            fitEachPage: true,
+          ).fromUrl(
+            pdfUrl,
+            placeholder: (double progress) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: Color(0xFF388AF6)),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Đang tải tài liệu... ${progress.toInt()}%',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        errorWidget: (dynamic error) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 48),
-              const SizedBox(height: 16),
-              Text(
-                'Lỗi khi tải tài liệu PDF\n${error.toString()}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            errorWidget: (dynamic error) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.redAccent,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Lỗi khi tải tài liệu PDF\n${error.toString()}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 }

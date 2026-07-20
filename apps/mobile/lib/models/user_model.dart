@@ -37,13 +37,17 @@ class UserModel {
 
     // Default display name: prefix of email
     final email = data['email'] as String? ?? '';
-    final defaultDisplayName = email.isNotEmpty ? email.split('@').first : 'Kỹ thuật viên';
+    final defaultDisplayName = email.isNotEmpty
+        ? email.split('@').first
+        : 'Kỹ thuật viên';
 
     return UserModel(
       uid: doc.id,
       email: email,
       displayName: data['displayName'] as String? ?? defaultDisplayName,
-      photoURL: data['photoURL'] as String? ?? 'purple', // Default to purple preset color
+      photoURL:
+          data['photoURL'] as String? ??
+          'purple', // Default to purple preset color
       isPremium: data['isPremium'] as bool? ?? false,
       premiumExpiry: getDateTime(data['premiumExpiry']),
       activeSubscriptionId: data['activeSubscriptionId'] as String?,
@@ -59,7 +63,9 @@ class UserModel {
       'displayName': displayName,
       'photoURL': photoURL,
       'isPremium': isPremium,
-      'premiumExpiry': premiumExpiry != null ? Timestamp.fromDate(premiumExpiry!) : null,
+      'premiumExpiry': premiumExpiry != null
+          ? Timestamp.fromDate(premiumExpiry!)
+          : null,
       'activeSubscriptionId': activeSubscriptionId,
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),

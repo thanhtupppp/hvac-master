@@ -22,10 +22,12 @@ class GuideListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final articlesAsyncValue = brand != null && brand!.isNotEmpty
-        ? ref.watch(articlesByCategoryAndBrandProvider({
-            'category': category,
-            'brand': brand!,
-          }))
+        ? ref.watch(
+            articlesByCategoryAndBrandProvider({
+              'category': category,
+              'brand': brand!,
+            }),
+          )
         : ref.watch(articlesByCategoryProvider(category));
     final langCode = context.locale.languageCode;
 
@@ -34,12 +36,20 @@ class GuideListScreen extends ConsumerWidget {
         backgroundColor: const Color(0xFF0A0F1D),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           brandName != null ? '$categoryTitle $brandName' : categoryTitle,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -64,14 +74,17 @@ class GuideListScreen extends ConsumerWidget {
                       width: 48,
                       height: 48,
                       color: Colors.grey[900],
-                      child: article.imageUrl != null && article.imageUrl!.isNotEmpty
+                      child:
+                          article.imageUrl != null &&
+                              article.imageUrl!.isNotEmpty
                           ? Image.network(
                               article.imageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.image_not_supported,
-                                color: Colors.grey,
-                              ),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.image_not_supported,
+                                    color: Colors.grey,
+                                  ),
                             )
                           : const Icon(
                               Icons.description_outlined,
@@ -86,7 +99,9 @@ class GuideListScreen extends ConsumerWidget {
                   subtitle: Text(
                     article.isPremium ? 'Nội dung VIP (Premium)' : 'Miễn phí',
                     style: TextStyle(
-                      color: article.isPremium ? Colors.amber[800] : Colors.green,
+                      color: article.isPremium
+                          ? Colors.amber[800]
+                          : Colors.green,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -111,12 +126,8 @@ class GuideListScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (err, stack) => Center(
-          child: Text('Lỗi tải dữ liệu: $err'),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Lỗi tải dữ liệu: $err')),
       ),
     );
   }

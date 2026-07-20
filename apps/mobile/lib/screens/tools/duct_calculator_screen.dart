@@ -22,15 +22,6 @@ class _DuctCalculatorScreenState extends ConsumerState<DuctCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize controller values from current state to ensure consistency
-    final initialState = ref.read(ductCalculatorProvider);
-    final isMetric = initialState.input.unitSystem == UnitSystem.metric;
-    _flowController.text = initialState.input.flowRate.toStringAsFixed(0);
-    _velocityController.text = initialState.input.targetVelocity
-        .toStringAsFixed(isMetric ? 1 : 0);
-    _frictionController.text = initialState.input.frictionRate.toStringAsFixed(
-      isMetric ? 2 : 4,
-    );
   }
 
   @override

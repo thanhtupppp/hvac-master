@@ -24,7 +24,7 @@ import '../../screens/tools/humidity_calculator_screen.dart';
 import '../../models/article.dart';
 
 class AppRoutes {
-  static const String initial = '/'; 
+  static const String initial = '/';
   static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String home = '/home';
@@ -65,74 +65,119 @@ class AppRoutes {
       case ductSizer:
         return MaterialPageRoute(builder: (_) => const DuctCalculatorScreen());
       case superheat:
-        return MaterialPageRoute(builder: (_) => const SuperheatCalculatorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const SuperheatCalculatorScreen(),
+        );
       case unitConverter:
         return MaterialPageRoute(builder: (_) => const UnitConverterScreen());
       case refrigerantSelector:
-        return MaterialPageRoute(builder: (_) => const RefrigerantSelectorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const RefrigerantSelectorScreen(),
+        );
       case pressureConverter:
-        return MaterialPageRoute(builder: (_) => const PressureConverterScreen());
+        return MaterialPageRoute(
+          builder: (_) => const PressureConverterScreen(),
+        );
       case airflowCalculator:
-        return MaterialPageRoute(builder: (_) => const AirflowCalculatorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const AirflowCalculatorScreen(),
+        );
       case airVelocityCalculator:
-        return MaterialPageRoute(builder: (_) => const AirVelocityCalculatorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const AirVelocityCalculatorScreen(),
+        );
       case achCalculator:
         return MaterialPageRoute(builder: (_) => const AchCalculatorScreen());
       case saturationTemperature:
-        return MaterialPageRoute(builder: (_) => const SaturationTemperatureScreen());
+        return MaterialPageRoute(
+          builder: (_) => const SaturationTemperatureScreen(),
+        );
       case subcoolingCalculator:
-        return MaterialPageRoute(builder: (_) => const SubcoolingCalculatorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const SubcoolingCalculatorScreen(),
+        );
       case dewPointCalculator:
-        return MaterialPageRoute(builder: (_) => const DewPointCalculatorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const DewPointCalculatorScreen(),
+        );
       case humidityCalculator:
-        return MaterialPageRoute(builder: (_) => const HumidityCalculatorScreen());
+        return MaterialPageRoute(
+          builder: (_) => const HumidityCalculatorScreen(),
+        );
       case brandList:
-        final args = settings.arguments as Map<String, dynamic>?;
-        if (args == null) return _errorRoute(settings.name);
-        return MaterialPageRoute(
-          builder: (_) => BrandListScreen(
-            category: args['category'] as String,
-            categoryName: args['categoryName'] as String,
-          ),
-        );
+        {
+          final args = _extractArgs(
+            settings,
+            requiredKeys: ['category', 'categoryName'],
+          );
+          if (args == null) return _errorRoute(settings.name);
+          return MaterialPageRoute(
+            builder: (_) => BrandListScreen(
+              category: args['category']! as String,
+              categoryName: args['categoryName']! as String,
+            ),
+          );
+        }
       case guideList:
-        final args = settings.arguments as Map<String, dynamic>?;
-        if (args == null) return _errorRoute(settings.name);
-        return MaterialPageRoute(
-          builder: (_) => GuideListScreen(
-            category: args['category'] as String,
-            categoryTitle: (args['categoryTitle'] ?? args['categoryName'] ?? '') as String,
-            brand: args['brand'] as String?,
-            brandName: args['brandName'] as String?,
-          ),
-        );
+        {
+          final args = _extractArgs(settings, requiredKeys: ['category']);
+          if (args == null) return _errorRoute(settings.name);
+          return MaterialPageRoute(
+            builder: (_) => GuideListScreen(
+              category: args['category']! as String,
+              categoryTitle:
+                  args['categoryTitle'] as String? ??
+                  args['categoryName'] as String? ??
+                  '',
+              brand: args['brand'] as String?,
+              brandName: args['brandName'] as String?,
+            ),
+          );
+        }
       case guideDetail:
-        final article = settings.arguments as Article?;
-        if (article == null) return _errorRoute(settings.name);
-        return MaterialPageRoute(
-          builder: (_) => GuideDetailScreen(article: article),
-        );
+        {
+          final article = settings.arguments as Article?;
+          if (article == null) return _errorRoute(settings.name);
+          return MaterialPageRoute(
+            builder: (_) => GuideDetailScreen(article: article),
+          );
+        }
       case pdfViewer:
-        final args = settings.arguments as Map<String, dynamic>?;
-        if (args == null) return _errorRoute(settings.name);
-        return MaterialPageRoute(
-          builder: (_) => PdfViewerScreen(
-            pdfUrl: args['pdfUrl'] as String,
-            title: args['title'] as String,
-          ),
-        );
+        {
+          final args = _extractArgs(
+            settings,
+            requiredKeys: ['pdfUrl', 'title'],
+          );
+          if (args == null) return _errorRoute(settings.name);
+          return MaterialPageRoute(
+            builder: (_) => PdfViewerScreen(
+              pdfUrl: args['pdfUrl']! as String,
+              title: args['title']! as String,
+            ),
+          );
+        }
       default:
         return _errorRoute(settings.name);
     }
+  }
+
+  static Map<String, Object?>? _extractArgs(
+    RouteSettings settings, {
+    required List<String> requiredKeys,
+  }) {
+    final raw = settings.arguments;
+    if (raw is! Map<String, Object?>) return null;
+    for (final key in requiredKeys) {
+      if (!raw.containsKey(key)) return null;
+    }
+    return raw;
   }
 
   static Route<dynamic> _errorRoute(String? name) {
     return MaterialPageRoute(
       builder: (_) => Scaffold(
         appBar: AppBar(title: const Text('Error')),
-        body: Center(
-          child: Text('Route not found: $name'),
-        ),
+        body: Center(child: Text('Route not found: $name')),
       ),
     );
   }

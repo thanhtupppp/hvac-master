@@ -6,10 +6,12 @@ class AirVelocityCalculatorScreen extends StatefulWidget {
   const AirVelocityCalculatorScreen({super.key});
 
   @override
-  State<AirVelocityCalculatorScreen> createState() => _AirVelocityCalculatorScreenState();
+  State<AirVelocityCalculatorScreen> createState() =>
+      _AirVelocityCalculatorScreenState();
 }
 
-class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScreen> {
+class _AirVelocityCalculatorScreenState
+    extends State<AirVelocityCalculatorScreen> {
   final _flowController = TextEditingController(text: '1700');
   final _areaController = TextEditingController(text: '0.5');
   double _resultFpm = 0;
@@ -38,7 +40,10 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
   void _recalculate() {
     final flow = double.tryParse(_flowController.text);
     if (flow == null || flow <= 0) {
-      setState(() { _resultFpm = 0; _resultMs = 0; });
+      setState(() {
+        _resultFpm = 0;
+        _resultMs = 0;
+      });
       return;
     }
 
@@ -61,7 +66,10 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
     if (areaSqFt <= 0) return;
     final fpm = cfm / areaSqFt;
     final ms = fpm / 196.85;
-    setState(() { _resultFpm = fpm; _resultMs = ms; });
+    setState(() {
+      _resultFpm = fpm;
+      _resultMs = ms;
+    });
   }
 
   @override
@@ -72,12 +80,20 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Vận tốc Gió',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -106,14 +122,29 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
       ),
       child: Column(
         children: [
-          _buildField('Lưu lượng gió', _flowController, _unit == UnitSystem.imperial ? 'CFM' : 'm³/h'),
+          _buildField(
+            'Lưu lượng gió',
+            _flowController,
+            _unit == UnitSystem.imperial ? 'CFM' : 'm³/h',
+          ),
           const SizedBox(height: 12),
           if (!_byDuct) ...[
-            _buildField('Diện tích mặt cắt', _areaController, _unit == UnitSystem.imperial ? 'ft²' : 'm²'),
+            _buildField(
+              'Diện tích mặt cắt',
+              _areaController,
+              _unit == UnitSystem.imperial ? 'ft²' : 'm²',
+            ),
             const SizedBox(height: 8),
-            const Text('Hoặc tính theo đường kính ống bên dưới', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
+            const Text(
+              'Hoặc tính theo đường kính ống bên dưới',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+            ),
           ] else
-            _buildField('Đường kính ống', _diameterController, _unit == UnitSystem.imperial ? 'inch' : 'mm'),
+            _buildField(
+              'Đường kính ống',
+              _diameterController,
+              _unit == UnitSystem.imperial ? 'inch' : 'mm',
+            ),
         ],
       ),
     );
@@ -122,12 +153,24 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
   Widget _buildField(String label, TextEditingController ctrl, String unit) {
     return Row(
       children: [
-        Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
         SizedBox(
           width: 120,
           child: TextField(
             controller: ctrl,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.right,
             decoration: InputDecoration(
@@ -135,7 +178,10 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
               isDense: true,
               contentPadding: EdgeInsets.zero,
               suffixText: unit,
-              suffixStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              suffixStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -146,7 +192,10 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
   Widget _buildUnitToggle() {
     return Row(
       children: [
-        const Text('Hệ đơn vị:', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text(
+          'Hệ đơn vị:',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
         const SizedBox(width: 12),
         SegmentedButton<UnitSystem>(
           segments: const [
@@ -166,7 +215,10 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
   Widget _buildModeToggle() {
     return Row(
       children: [
-        const Text('Tính theo:', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text(
+          'Tính theo:',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
         const SizedBox(width: 12),
         SegmentedButton<bool>(
           segments: const [
@@ -194,9 +246,17 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
       ),
       child: Column(
         children: [
-          _buildResultRow('Vận tốc', '${_resultFpm.toStringAsFixed(1)} FPM', _resultFpm > 1200 ? Colors.red : Colors.white),
+          _buildResultRow(
+            'Vận tốc',
+            '${_resultFpm.toStringAsFixed(1)} FPM',
+            _resultFpm > 1200 ? Colors.red : Colors.white,
+          ),
           const SizedBox(height: 8),
-          _buildResultRow('Vận tốc', '${_resultMs.toStringAsFixed(2)} m/s', Colors.white),
+          _buildResultRow(
+            'Vận tốc',
+            '${_resultMs.toStringAsFixed(2)} m/s',
+            Colors.white,
+          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -233,8 +293,18 @@ class _AirVelocityCalculatorScreenState extends State<AirVelocityCalculatorScree
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-        Text(value, style: TextStyle(color: valueColor, fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }

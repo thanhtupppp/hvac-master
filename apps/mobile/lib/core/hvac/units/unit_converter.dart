@@ -56,7 +56,10 @@ class UnitConverter {
   static HvacResult resultToMetric(HvacResult imperialResult) {
     final round = imperialResult.roundResult;
     final convertedRound = RoundResult(
-      calculatedDiameter: fromInches(round.calculatedDiameter, UnitSystem.metric),
+      calculatedDiameter: fromInches(
+        round.calculatedDiameter,
+        UnitSystem.metric,
+      ),
       standardDiameter: fromInches(round.standardDiameter, UnitSystem.metric),
       velocity: fromFpm(round.velocity, UnitSystem.metric),
       frictionRate: fromInWg(round.frictionRate, UnitSystem.metric),
@@ -69,7 +72,10 @@ class UnitConverter {
         height: fromInches(opt.height, UnitSystem.metric),
         area: opt.area * 645.16,
         velocity: fromFpm(opt.velocity, UnitSystem.metric),
-        equivalentDiameter: fromInches(opt.equivalentDiameter, UnitSystem.metric),
+        equivalentDiameter: fromInches(
+          opt.equivalentDiameter,
+          UnitSystem.metric,
+        ),
         aspectRatio: opt.aspectRatio,
         score: opt.score,
         stars: opt.stars,

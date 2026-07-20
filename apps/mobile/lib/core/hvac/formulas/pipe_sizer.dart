@@ -19,11 +19,34 @@ class PipeSizer {
   static const double _mu = 0.001002;
 
   static List<double> get standardSizes => [
-    15, 20, 25, 32, 40, 50, 65, 80, 100, 125, 150, 200, 250, 300
+    15,
+    20,
+    25,
+    32,
+    40,
+    50,
+    65,
+    80,
+    100,
+    125,
+    150,
+    200,
+    250,
+    300,
   ];
 
   static List<double> get copperSizes => [
-    15, 22, 28, 35, 42, 54, 67, 76, 108, 133, 159
+    15,
+    22,
+    28,
+    35,
+    42,
+    54,
+    67,
+    76,
+    108,
+    133,
+    159,
   ];
 
   static PipeSizerResult size({
@@ -66,7 +89,11 @@ class PipeSizer {
     return velocityMs * diameterMm / 1000 / (_mu / _rho);
   }
 
-  static double _frictionFactor(double re, double roughnessMm, double diameterMm) {
+  static double _frictionFactor(
+    double re,
+    double roughnessMm,
+    double diameterMm,
+  ) {
     if (re <= 0 || diameterMm <= 0) return 0;
     if (re < 2300) return 64 / re;
     final e = roughnessMm / diameterMm;

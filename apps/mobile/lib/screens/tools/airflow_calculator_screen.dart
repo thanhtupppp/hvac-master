@@ -8,7 +8,8 @@ class AirflowCalculatorScreen extends StatefulWidget {
   const AirflowCalculatorScreen({super.key});
 
   @override
-  State<AirflowCalculatorScreen> createState() => _AirflowCalculatorScreenState();
+  State<AirflowCalculatorScreen> createState() =>
+      _AirflowCalculatorScreenState();
 }
 
 class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
@@ -53,7 +54,10 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         final fpm = cfm / areaSqFt;
         final ms = _unit == UnitSystem.imperial ? fpm : fpm / 196.85;
         final flow = _unit == UnitSystem.imperial ? cfm : cfm * 1.699;
-        setState(() => _result = '${fpm.toStringAsFixed(1)} FPM\n${ms.toStringAsFixed(2)} m/s\n${flow.toStringAsFixed(1)} m³/h');
+        setState(
+          () => _result =
+              '${fpm.toStringAsFixed(1)} FPM\n${ms.toStringAsFixed(2)} m/s\n${flow.toStringAsFixed(1)} m³/h',
+        );
         break;
       case AirflowMode.airVelocity:
         final cfm = v1;
@@ -64,8 +68,13 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         if (diameterIn <= 0) return;
         final areaFromDia = 3.14159 * diameterIn * diameterIn / 4 / 144;
         final cfmFromDia = fpm * areaFromDia;
-        final flow = _unit == UnitSystem.imperial ? cfmFromDia : cfmFromDia * 1.699;
-        setState(() => _result = 'Diện tích: ${areaSqFt.toStringAsFixed(2)} ft²\n${areaSqFt * 929.03 > 0 ? (areaSqFt * 929.03).toStringAsFixed(1) : '—'} cm²\nLưu lượng (Ø${diameterIn.toStringAsFixed(1)}"): ${flow.toStringAsFixed(1)} ${_unit == UnitSystem.imperial ? 'CFM' : 'm³/h'}');
+        final flow = _unit == UnitSystem.imperial
+            ? cfmFromDia
+            : cfmFromDia * 1.699;
+        setState(
+          () => _result =
+              'Diện tích: ${areaSqFt.toStringAsFixed(2)} ft²\n${areaSqFt * 929.03 > 0 ? (areaSqFt * 929.03).toStringAsFixed(1) : '—'} cm²\nLưu lượng (Ø${diameterIn.toStringAsFixed(1)}"): ${flow.toStringAsFixed(1)} ${_unit == UnitSystem.imperial ? 'CFM' : 'm³/h'}',
+        );
         break;
       case AirflowMode.ach:
         final length = v1;
@@ -75,7 +84,10 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         final cfm = v2;
         if (vol <= 0) return;
         final ach = (cfm * 60) / vol;
-        setState(() => _result = 'Thể tích: ${vol.toStringAsFixed(1)} m³\nACH: ${ach.toStringAsFixed(1)} lần/giờ\nCFM cần: ${(ach * vol / 60).toStringAsFixed(1)}');
+        setState(
+          () => _result =
+              'Thể tích: ${vol.toStringAsFixed(1)} m³\nACH: ${ach.toStringAsFixed(1)} lần/giờ\nCFM cần: ${(ach * vol / 60).toStringAsFixed(1)}',
+        );
         break;
     }
   }
@@ -88,12 +100,20 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Tính Lưu lượng & Vận tốc',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -153,9 +173,12 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
 
   String _modeLabel(AirflowMode m) {
     switch (m) {
-      case AirflowMode.flowRate: return 'Q = V×A';
-      case AirflowMode.airVelocity: return 'Đường kính';
-      case AirflowMode.ach: return 'ACH';
+      case AirflowMode.flowRate:
+        return 'Q = V×A';
+      case AirflowMode.airVelocity:
+        return 'Đường kính';
+      case AirflowMode.ach:
+        return 'ACH';
     }
   }
 
@@ -164,19 +187,35 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
       case AirflowMode.flowRate:
         return Column(
           children: [
-            _buildField('Lưu lượng', _value1Controller, _unit == UnitSystem.imperial ? 'CFM' : 'm³/h'),
+            _buildField(
+              'Lưu lượng',
+              _value1Controller,
+              _unit == UnitSystem.imperial ? 'CFM' : 'm³/h',
+            ),
             const SizedBox(height: 12),
-            _buildField('Diện tích', _value2Controller, _unit == UnitSystem.imperial ? 'ft²' : 'm²'),
+            _buildField(
+              'Diện tích',
+              _value2Controller,
+              _unit == UnitSystem.imperial ? 'ft²' : 'm²',
+            ),
           ],
         );
       case AirflowMode.airVelocity:
         return Column(
           children: [
-            _buildField('Lưu lượng', _value1Controller, _unit == UnitSystem.imperial ? 'CFM' : 'm³/h'),
+            _buildField(
+              'Lưu lượng',
+              _value1Controller,
+              _unit == UnitSystem.imperial ? 'CFM' : 'm³/h',
+            ),
             const SizedBox(height: 12),
             _buildField('Vận tốc mục tiêu', _value2Controller, 'FPM'),
             const SizedBox(height: 12),
-            _buildField('Đường kính (nếu có)', _value3Controller, _unit == UnitSystem.imperial ? 'inch' : 'mm'),
+            _buildField(
+              'Đường kính (nếu có)',
+              _value3Controller,
+              _unit == UnitSystem.imperial ? 'inch' : 'mm',
+            ),
           ],
         );
       case AirflowMode.ach:
@@ -203,21 +242,36 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
           ),
           SizedBox(
             width: 100,
             child: TextField(
               controller: ctrl,
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               textAlign: TextAlign.right,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
                 suffixText: unit,
-                suffixStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                suffixStyle: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                ),
               ),
             ),
           ),
@@ -229,7 +283,10 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
   Widget _buildUnitToggle() {
     return Row(
       children: [
-        const Text('Hệ đơn vị:', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text(
+          'Hệ đơn vị:',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
         const SizedBox(width: 12),
         SegmentedButton<UnitSystem>(
           segments: const [
@@ -257,9 +314,24 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('KẾT QUẢ', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'KẾT QUẢ',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 12),
-          Text(_result.isEmpty ? '—' : _result, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            _result.isEmpty ? '—' : _result,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

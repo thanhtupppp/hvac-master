@@ -5,7 +5,9 @@ import 'package:mobile/core/routes/app_routes.dart';
 import 'package:mobile/screens/tools/duct_calculator_screen.dart';
 
 void main() {
-  testWidgets('E2E: Routing opens DuctSizer and updates state on inputs', (WidgetTester tester) async {
+  testWidgets('E2E: Routing opens DuctSizer and updates state on inputs', (
+    WidgetTester tester,
+  ) async {
     // 1. Setup the widget tree with ProviderScope and MaterialApp using AppRoutes
     await tester.pumpWidget(
       ProviderScope(
@@ -28,7 +30,7 @@ void main() {
     final flowFieldFinder = find.byKey(const Key('flowRateField'));
     await tester.enterText(flowFieldFinder, '2000');
     await tester.pump();
-    
+
     // Wait for the 250ms debounce and settle the UI
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();

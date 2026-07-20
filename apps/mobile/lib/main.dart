@@ -14,12 +14,10 @@ import 'core/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await EasyLocalization.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!kIsWeb) {
     unawaited(MobileAds.instance.initialize());
@@ -28,11 +26,9 @@ void main() async {
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('vi', 'VN'), Locale('en', 'US')],
-      path: 'assets/translations', 
+      path: 'assets/translations',
       fallbackLocale: const Locale('vi', 'VN'),
-      child: const ProviderScope(
-        child: HvacApp(),
-      ),
+      child: const ProviderScope(child: HvacApp()),
     ),
   );
 }
@@ -46,7 +42,8 @@ class HvacApp extends ConsumerWidget {
       title: 'HVAC Pro',
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
-      locale: context.locale, // Automatically detects system locale or uses fallback
+      locale: context
+          .locale, // Automatically detects system locale or uses fallback
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system, // Dark mode support based on system settings
@@ -56,9 +53,7 @@ class HvacApp extends ConsumerWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
+              body: Center(child: CircularProgressIndicator()),
             );
           }
           if (snapshot.hasData) {
@@ -70,4 +65,3 @@ class HvacApp extends ConsumerWidget {
     );
   }
 }
-

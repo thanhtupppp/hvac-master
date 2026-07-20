@@ -24,7 +24,11 @@ class BrandListScreen extends ConsumerWidget {
         backgroundColor: const Color(0xFF0F172A),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -44,20 +48,29 @@ class BrandListScreen extends ConsumerWidget {
             data: (brands) {
               // Extract brand IDs that actually have articles in this category
               final existingBrandIds = articles.map((a) => a.brand).toSet();
-              
+
               // Filter brands list based on existing ones
-              final filteredBrands = brands.where((b) => existingBrandIds.contains(b.id)).toList();
+              final filteredBrands = brands
+                  .where((b) => existingBrandIds.contains(b.id))
+                  .toList();
 
               if (filteredBrands.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.category_outlined, size: 64, color: Color(0xFF475569)),
+                      const Icon(
+                        Icons.category_outlined,
+                        size: 64,
+                        color: Color(0xFF475569),
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Chưa có hãng nào cho danh mục này'.tr(),
-                        style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -69,7 +82,10 @@ class BrandListScreen extends ConsumerWidget {
                 children: [
                   // Subtitle Header
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -98,12 +114,13 @@ class BrandListScreen extends ConsumerWidget {
                   Expanded(
                     child: GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 1.1,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 1.1,
+                          ),
                       itemCount: filteredBrands.length,
                       itemBuilder: (context, index) {
                         final brand = filteredBrands[index];
@@ -129,9 +146,8 @@ class BrandListScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: Colors.blue),
-        ),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(color: Colors.blue)),
         error: (err, stack) => Center(
           child: Text(
             'Lỗi tải dữ liệu bài viết'.tr(),
@@ -274,17 +290,26 @@ class _BrandGridItem extends StatelessWidget {
       case 'daikin':
         return [const Color(0xFF0284C7), const Color(0xFF0369A1)]; // Sky Blue
       case 'panasonic':
-        return [const Color(0xFF1E3A8A), const Color(0xFF1D4ED8)]; // Dark Royal Blue
+        return [
+          const Color(0xFF1E3A8A),
+          const Color(0xFF1D4ED8),
+        ]; // Dark Royal Blue
       case 'toshiba':
         return [const Color(0xFFDC2626), const Color(0xFFB91C1C)]; // Red
       case 'lg':
-        return [const Color(0xFFDB2777), const Color(0xFFBE185D)]; // Pinkish Red
+        return [
+          const Color(0xFFDB2777),
+          const Color(0xFFBE185D),
+        ]; // Pinkish Red
       case 'electrolux':
         return [const Color(0xFF0F766E), const Color(0xFF115E59)]; // Teal
       case 'samsung':
         return [const Color(0xFF2563EB), const Color(0xFF1D4ED8)]; // Blue
       default:
-        return [const Color(0xFF4F46E5), const Color(0xFF4338CA)]; // Indigo Default
+        return [
+          const Color(0xFF4F46E5),
+          const Color(0xFF4338CA),
+        ]; // Indigo Default
     }
   }
 }

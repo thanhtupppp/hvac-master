@@ -12,61 +12,55 @@ class RectangleGenerator {
     required HvacInput input,
     required List<double> standardRectSizesInInches,
   }) {
-    final List<RectangleOption> options = [];
+    final options = <RectangleOption>[];
+    final isMetric = input.unitSystem == UnitSystem.metric;
+    final targetVel = targetVelocityFpm;
+    final targetDiam = targetDiameterIn;
+    final cfm = flowRateCfm;
 
     for (int i = 0; i < standardRectSizesInInches.length; i++) {
       final w = standardRectSizesInInches[i];
       for (int j = 0; j < standardRectSizesInInches.length; j++) {
         final h = standardRectSizesInInches[j];
-        if (w < h) continue;
+        if (w <= h) continue;
 
-        final area = w * h;
         final ar = w / h;
         if (ar > 4.0) continue;
 
+        final area = w * h;
         final velocity = HvacFormulas.velocity(
-          cfm: flowRateCfm,
+          cfm: cfm,
           areaSqFt: area / 144.0,
         );
         final de = HvacFormulas.equivalentDiameter(a: w, b: h);
 
-        final velErr = targetVelocityFpm <= 0
+        final velErr = targetVel <= 0
             ? 1.0
-            : (velocity - targetVelocityFpm).abs() / targetVelocityFpm;
-        final deErr = targetDiameterIn <= 0
+            : (velocity - targetVel).abs() / targetVel;
+        final deErr = targetDiam <= 0
             ? 1.0
-            : (de - targetDiameterIn).abs() / targetDiameterIn;
+            : (de - targetDiam).abs() / targetDiam;
 
-        final widthForCheck = input.unitSystem == UnitSystem.metric
-            ? w * 25.4
-            : w;
-        final heightForCheck = input.unitSystem == UnitSystem.metric
-            ? h * 25.4
-            : h;
-        final preferred = PreferredRectSizes.contains(
-          widthForCheck,
-          heightForCheck,
-          input.unitSystem == UnitSystem.metric,
-        );
+        final wForPreferred = isMetric ? w * 25.4 : w;
+        final hForPreferred = isMetric ? h * 25.4 : h;
+        final preferred = _isPreferred(wForPreferred, hForPreferred, isMetric);
 
-        final mockOption = RectangleOption(
-          width: w,
-          height: h,
-          area: area,
-          velocity: velocity,
-          equivalentDiameter: de,
-          aspectRatio: ar,
-          score: 0,
-          stars: 0,
-          preferred: preferred,
-          velocityError: velErr,
-          equivalentDiameterError: deErr,
-        );
-
-        final finalScore = RectangleRanker.score(
-          option: mockOption,
-          targetVelocityFpm: targetVelocityFpm,
-          targetEquivDiamIn: targetDiameterIn,
+        final score = RectangleRanker.score(
+          option: RectangleOption(
+            width: w,
+            height: h,
+            area: area,
+            velocity: velocity,
+            equivalentDiameter: de,
+            aspectRatio: ar,
+            score: 0,
+            stars: 0,
+            preferred: preferred,
+            velocityError: velErr,
+            equivalentDiameterError: deErr,
+          ),
+          targetVelocityFpm: targetVel,
+          targetEquivDiamIn: targetDiam,
         );
 
         options.add(
@@ -77,8 +71,8 @@ class RectangleGenerator {
             velocity: velocity,
             equivalentDiameter: de,
             aspectRatio: ar,
-            score: finalScore,
-            stars: RectangleRanker.toStars(finalScore),
+            score: score,
+            stars: RectangleRanker.toStars(score),
             preferred: preferred,
             velocityError: velErr,
             equivalentDiameterError: deErr,
@@ -89,5 +83,9 @@ class RectangleGenerator {
 
     options.sort((a, b) => b.score.compareTo(a.score));
     return options;
+  }
+
+  static bool _isPreferred(double w, double h, bool isMetric) {
+    return PreferredRectSizes.contains(w, h, isMetric);
   }
 }

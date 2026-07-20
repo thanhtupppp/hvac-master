@@ -82,7 +82,7 @@ void main() {
 
         final state = container.read(ductCalculatorProvider);
         expect(state.input.systemType, SystemType.supplyBranch);
-        expect(state.input.targetVelocity, 3.0);
+        expect(state.input.targetVelocity, closeTo(3.048, 0.01));
         expect(state.status, CalculationStatus.success);
       },
     );

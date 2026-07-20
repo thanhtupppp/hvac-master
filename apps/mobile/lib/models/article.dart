@@ -37,7 +37,7 @@ class Article {
 
   factory Article.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    
+
     DateTime? getDocDateTime(dynamic field) {
       if (field is Timestamp) {
         return field.toDate();
@@ -48,7 +48,10 @@ class Article {
     return Article(
       id: doc.id,
       titleVi: data['title_vi'] as String? ?? '',
-      causesVi: data['causes_vi'] as String? ?? data['content_vi'] as String? ?? '', // Fallback to content_vi
+      causesVi:
+          data['causes_vi'] as String? ??
+          data['content_vi'] as String? ??
+          '', // Fallback to content_vi
       stepsVi: data['steps_vi'] as String? ?? '',
       notesVi: data['notes_vi'] as String? ?? '',
       imageUrl: data['imageUrl'] as String?,
@@ -65,7 +68,8 @@ class Article {
   }
 
   // Fallback preview text getter for backward compatibility
-  String get contentVi => causesVi.isNotEmpty ? causesVi : (stepsVi.isNotEmpty ? stepsVi : notesVi);
+  String get contentVi =>
+      causesVi.isNotEmpty ? causesVi : (stepsVi.isNotEmpty ? stepsVi : notesVi);
 
   // Fallback preview method for backward compatibility
   String getContent(String langCode) {

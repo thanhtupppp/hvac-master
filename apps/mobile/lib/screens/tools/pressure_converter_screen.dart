@@ -6,7 +6,8 @@ class PressureConverterScreen extends StatefulWidget {
   const PressureConverterScreen({super.key});
 
   @override
-  State<PressureConverterScreen> createState() => _PressureConverterScreenState();
+  State<PressureConverterScreen> createState() =>
+      _PressureConverterScreenState();
 }
 
 class _PressureConverterScreenState extends State<PressureConverterScreen> {
@@ -41,12 +42,20 @@ class _PressureConverterScreenState extends State<PressureConverterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Chuyển đổi Áp suất',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -70,13 +79,24 @@ class _PressureConverterScreenState extends State<PressureConverterScreen> {
                       children: [
                         const Text(
                           'GIÁ TRỊ NHẬP',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _inputController,
-                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                            signed: true,
+                          ),
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
@@ -88,7 +108,10 @@ class _PressureConverterScreenState extends State<PressureConverterScreen> {
                   ),
                   const SizedBox(width: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.bgSecondary,
                       borderRadius: BorderRadius.circular(12),
@@ -104,7 +127,10 @@ class _PressureConverterScreenState extends State<PressureConverterScreen> {
                               value: u,
                               child: Text(
                                 PressureConverter.label(u),
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                         ],
@@ -139,7 +165,11 @@ class _PressureConverterScreenState extends State<PressureConverterScreen> {
               itemBuilder: (context, i) {
                 final to = PressureConverter.all[i];
                 if (to == _selectedFrom) return const SizedBox.shrink();
-                final result = PressureConverter.convert(_inputValue, _selectedFrom, to);
+                final result = PressureConverter.convert(
+                  _inputValue,
+                  _selectedFrom,
+                  to,
+                );
                 return _buildResultRow(
                   '${PressureConverter.label(to)} (${PressureConverter.description(to)})',
                   result.toStringAsExponential(6),
@@ -167,13 +197,20 @@ class _PressureConverterScreenState extends State<PressureConverterScreen> {
           Flexible(
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

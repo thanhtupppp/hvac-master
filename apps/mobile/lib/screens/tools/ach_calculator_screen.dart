@@ -43,7 +43,9 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
     final l = double.tryParse(_lengthController.text);
     final w = double.tryParse(_widthController.text);
     final h = double.tryParse(_heightController.text);
-    if (l == null || w == null || h == null || l <= 0 || w <= 0 || h <= 0) return;
+    if (l == null || w == null || h == null || l <= 0 || w <= 0 || h <= 0) {
+      return;
+    }
 
     final vol = l * w * h;
 
@@ -68,12 +70,20 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Tính ACH',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -105,27 +115,49 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() { _calcFromAch = true; _recalculate(); }),
+              onTap: () => setState(() {
+                _calcFromAch = true;
+                _recalculate();
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: _calcFromAch ? AppColors.bgCard : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text('Tính CFM từ ACH', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Tính CFM từ ACH',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
           Expanded(
             child: GestureDetector(
-              onTap: () => setState(() { _calcFromAch = false; _recalculate(); }),
+              onTap: () => setState(() {
+                _calcFromAch = false;
+                _recalculate();
+              }),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: !_calcFromAch ? AppColors.bgCard : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text('Tính ACH từ CFM', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Tính ACH từ CFM',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
@@ -164,12 +196,24 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
   Widget _buildField(String label, TextEditingController ctrl, String unit) {
     return Row(
       children: [
-        Expanded(child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13))),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
         SizedBox(
           width: 120,
           child: TextField(
             controller: ctrl,
-            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textAlign: TextAlign.right,
             decoration: InputDecoration(
@@ -177,7 +221,10 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
               isDense: true,
               contentPadding: EdgeInsets.zero,
               suffixText: unit,
-              suffixStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              suffixStyle: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
             ),
           ),
         ),
@@ -188,7 +235,10 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
   Widget _buildUnitToggle() {
     return Row(
       children: [
-        const Text('Hệ đơn vị:', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+        const Text(
+          'Hệ đơn vị:',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+        ),
         const SizedBox(width: 12),
         SegmentedButton<UnitSystem>(
           segments: const [
@@ -226,7 +276,10 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
           const SizedBox(height: 8),
           _buildResultRow('ACH', '${ach.toStringAsFixed(1)} lần/giờ'),
           const SizedBox(height: 8),
-          _buildResultRow('Lưu lượng cần thiết', '${cfm.toStringAsFixed(1)} CFM'),
+          _buildResultRow(
+            'Lưu lượng cần thiết',
+            '${cfm.toStringAsFixed(1)} CFM',
+          ),
         ],
       ),
     );
@@ -236,8 +289,18 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -260,14 +323,35 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('ACH THAM KHẢO THEO KHÔNG GIAN', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text(
+            'ACH THAM KHẢO THEO KHÔNG GIAN',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
           const SizedBox(height: 12),
           for (final g in guides) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(g.$1, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                Text(g.$2, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(
+                  g.$1,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  g.$2,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),

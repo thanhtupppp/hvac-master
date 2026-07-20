@@ -19,8 +19,12 @@ class HvacInput {
 
   bool get isValid {
     if (flowRate <= 0) return false;
-    if (method == CalculationMethod.velocity && targetVelocity <= 0) return false;
-    if (method == CalculationMethod.equalFriction && frictionRate <= 0) return false;
+    if (method == CalculationMethod.velocity && targetVelocity <= 0) {
+      return false;
+    }
+    if (method == CalculationMethod.equalFriction && frictionRate <= 0) {
+      return false;
+    }
     return true;
   }
 }

@@ -108,7 +108,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Navigator.pop(context); // Close dialog
               _executeDeleteAccount();
             },
-            child: const Text('Xác nhận xóa', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Xác nhận xóa',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -129,7 +132,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: AppColors.bgSecondary,
-          title: const Text('Yêu cầu đăng nhập lại', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Yêu cầu đăng nhập lại',
+            style: TextStyle(color: Colors.white),
+          ),
           content: Text(
             e.toString().contains('đăng nhập lại')
                 ? 'Để thực hiện thao tác nhạy cảm này, vui lòng đăng xuất và đăng nhập lại tài khoản của bạn.'
@@ -163,12 +169,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Trang cá nhân',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
@@ -188,9 +202,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _nameController.text = user.displayName;
           }
 
-          final colors = _avatarGradients[user.photoURL] ?? _avatarGradients['purple']!;
+          final colors =
+              _avatarGradients[user.photoURL] ?? _avatarGradients['purple']!;
           final avatarText = user.displayName.isNotEmpty
-              ? user.displayName.substring(0, user.displayName.length > 2 ? 2 : user.displayName.length).toUpperCase()
+              ? user.displayName
+                    .substring(
+                      0,
+                      user.displayName.length > 2 ? 2 : user.displayName.length,
+                    )
+                    .toUpperCase()
               : '?';
 
           final expiryText = user.premiumExpiry != null
@@ -244,7 +264,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: Colors.amber,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.stars, color: Colors.white, size: 16),
+                          child: Icon(
+                            Icons.stars,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                     ],
                   ),
@@ -298,7 +322,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: AppColors.bgCard,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: user.isPremium ? Colors.amber.withValues(alpha: 0.3) : AppColors.divider,
+                      color: user.isPremium
+                          ? Colors.amber.withValues(alpha: 0.3)
+                          : AppColors.divider,
                       width: 1.5,
                     ),
                   ),
@@ -306,7 +332,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       Icon(
                         user.isPremium ? Icons.stars : Icons.star_outline,
-                        color: user.isPremium ? Colors.amber : AppColors.textMuted,
+                        color: user.isPremium
+                            ? Colors.amber
+                            : AppColors.textMuted,
                         size: 32,
                       ),
                       const SizedBox(width: 16),
@@ -315,16 +343,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              user.isPremium ? 'Tài khoản Premium (VIP)' : 'Tài khoản Miễn phí',
+                              user.isPremium
+                                  ? 'Tài khoản Premium (VIP)'
+                                  : 'Tài khoản Miễn phí',
                               style: TextStyle(
-                                color: user.isPremium ? Colors.amber : Colors.white,
+                                color: user.isPremium
+                                    ? Colors.amber
+                                    : Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              user.isPremium ? 'Hết hạn ngày: $expiryText' : 'Nâng cấp để mở khóa mọi tài liệu kỹ thuật.',
+                              user.isPremium
+                                  ? 'Hết hạn ngày: $expiryText'
+                                  : 'Nâng cấp để mở khóa mọi tài liệu kỹ thuật.',
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 12,
@@ -360,35 +394,57 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       // Email Address (Read-only)
                       const Text(
                         'Email đăng ký',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         user.email,
-                        style: const TextStyle(color: Colors.white70, fontSize: 15, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const Divider(height: 32, color: AppColors.divider),
 
                       // Display Name Input
                       const Text(
                         'Tên hiển thị',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _nameController,
-                        style: const TextStyle(color: Colors.white, fontSize: 15),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Nhập tên hiển thị...',
-                          hintStyle: const TextStyle(color: AppColors.textMuted),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          hintStyle: const TextStyle(
+                            color: AppColors.textMuted,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.divider),
+                            borderSide: const BorderSide(
+                              color: AppColors.divider,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.accentPrimary),
+                            borderSide: const BorderSide(
+                              color: AppColors.accentPrimary,
+                            ),
                           ),
                           filled: true,
                           fillColor: AppColors.bgPrimary,
@@ -405,7 +461,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 13,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -415,7 +474,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
                       _successMessage!,
-                      style: const TextStyle(color: Colors.greenAccent, fontSize: 13),
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 13,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -437,9 +499,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
-                        : const Text('Lưu thay đổi', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        : const Text(
+                            'Lưu thay đổi',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -464,9 +535,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       // Logout
                       ListTile(
-                        leading: const Icon(Icons.logout, color: Colors.white70),
-                        title: const Text('Đăng xuất', style: TextStyle(color: Colors.white, fontSize: 14)),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted),
+                        leading: const Icon(
+                          Icons.logout,
+                          color: Colors.white70,
+                        ),
+                        title: const Text(
+                          'Đăng xuất',
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
                         onTap: () async {
                           await FirebaseAuth.instance.signOut();
                           if (!context.mounted) return;
@@ -476,9 +557,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       const Divider(color: AppColors.divider, height: 1),
                       // Delete account
                       ListTile(
-                        leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                        title: const Text('Yêu cầu xóa tài khoản', style: TextStyle(color: Colors.redAccent, fontSize: 14)),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textMuted),
+                        leading: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.redAccent,
+                        ),
+                        title: const Text(
+                          'Yêu cầu xóa tài khoản',
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 14,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
                         onTap: _confirmDeleteAccount,
                       ),
                     ],

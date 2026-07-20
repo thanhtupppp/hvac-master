@@ -165,7 +165,9 @@ class BookmarksTab extends ConsumerWidget {
                               if (fullDoc.exists) {
                                 final article = Article.fromFirestore(fullDoc);
                                 if (context.mounted) {
-                                  ref.read(historyProvider.notifier).addArticleToHistory(article.id);
+                                  ref
+                                      .read(historyProvider.notifier)
+                                      .addArticleToHistory(article.id);
                                   Navigator.pushNamed(
                                     context,
                                     AppRoutes.guideDetail,

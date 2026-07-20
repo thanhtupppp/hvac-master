@@ -25,10 +25,12 @@ class InputValidator {
     if (!isValidFlowRate(input.flowRate)) {
       return 'Lưu lượng gió phải lớn hơn 0';
     }
-    if (input.method == CalculationMethod.velocity && !isValidVelocity(input.targetVelocity)) {
+    if (input.method == CalculationMethod.velocity &&
+        !isValidVelocity(input.targetVelocity)) {
       return 'Vận tốc gió phải lớn hơn 0';
     }
-    if (input.method == CalculationMethod.equalFriction && !isValidFrictionRate(input.frictionRate)) {
+    if (input.method == CalculationMethod.equalFriction &&
+        !isValidFrictionRate(input.frictionRate)) {
       return 'Tỷ lệ ma sát phải lớn hơn 0';
     }
     return null;

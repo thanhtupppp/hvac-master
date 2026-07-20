@@ -36,12 +36,20 @@ class _PTCalculatorScreenState extends State<PTCalculatorScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Thước kéo tra môi chất Lạnh',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -55,16 +63,13 @@ class _PTCalculatorScreenState extends State<PTCalculatorScreen> {
               icon: const Icon(Icons.tune, color: Colors.white, size: 20),
               onPressed: () => _showSettingsBottomSheet(context),
             ),
-          )
+          ),
         ],
       ),
       body: Row(
         children: [
           // Left Side: Vertical Sliding Ruler (Self-updating, not affected by global AnimatedBuilder)
-          Expanded(
-            flex: 4,
-            child: PressureRuler(controller: _controller),
-          ),
+          Expanded(flex: 4, child: PressureRuler(controller: _controller)),
 
           // Right Side: Control Panels & Readouts (Rebuilds only when global config changes)
           Expanded(
@@ -84,7 +89,8 @@ class _PTCalculatorScreenState extends State<PTCalculatorScreen> {
                     onTempSubmitted: _controller.submitTempInput,
                     onPressureSubmitted: _controller.submitPressureInput,
                     getTempDisplayValue: _controller.getTempDisplayValue,
-                    getPressureDisplayValue: _controller.getPressureDisplayValue,
+                    getPressureDisplayValue:
+                        _controller.getPressureDisplayValue,
                   ),
                   onSelectRefrigerant: () async {
                     final result = await Navigator.push<RefrigerantModel>(
@@ -155,7 +161,10 @@ class _RightPanel extends StatelessWidget {
               child: InkWell(
                 onTap: onSelectRefrigerant,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -242,29 +251,23 @@ class _RightPanel extends StatelessWidget {
               children: [
                 _buildDetailRow('Nhóm an toàn', data.safetyGroup),
                 const SizedBox(height: 8),
-                _buildDetailRow(
-                  data.gwpLabel,
-                  data.gwpValue,
-                ),
+                _buildDetailRow(data.gwpLabel, data.gwpValue),
                 const SizedBox(height: 8),
                 _buildDetailRow('ODP', data.odpValue),
                 const SizedBox(height: 8),
-                _buildDetailRow(
-                  'Nhiệt độ tới hạn',
-                  data.criticalTempText,
-                ),
+                _buildDetailRow('Nhiệt độ tới hạn', data.criticalTempText),
                 const SizedBox(height: 8),
-                _buildDetailRow(
-                  'Điểm sôi (0 bar (g))',
-                  data.boilingPointText,
-                ),
+                _buildDetailRow('Điểm sôi (0 bar (g))', data.boilingPointText),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       'Màu',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
                     Container(
                       width: 12,
@@ -291,7 +294,10 @@ class _RightPanel extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
@@ -300,7 +306,11 @@ class _RightPanel extends StatelessWidget {
         Flexible(
           child: Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.end,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,

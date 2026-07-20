@@ -11,27 +11,43 @@ class PressureConverter {
 
   static double toPascal(double value, PressureUnit from) {
     switch (from) {
-      case PressureUnit.pa:    return value;
-      case PressureUnit.kpa:   return value * _paPerKpa;
-      case PressureUnit.mpa:   return value * _paPerMpa;
-      case PressureUnit.bar:   return value * _paPerBar;
-      case PressureUnit.psi:   return value * _paPerPsi;
-      case PressureUnit.inhg:  return value * _paPerInHg;
-      case PressureUnit.mmhg:  return value * _paPerMmHg;
-      case PressureUnit.inh2o: return value * _paPerInH2o;
+      case PressureUnit.pa:
+        return value;
+      case PressureUnit.kpa:
+        return value * _paPerKpa;
+      case PressureUnit.mpa:
+        return value * _paPerMpa;
+      case PressureUnit.bar:
+        return value * _paPerBar;
+      case PressureUnit.psi:
+        return value * _paPerPsi;
+      case PressureUnit.inhg:
+        return value * _paPerInHg;
+      case PressureUnit.mmhg:
+        return value * _paPerMmHg;
+      case PressureUnit.inh2o:
+        return value * _paPerInH2o;
     }
   }
 
   static double fromPascal(double pascal, PressureUnit to) {
     switch (to) {
-      case PressureUnit.pa:    return pascal;
-      case PressureUnit.kpa:   return pascal / _paPerKpa;
-      case PressureUnit.mpa:   return pascal / _paPerMpa;
-      case PressureUnit.bar:   return pascal / _paPerBar;
-      case PressureUnit.psi:   return pascal / _paPerPsi;
-      case PressureUnit.inhg:  return pascal / _paPerInHg;
-      case PressureUnit.mmhg:  return pascal / _paPerMmHg;
-      case PressureUnit.inh2o: return pascal / _paPerInH2o;
+      case PressureUnit.pa:
+        return pascal;
+      case PressureUnit.kpa:
+        return pascal / _paPerKpa;
+      case PressureUnit.mpa:
+        return pascal / _paPerMpa;
+      case PressureUnit.bar:
+        return pascal / _paPerBar;
+      case PressureUnit.psi:
+        return pascal / _paPerPsi;
+      case PressureUnit.inhg:
+        return pascal / _paPerInHg;
+      case PressureUnit.mmhg:
+        return pascal / _paPerMmHg;
+      case PressureUnit.inh2o:
+        return pascal / _paPerInH2o;
     }
   }
 
@@ -42,27 +58,43 @@ class PressureConverter {
 
   static String label(PressureUnit unit) {
     switch (unit) {
-      case PressureUnit.pa:    return 'Pa';
-      case PressureUnit.kpa:   return 'kPa';
-      case PressureUnit.mpa:   return 'MPa';
-      case PressureUnit.bar:   return 'Bar';
-      case PressureUnit.psi:   return 'PSI';
-      case PressureUnit.inhg:  return 'inHg';
-      case PressureUnit.mmhg:  return 'mmHg';
-      case PressureUnit.inh2o: return 'inH₂O';
+      case PressureUnit.pa:
+        return 'Pa';
+      case PressureUnit.kpa:
+        return 'kPa';
+      case PressureUnit.mpa:
+        return 'MPa';
+      case PressureUnit.bar:
+        return 'Bar';
+      case PressureUnit.psi:
+        return 'PSI';
+      case PressureUnit.inhg:
+        return 'inHg';
+      case PressureUnit.mmhg:
+        return 'mmHg';
+      case PressureUnit.inh2o:
+        return 'inH₂O';
     }
   }
 
   static String description(PressureUnit unit) {
     switch (unit) {
-      case PressureUnit.pa:    return 'Pascal';
-      case PressureUnit.kpa:   return 'Kilopascal';
-      case PressureUnit.mpa:   return 'Megapascal';
-      case PressureUnit.bar:   return 'Bar';
-      case PressureUnit.psi:   return 'Pounds per square inch';
-      case PressureUnit.inhg:  return 'Inches of Mercury';
-      case PressureUnit.mmhg:  return 'Millimeters of Mercury';
-      case PressureUnit.inh2o: return 'Inches of Water';
+      case PressureUnit.pa:
+        return 'Pascal';
+      case PressureUnit.kpa:
+        return 'Kilopascal';
+      case PressureUnit.mpa:
+        return 'Megapascal';
+      case PressureUnit.bar:
+        return 'Bar';
+      case PressureUnit.psi:
+        return 'Pounds per square inch';
+      case PressureUnit.inhg:
+        return 'Inches of Mercury';
+      case PressureUnit.mmhg:
+        return 'Millimeters of Mercury';
+      case PressureUnit.inh2o:
+        return 'Inches of Water';
     }
   }
 

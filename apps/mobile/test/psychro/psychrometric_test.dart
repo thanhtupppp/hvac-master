@@ -23,7 +23,10 @@ void main() {
     test('saturationVaporPressure positive for positive temps', () {
       expect(saturationVaporPressure(20), greaterThan(0));
       expect(saturationVaporPressure(0), greaterThan(0));
-      expect(saturationVaporPressure(37.78), closeTo(6.54, 0.1)); // 100°F in hPa
+      expect(
+        saturationVaporPressure(37.78),
+        closeTo(6.54, 0.1),
+      ); // 100°F in hPa
     });
 
     test('humidityRatio returns NaN for invalid RH', () {

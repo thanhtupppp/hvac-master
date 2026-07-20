@@ -72,7 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final canCheck =
         await _localAuth.canCheckBiometrics ||
         await _localAuth.isDeviceSupported();
-    
+
     final biometricEnabled = enabled == 'true';
 
     setState(() {
@@ -143,7 +143,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return 'Chào buổi tối';
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (!_isUnlocked) {
@@ -158,7 +157,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withValues(alpha: 0.03),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
                 ),
                 child: const Icon(
                   Icons.lock_outline,
@@ -178,10 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Vui lòng xác thực vân tay để truy cập',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 48),
               GestureDetector(
@@ -215,9 +213,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: const Icon(Icons.logout, size: 16),
                 label: const Text(
                   'Đăng nhập bằng tài khoản khác',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.accentBright,
@@ -397,11 +393,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userAsync = ref.watch(userProfileProvider);
     final userModel = userAsync.asData?.value;
 
-    final displayName = userModel?.displayName ??
-        (FirebaseAuth.instance.currentUser?.email?.split('@').first ?? 'Kỹ thuật viên');
+    final displayName =
+        userModel?.displayName ??
+        (FirebaseAuth.instance.currentUser?.email?.split('@').first ??
+            'Kỹ thuật viên');
 
     final avatarText = displayName.isNotEmpty
-        ? displayName.substring(0, displayName.length > 2 ? 2 : displayName.length).toUpperCase()
+        ? displayName
+              .substring(0, displayName.length > 2 ? 2 : displayName.length)
+              .toUpperCase()
         : '?';
 
     final Map<String, List<Color>> avatarGradients = {
@@ -412,7 +412,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'green': [const Color(0xFF4CAF50), const Color(0xFF8BC34A)],
     };
 
-    final colors = avatarGradients[userModel?.photoURL ?? 'purple'] ?? avatarGradients['purple']!;
+    final colors =
+        avatarGradients[userModel?.photoURL ?? 'purple'] ??
+        avatarGradients['purple']!;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -480,7 +482,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             color: Colors.amber,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.stars, color: Colors.white, size: 8),
+                          child: Icon(
+                            Icons.stars,
+                            color: Colors.white,
+                            size: 8,
+                          ),
                         ),
                     ],
                   ),
@@ -563,14 +569,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
 
-
-
-        const SliverToBoxAdapter(
-          child: LatestArticlesSection(),
-        ),
-        const SliverToBoxAdapter(
-          child: PopularArticlesSection(),
-        ),
+        const SliverToBoxAdapter(child: LatestArticlesSection()),
+        const SliverToBoxAdapter(child: PopularArticlesSection()),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
@@ -621,8 +621,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-
-
   // Premium Settings Tab
   Widget _buildSettingsTab() {
     final userAsync = ref.watch(userProfileProvider);
@@ -646,10 +644,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           'green': [const Color(0xFF4CAF50), const Color(0xFF8BC34A)],
         };
 
-        final colors = avatarGradients[userModel.photoURL] ?? avatarGradients['purple']!;
+        final colors =
+            avatarGradients[userModel.photoURL] ?? avatarGradients['purple']!;
         final displayName = userModel.displayName;
         final avatarText = displayName.isNotEmpty
-            ? displayName.substring(0, displayName.length > 2 ? 2 : displayName.length).toUpperCase()
+            ? displayName
+                  .substring(0, displayName.length > 2 ? 2 : displayName.length)
+                  .toUpperCase()
             : '?';
 
         return CustomScrollView(
@@ -676,14 +677,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     // Mini Profile Card
                     GestureDetector(
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.profile),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppColors.bgCard,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: userModel.isPremium ? Colors.amber.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
+                            color: userModel.isPremium
+                                ? Colors.amber.withValues(alpha: 0.3)
+                                : Colors.white.withValues(alpha: 0.05),
                             width: 1.5,
                           ),
                         ),
@@ -733,20 +737,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       if (userModel.isPremium) ...[
                                         const SizedBox(width: 8),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: Colors.amber.withValues(alpha: 0.2),
-                                            borderRadius: BorderRadius.circular(6),
-                                            border: Border.all(color: Colors.amber, width: 0.5),
+                                            color: Colors.amber.withValues(
+                                              alpha: 0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.amber,
+                                              width: 0.5,
+                                            ),
                                           ),
                                           child: const Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.stars, color: Colors.amber, size: 10),
+                                              Icon(
+                                                Icons.stars,
+                                                color: Colors.amber,
+                                                size: 10,
+                                              ),
                                               SizedBox(width: 4),
                                               Text(
                                                 'VIP',
-                                                style: TextStyle(color: Colors.amber, fontSize: 8, fontWeight: FontWeight.bold),
+                                                style: TextStyle(
+                                                  color: Colors.amber,
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -806,7 +828,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             children: [
                               Row(
                                 children: const [
-                                  Icon(Icons.fingerprint, color: Color(0xFF388AF6)),
+                                  Icon(
+                                    Icons.fingerprint,
+                                    color: Color(0xFF388AF6),
+                                  ),
                                   SizedBox(width: 16),
                                   Text(
                                     'Đăng nhập bằng vân tay',
@@ -844,7 +869,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       height: 54,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[800]?.withValues(alpha: 0.2),
+                          backgroundColor: Colors.red[800]?.withValues(
+                            alpha: 0.2,
+                          ),
                           foregroundColor: Colors.red[200],
                           elevation: 0,
                           side: BorderSide(color: Colors.red[800]!),
@@ -872,7 +899,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Lỗi: ${err.toString()}', style: const TextStyle(color: Colors.red))),
+      error: (err, _) => Center(
+        child: Text(
+          'Lỗi: ${err.toString()}',
+          style: const TextStyle(color: Colors.red),
+        ),
+      ),
     );
   }
 
@@ -983,9 +1015,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     label: Text(
                       displayTitle,
                       style: TextStyle(
-                        color: isSelected
-                            ? Colors.white
-                            : AppColors.textMuted,
+                        color: isSelected ? Colors.white : AppColors.textMuted,
                         fontSize: 13,
                         fontWeight: isSelected
                             ? FontWeight.bold
@@ -1026,8 +1056,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
     );
   }
-
-
 
   Widget _buildPopularSearches() {
     return StreamBuilder<QuerySnapshot>(
@@ -1161,7 +1189,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   if (currentQuery.isNotEmpty) {
                     _logSearchQuery(currentQuery);
                   }
-                  ref.read(historyProvider.notifier).addArticleToHistory(article.id);
+                  ref
+                      .read(historyProvider.notifier)
+                      .addArticleToHistory(article.id);
                   Navigator.pushNamed(
                     context,
                     AppRoutes.guideDetail,
@@ -1258,8 +1288,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
     );
   }
-
-
 }
 
 class _NavPainter extends CustomPainter {
@@ -1272,7 +1300,7 @@ class _NavPainter extends CustomPainter {
     final fillPaint = Paint()
       ..color = AppColors.bgSecondary
       ..style = PaintingStyle.fill;
-      
+
     final borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -1298,7 +1326,7 @@ class _NavPainter extends CustomPainter {
 
     // Draw background
     canvas.drawPath(path, fillPaint);
-    
+
     // Draw top border only
     final borderPath = Path();
     borderPath.moveTo(0, top);
@@ -1306,7 +1334,7 @@ class _NavPainter extends CustomPainter {
     borderPath.cubicTo(loc - 20, top, loc - 20, 10, loc, 10);
     borderPath.cubicTo(loc + 20, 10, loc + 20, top, loc + 40, top);
     borderPath.lineTo(size.width, top);
-    
+
     canvas.drawPath(borderPath, borderPaint);
   }
 
@@ -1314,5 +1342,3 @@ class _NavPainter extends CustomPainter {
   bool shouldRepaint(covariant _NavPainter oldDelegate) =>
       oldDelegate.loc != loc;
 }
-
-

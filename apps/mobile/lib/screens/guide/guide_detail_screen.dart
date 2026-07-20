@@ -13,10 +13,7 @@ import '../../providers/user_provider.dart';
 class GuideDetailScreen extends ConsumerStatefulWidget {
   final Article article;
 
-  const GuideDetailScreen({
-    super.key,
-    required this.article,
-  });
+  const GuideDetailScreen({super.key, required this.article});
 
   @override
   ConsumerState<GuideDetailScreen> createState() => _GuideDetailScreenState();
@@ -83,8 +80,12 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
 
   void _initVideoPlayer() {
     if (_videoPlayerController != null) return;
-    if (widget.article.videoUrl != null && widget.article.videoUrl!.isNotEmpty && !_isLocked) {
-      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.article.videoUrl!));
+    if (widget.article.videoUrl != null &&
+        widget.article.videoUrl!.isNotEmpty &&
+        !_isLocked) {
+      _videoPlayerController = VideoPlayerController.networkUrl(
+        Uri.parse(widget.article.videoUrl!),
+      );
       _chewieController = ChewieController(
         videoPlayerController: _videoPlayerController!,
         autoPlay: false,
@@ -120,9 +121,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
         .replaceAll(RegExp(r'<p>'), '')
         .replaceAll(RegExp(r'</li>'), '\n')
         .replaceAll(RegExp(r'<ul>|</ul>|<li>'), '');
-    
+
     result = result.replaceAll(RegExp(r'<[^>]*>'), '');
-    
+
     result = result
         .replaceAll('&nbsp;', ' ')
         .replaceAll('&amp;', '&')
@@ -130,13 +131,18 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
         .replaceAll('&gt;', '>')
         .replaceAll('&quot;', '"')
         .replaceAll('&#39;', "'");
-        
+
     return result.trim();
   }
 
   bool _isImageUrl(String text) {
     final clean = text.trim();
-    return (clean.startsWith('http') && (clean.contains('cloudinary.com') || clean.endsWith('.png') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.webp')));
+    return (clean.startsWith('http') &&
+        (clean.contains('cloudinary.com') ||
+            clean.endsWith('.png') ||
+            clean.endsWith('.jpg') ||
+            clean.endsWith('.jpeg') ||
+            clean.endsWith('.webp')));
   }
 
   String? _extractMarkdownImageUrl(String text) {
@@ -155,7 +161,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
     if (match != null) {
       final label = match.group(1) ?? 'Tài liệu PDF';
       final url = match.group(2) ?? '';
-      if (label.toLowerCase().contains('pdf') || url.toLowerCase().contains('.pdf') || url.toLowerCase().contains('/raw/upload/')) {
+      if (label.toLowerCase().contains('pdf') ||
+          url.toLowerCase().contains('.pdf') ||
+          url.toLowerCase().contains('/raw/upload/')) {
         return {'label': label, 'url': url};
       }
     }
@@ -191,7 +199,8 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  (label.toLowerCase() == 'pdf' || label.toLowerCase() == 'tài liệu pdf')
+                  (label.toLowerCase() == 'pdf' ||
+                          label.toLowerCase() == 'tài liệu pdf')
                       ? 'Tài liệu hướng dẫn kỹ thuật'
                       : label,
                   maxLines: 1,
@@ -217,20 +226,24 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             onPressed: () {
               if (_isLocked) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tài liệu VIP - Vui lòng nâng cấp tài khoản để xem')),
+                  const SnackBar(
+                    content: Text(
+                      'Tài liệu VIP - Vui lòng nâng cấp tài khoản để xem',
+                    ),
+                  ),
                 );
                 return;
               }
               Navigator.pushNamed(
                 context,
                 AppRoutes.pdfViewer,
-                arguments: {
-                  'pdfUrl': url,
-                  'title': label,
-                },
+                arguments: {'pdfUrl': url, 'title': label},
               );
             },
-            child: const Text('Đọc ngay', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Đọc ngay',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -274,7 +287,13 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
     );
   }
 
-  Widget _buildActiveTabContent(String causes, String steps, String notes, bool hasVideo, bool hasPdf) {
+  Widget _buildActiveTabContent(
+    String causes,
+    String steps,
+    String notes,
+    bool hasVideo,
+    bool hasPdf,
+  ) {
     if (_activeTabIndex == 0) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -311,12 +330,21 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
   }
 
   Widget _buildStructuredContent(String causes, String steps, String notes) {
-    final hasVideo = widget.article.videoUrl != null && widget.article.videoUrl!.isNotEmpty;
-    final hasPdf = widget.article.pdfUrl != null && widget.article.pdfUrl!.isNotEmpty;
-    
-    final hasInlinePdf = causes.contains('[') && causes.contains(']') && (causes.contains('.pdf') || causes.contains('/raw/upload/')) ||
-                         steps.contains('[') && steps.contains(']') && (steps.contains('.pdf') || steps.contains('/raw/upload/')) ||
-                         notes.contains('[') && notes.contains(']') && (notes.contains('.pdf') || notes.contains('/raw/upload/'));
+    final hasVideo =
+        widget.article.videoUrl != null && widget.article.videoUrl!.isNotEmpty;
+    final hasPdf =
+        widget.article.pdfUrl != null && widget.article.pdfUrl!.isNotEmpty;
+
+    final hasInlinePdf =
+        causes.contains('[') &&
+            causes.contains(']') &&
+            (causes.contains('.pdf') || causes.contains('/raw/upload/')) ||
+        steps.contains('[') &&
+            steps.contains(']') &&
+            (steps.contains('.pdf') || steps.contains('/raw/upload/')) ||
+        notes.contains('[') &&
+            notes.contains(']') &&
+            (notes.contains('.pdf') || notes.contains('/raw/upload/'));
 
     final tabCount = (hasVideo ? 1 : 0) + (hasPdf ? 1 : 0) + 1;
 
@@ -339,14 +367,18 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: _activeTabIndex == 0 ? const Color(0xFF388AF6) : Colors.transparent,
+                        color: _activeTabIndex == 0
+                            ? const Color(0xFF388AF6)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Center(
                         child: Text(
                           'QUY TRÌNH',
                           style: TextStyle(
-                            color: _activeTabIndex == 0 ? Colors.white : const Color(0xFF5A6B8F),
+                            color: _activeTabIndex == 0
+                                ? Colors.white
+                                : const Color(0xFF5A6B8F),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -363,14 +395,18 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: _activeTabIndex == 1 ? const Color(0xFF388AF6) : Colors.transparent,
+                          color: _activeTabIndex == 1
+                              ? const Color(0xFF388AF6)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
                             'CLIP HƯỚNG DẪN',
                             style: TextStyle(
-                              color: _activeTabIndex == 1 ? Colors.white : const Color(0xFF5A6B8F),
+                              color: _activeTabIndex == 1
+                                  ? Colors.white
+                                  : const Color(0xFF5A6B8F),
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -384,18 +420,23 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _activeTabIndex = hasVideo ? 2 : 1),
+                      onTap: () =>
+                          setState(() => _activeTabIndex = hasVideo ? 2 : 1),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: _activeTabIndex == (hasVideo ? 2 : 1) ? const Color(0xFF388AF6) : Colors.transparent,
+                          color: _activeTabIndex == (hasVideo ? 2 : 1)
+                              ? const Color(0xFF388AF6)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
                             'TÀI LIỆU HÃNG',
                             style: TextStyle(
-                              color: _activeTabIndex == (hasVideo ? 2 : 1) ? Colors.white : const Color(0xFF5A6B8F),
+                              color: _activeTabIndex == (hasVideo ? 2 : 1)
+                                  ? Colors.white
+                                  : const Color(0xFF5A6B8F),
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -410,9 +451,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
           ),
           const SizedBox(height: 20),
         ],
-        
+
         // Tab Content
-        if (tabCount > 1) 
+        if (tabCount > 1)
           _buildActiveTabContent(causes, steps, notes, hasVideo, hasPdf)
         else
           Column(
@@ -434,7 +475,10 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
           ),
 
         // Bottom PDF fallback check for non-tabbed view
-        if (tabCount == 1 && widget.article.pdfUrl != null && widget.article.pdfUrl!.isNotEmpty && !hasInlinePdf) ...[
+        if (tabCount == 1 &&
+            widget.article.pdfUrl != null &&
+            widget.article.pdfUrl!.isNotEmpty &&
+            !hasInlinePdf) ...[
           _buildPdfDocumentCard(context),
         ],
       ],
@@ -453,7 +497,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
       children: [
         const Row(
           children: [
-            Icon(Icons.video_library_outlined, color: Color(0xFF388AF6), size: 20),
+            Icon(
+              Icons.video_library_outlined,
+              color: Color(0xFF388AF6),
+              size: 20,
+            ),
             SizedBox(width: 8),
             Text(
               'VIDEO HƯỚNG DẪN THỰC TẾ',
@@ -484,7 +532,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                         child: Container(
                           color: Colors.grey[950],
                           child: const Center(
-                            child: Icon(Icons.play_circle_outline, color: Colors.white30, size: 64),
+                            child: Icon(
+                              Icons.play_circle_outline,
+                              color: Colors.white30,
+                              size: 64,
+                            ),
                           ),
                         ),
                       ),
@@ -495,11 +547,19 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.lock, color: Colors.orange, size: 24),
+                                Icon(
+                                  Icons.lock,
+                                  color: Colors.orange,
+                                  size: 24,
+                                ),
                                 SizedBox(height: 8),
                                 Text(
                                   'Video Premium (VIP)',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ],
                             ),
@@ -509,10 +569,10 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                     ],
                   )
                 : _isVideoInitialized && _chewieController != null
-                    ? Chewie(controller: _chewieController!)
-                    : const Center(
-                        child: CircularProgressIndicator(color: Color(0xFF388AF6)),
-                      ),
+                ? Chewie(controller: _chewieController!)
+                : const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF388AF6)),
+                  ),
           ),
         ),
       ],
@@ -566,7 +626,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             onPressed: () {
               if (_isLocked) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Tài liệu VIP - Vui lòng nâng cấp tài khoản để xem')),
+                  const SnackBar(
+                    content: Text(
+                      'Tài liệu VIP - Vui lòng nâng cấp tài khoản để xem',
+                    ),
+                  ),
                 );
                 return;
               }
@@ -579,7 +643,10 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 },
               );
             },
-            child: const Text('Đọc ngay', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Đọc ngay',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -588,15 +655,22 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
 
   Widget _buildCausesSection(String causes) {
     final cleanText = _stripHtml(causes);
-    final lines = cleanText.split('\n').where((l) => l.trim().isNotEmpty).toList();
-    
+    final lines = cleanText
+        .split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF5722).withAlpha(13), // 0.05 alpha approximately 13
+        color: const Color(
+          0xFFFF5722,
+        ).withAlpha(13), // 0.05 alpha approximately 13
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFF5722).withAlpha(51), // 0.2 alpha approximately 51
+          color: const Color(
+            0xFFFF5722,
+          ).withAlpha(51), // 0.2 alpha approximately 51
           width: 1,
         ),
       ),
@@ -605,7 +679,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.report_problem_outlined, color: Color(0xFFFF7043), size: 20),
+              Icon(
+                Icons.report_problem_outlined,
+                color: Color(0xFFFF7043),
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'NGUYÊN NHÂN GÂY LỖI',
@@ -627,7 +705,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             }
             final pdfLink = _extractMarkdownPdfLink(displayText);
             if (pdfLink != null) {
-              return _buildInlinePdfCard(context, pdfLink['label']!, pdfLink['url']!);
+              return _buildInlinePdfCard(
+                context,
+                pdfLink['label']!,
+                pdfLink['url']!,
+              );
             }
             if (displayText.startsWith('-') || displayText.startsWith('*')) {
               displayText = displayText.substring(1).trim();
@@ -637,7 +719,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.arrow_right, color: Color(0xFFFF7043), size: 18),
+                  const Icon(
+                    Icons.arrow_right,
+                    color: Color(0xFFFF7043),
+                    size: 18,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -660,14 +746,21 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
 
   Widget _buildStepsSection(String steps) {
     final cleanText = _stripHtml(steps);
-    final lines = cleanText.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    final lines = cleanText
+        .split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           children: [
-            Icon(Icons.build_circle_outlined, color: Color(0xFF388AF6), size: 20),
+            Icon(
+              Icons.build_circle_outlined,
+              color: Color(0xFF388AF6),
+              size: 20,
+            ),
             SizedBox(width: 8),
             Text(
               'QUY TRÌNH HƯỚNG DẪN XỬ LÝ',
@@ -715,7 +808,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildInlinePdfCard(context, pdfLink['label']!, pdfLink['url']!),
+                      child: _buildInlinePdfCard(
+                        context,
+                        pdfLink['label']!,
+                        pdfLink['url']!,
+                      ),
                     ),
                   ),
                 ],
@@ -723,10 +820,13 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             );
           }
 
-          final stepPattern = RegExp(r'^(bước|step|b)\s*\d+[:\s\.]*', caseSensitive: false);
+          final stepPattern = RegExp(
+            r'^(bước|step|b)\s*\d+[:\s\.]*',
+            caseSensitive: false,
+          );
           String stepNumber = '${index + 1}';
           String stepText = line;
-          
+
           if (stepPattern.hasMatch(line)) {
             final match = stepPattern.firstMatch(line);
             if (match != null) {
@@ -749,9 +849,14 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF388AF6).withAlpha(38), // 0.15 alpha
+                        color: const Color(
+                          0xFF388AF6,
+                        ).withAlpha(38), // 0.15 alpha
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF388AF6), width: 1.5),
+                        border: Border.all(
+                          color: const Color(0xFF388AF6),
+                          width: 1.5,
+                        ),
                       ),
                       child: Center(
                         child: Text(
@@ -768,7 +873,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       Expanded(
                         child: Container(
                           width: 1.5,
-                          color: const Color(0xFF388AF6).withAlpha(76), // 0.3 alpha
+                          color: const Color(
+                            0xFF388AF6,
+                          ).withAlpha(76), // 0.3 alpha
                           margin: const EdgeInsets.symmetric(vertical: 4),
                         ),
                       ),
@@ -780,9 +887,13 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1D2A4A).withAlpha(102), // 0.4 alpha
+                      color: const Color(
+                        0xFF1D2A4A,
+                      ).withAlpha(102), // 0.4 alpha
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withAlpha(8)), // 0.03 alpha
+                      border: Border.all(
+                        color: Colors.white.withAlpha(8),
+                      ), // 0.03 alpha
                     ),
                     child: Text(
                       stepText,
@@ -804,7 +915,10 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
 
   Widget _buildNotesSection(String notes) {
     final cleanText = _stripHtml(notes);
-    final lines = cleanText.split('\n').where((l) => l.trim().isNotEmpty).toList();
+    final lines = cleanText
+        .split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .toList();
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -843,7 +957,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
             }
             final pdfLink = _extractMarkdownPdfLink(displayText);
             if (pdfLink != null) {
-              return _buildInlinePdfCard(context, pdfLink['label']!, pdfLink['url']!);
+              return _buildInlinePdfCard(
+                context,
+                pdfLink['label']!,
+                pdfLink['url']!,
+              );
             }
             if (displayText.startsWith('-') || displayText.startsWith('*')) {
               displayText = displayText.substring(1).trim();
@@ -853,7 +971,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline, color: Color(0xFFFFB300), size: 14),
+                  const Icon(
+                    Icons.info_outline,
+                    color: Color(0xFFFFB300),
+                    size: 14,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -885,7 +1007,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
       case 'microwave':
         return 'Lò vi sóng';
       default:
-        return key.replaceAll('-', ' ').split(' ').map((str) => str[0].toUpperCase() + str.substring(1)).join(' ');
+        return key
+            .replaceAll('-', ' ')
+            .split(' ')
+            .map((str) => str[0].toUpperCase() + str.substring(1))
+            .join(' ');
     }
   }
 
@@ -909,7 +1035,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 panEnabled: true,
                 minScale: 0.5,
                 maxScale: 6.0,
-                child: widget.article.imageUrl != null && widget.article.imageUrl!.isNotEmpty
+                child:
+                    widget.article.imageUrl != null &&
+                        widget.article.imageUrl!.isNotEmpty
                     ? Image.network(
                         widget.article.imageUrl!,
                         fit: BoxFit.contain,
@@ -949,7 +1077,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
     final causes = widget.article.getCauses(langCode);
     final steps = widget.article.getSteps(langCode);
     final notes = widget.article.getNotes(langCode);
-    final previewText = causes.isNotEmpty ? causes : (steps.isNotEmpty ? steps : notes);
+    final previewText = causes.isNotEmpty
+        ? causes
+        : (steps.isNotEmpty ? steps : notes);
     final categoryName = _getCategoryDisplayName(widget.article.category);
 
     return Scaffold(
@@ -963,20 +1093,28 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
               pinned: true,
               backgroundColor: const Color(0xFF0A0F1D),
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               actions: [
                 IconButton(
                   icon: Icon(
                     _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: _isBookmarked ? const Color(0xFF388AF6) : Colors.white,
+                    color: _isBookmarked
+                        ? const Color(0xFF388AF6)
+                        : Colors.white,
                   ),
                   onPressed: () async {
                     final user = FirebaseAuth.instance.currentUser;
                     if (user == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Vui lòng đăng nhập để lưu bài viết.')),
+                        const SnackBar(
+                          content: Text('Vui lòng đăng nhập để lưu bài viết.'),
+                        ),
                       );
                       return;
                     }
@@ -1005,13 +1143,13 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       } else {
                         await docRef.delete();
                       }
-                      
+
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              newBookmarkStatus 
-                                  ? 'Đã lưu hướng dẫn này' 
+                              newBookmarkStatus
+                                  ? 'Đã lưu hướng dẫn này'
                                   : 'Đã hủy lưu hướng dẫn',
                             ),
                             duration: const Duration(seconds: 1),
@@ -1024,7 +1162,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       });
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Lỗi khi cập nhật yêu thích: $e')),
+                          SnackBar(
+                            content: Text('Lỗi khi cập nhật yêu thích: $e'),
+                          ),
                         );
                       }
                     }
@@ -1034,14 +1174,20 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                   icon: const Icon(Icons.share),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đang chuẩn bị link chia sẻ...')),
+                      const SnackBar(
+                        content: Text('Đang chuẩn bị link chia sẻ...'),
+                      ),
                     );
                   },
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(
                 centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 56, bottom: 14, right: 16),
+                titlePadding: const EdgeInsets.only(
+                  left: 56,
+                  bottom: 14,
+                  right: 16,
+                ),
                 title: Text(
                   title,
                   maxLines: 1,
@@ -1066,13 +1212,15 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       ),
                     ),
                     // Cloudinary Image as cover background with opacity blending
-                    if (widget.article.imageUrl != null && widget.article.imageUrl!.isNotEmpty)
+                    if (widget.article.imageUrl != null &&
+                        widget.article.imageUrl!.isNotEmpty)
                       Opacity(
                         opacity: 0.25,
                         child: Image.network(
                           widget.article.imageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox(),
                         ),
                       ),
                     // Grid background
@@ -1091,11 +1239,20 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF388AF6).withValues(alpha: 0.15),
+                              color: const Color(
+                                0xFF388AF6,
+                              ).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFF388AF6).withValues(alpha: 0.3)),
+                              border: Border.all(
+                                color: const Color(
+                                  0xFF388AF6,
+                                ).withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Text(
                               categoryName.toUpperCase(),
@@ -1129,7 +1286,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF1D2A4A),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1147,7 +1306,10 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amber[800],
                             borderRadius: BorderRadius.circular(6),
@@ -1180,8 +1342,8 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    widget.article.isPremium 
-                        ? 'SƠ ĐỒ MẠCH ĐIỆN (PREMIUM)' 
+                    widget.article.isPremium
+                        ? 'SƠ ĐỒ MẠCH ĐIỆN (PREMIUM)'
                         : 'SƠ ĐỒ MẠCH ĐIỆN',
                     style: const TextStyle(
                       color: Color(0xFF5A6B8F),
@@ -1195,7 +1357,11 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       onTap: () => _showFullscreenBlueprint(context),
                       child: const Row(
                         children: [
-                          Icon(Icons.fullscreen, color: Color(0xFF388AF6), size: 16),
+                          Icon(
+                            Icons.fullscreen,
+                            color: Color(0xFF388AF6),
+                            size: 16,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'Phóng to',
@@ -1219,7 +1385,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0F1E36),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
@@ -1227,8 +1395,13 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                       ? Stack(
                           children: [
                             ImageFiltered(
-                              imageFilter: ui.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                              child: widget.article.imageUrl != null && widget.article.imageUrl!.isNotEmpty
+                              imageFilter: ui.ImageFilter.blur(
+                                sigmaX: 5.0,
+                                sigmaY: 5.0,
+                              ),
+                              child:
+                                  widget.article.imageUrl != null &&
+                                      widget.article.imageUrl!.isNotEmpty
                                   ? Image.network(
                                       widget.article.imageUrl!,
                                       fit: BoxFit.cover,
@@ -1277,25 +1450,32 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                           panEnabled: true,
                           minScale: 1.0,
                           maxScale: 4.0,
-                          child: widget.article.imageUrl != null && widget.article.imageUrl!.isNotEmpty
+                          child:
+                              widget.article.imageUrl != null &&
+                                  widget.article.imageUrl!.isNotEmpty
                               ? Image.network(
                                   widget.article.imageUrl!,
                                   fit: BoxFit.contain,
                                   width: double.infinity,
                                   height: 250,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return const Center(
-                                      child: CircularProgressIndicator(
-                                        color: Color(0xFF388AF6),
-                                      ),
-                                    );
-                                  },
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                        if (loadingProgress == null) {
+                                          return child;
+                                        }
+                                        return const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Color(0xFF388AF6),
+                                          ),
+                                        );
+                                      },
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Center(
                                       child: Text(
                                         'Lỗi tải hình ảnh',
-                                        style: TextStyle(color: Colors.redAccent),
+                                        style: TextStyle(
+                                          color: Colors.redAccent,
+                                        ),
                                       ),
                                     );
                                   },
@@ -1331,11 +1511,13 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  previewText.length > 150 
-                                      ? previewText.substring(0, 150) 
+                                  previewText.length > 150
+                                      ? previewText.substring(0, 150)
                                       : previewText,
                                   style: TextStyle(
-                                    color: Colors.white.withAlpha(38), // 0.15 alpha
+                                    color: Colors.white.withAlpha(
+                                      38,
+                                    ), // 0.15 alpha
                                     fontSize: 14,
                                     height: 1.6,
                                   ),
@@ -1346,7 +1528,10 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [Colors.transparent, const Color(0xFF0A0F1D).withAlpha(230)], // 0.9 alpha
+                                    colors: [
+                                      Colors.transparent,
+                                      const Color(0xFF0A0F1D).withAlpha(230),
+                                    ], // 0.9 alpha
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                   ),
@@ -1362,8 +1547,12 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                const Color(0xFFFF9800).withAlpha(26), // 0.1 alpha
-                                const Color(0xFFFF5722).withAlpha(26), // 0.1 alpha
+                                const Color(
+                                  0xFFFF9800,
+                                ).withAlpha(26), // 0.1 alpha
+                                const Color(
+                                  0xFFFF5722,
+                                ).withAlpha(26), // 0.1 alpha
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -1378,11 +1567,16 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.stars, color: Colors.orange, size: 32),
+                                  const Icon(
+                                    Icons.stars,
+                                    color: Colors.orange,
+                                    size: 32,
+                                  ),
                                   const SizedBox(width: 16),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Yêu cầu nâng cấp VIP',
@@ -1421,7 +1615,9 @@ class _GuideDetailScreenState extends ConsumerState<GuideDetailScreen> {
                                   onPressed: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Tính năng thanh toán Premium đang phát triển...'),
+                                        content: Text(
+                                          'Tính năng thanh toán Premium đang phát triển...',
+                                        ),
                                       ),
                                     );
                                   },
@@ -1460,7 +1656,7 @@ class BlueprintGridPainter extends CustomPainter {
     final paint = Paint()
       ..color = const Color(0xFF1E293B).withValues(alpha: 0.3)
       ..strokeWidth = 0.5;
-    
+
     for (double x = 0; x < size.width; x += gridStep) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
@@ -1485,7 +1681,7 @@ class CircuitDiagramPainter extends CustomPainter {
     final gridPaint = Paint()
       ..color = const Color(0xFF1E293B).withValues(alpha: 0.4)
       ..strokeWidth = 0.5;
-    
+
     const step = 20.0;
     for (double x = 0; x < size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
@@ -1504,9 +1700,7 @@ class CircuitDiagramPainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 
-    final textPainter = TextPainter(
-      textDirection: ui.TextDirection.ltr,
-    );
+    final textPainter = TextPainter(textDirection: ui.TextDirection.ltr);
 
     // Draw schematic wiring lines
     canvas.drawPath(
@@ -1528,31 +1722,57 @@ class CircuitDiagramPainter extends CustomPainter {
     );
 
     // Draw resistor R1
-    canvas.drawRect(Rect.fromCenter(center: const Offset(120, 80), width: 30, height: 12), componentPaint);
+    canvas.drawRect(
+      Rect.fromCenter(center: const Offset(120, 80), width: 30, height: 12),
+      componentPaint,
+    );
     textPainter.text = const TextSpan(
       text: 'R1 (10 kΩ)',
-      style: TextStyle(color: Color(0xFF5BA4F8), fontSize: 9, fontFamily: 'monospace'),
+      style: TextStyle(
+        color: Color(0xFF5BA4F8),
+        fontSize: 9,
+        fontFamily: 'monospace',
+      ),
     );
     textPainter.layout();
     textPainter.paint(canvas, const Offset(105, 60));
 
     // Draw capacitor C1
-    canvas.drawLine(const Offset(155, 125), const Offset(155, 155), componentPaint);
-    canvas.drawLine(const Offset(165, 125), const Offset(165, 155), componentPaint);
+    canvas.drawLine(
+      const Offset(155, 125),
+      const Offset(155, 155),
+      componentPaint,
+    );
+    canvas.drawLine(
+      const Offset(165, 125),
+      const Offset(165, 155),
+      componentPaint,
+    );
     canvas.drawLine(const Offset(140, 140), const Offset(155, 140), wirePaint);
     canvas.drawLine(const Offset(165, 140), const Offset(180, 140), wirePaint);
     textPainter.text = const TextSpan(
       text: 'C1 (100 μF)',
-      style: TextStyle(color: Color(0xFF5BA4F8), fontSize: 9, fontFamily: 'monospace'),
+      style: TextStyle(
+        color: Color(0xFF5BA4F8),
+        fontSize: 9,
+        fontFamily: 'monospace',
+      ),
     );
     textPainter.layout();
     textPainter.paint(canvas, const Offset(132, 105));
 
     // Draw IC Box
-    canvas.drawRect(Rect.fromCenter(center: const Offset(250, 120), width: 70, height: 60), componentPaint);
+    canvas.drawRect(
+      Rect.fromCenter(center: const Offset(250, 120), width: 70, height: 60),
+      componentPaint,
+    );
     textPainter.text = const TextSpan(
       text: 'MCU CHIP',
-      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 10,
+        fontWeight: FontWeight.bold,
+      ),
     );
     textPainter.layout();
     textPainter.paint(canvas, const Offset(225, 115));
@@ -1560,14 +1780,22 @@ class CircuitDiagramPainter extends CustomPainter {
     // Draw connections/labels inside IC
     textPainter.text = const TextSpan(
       text: 'VCC',
-      style: TextStyle(color: Color(0xFF5BA4F8), fontSize: 7, fontFamily: 'monospace'),
+      style: TextStyle(
+        color: Color(0xFF5BA4F8),
+        fontSize: 7,
+        fontFamily: 'monospace',
+      ),
     );
     textPainter.layout();
     textPainter.paint(canvas, const Offset(220, 95));
 
     textPainter.text = const TextSpan(
       text: 'GND',
-      style: TextStyle(color: Color(0xFF5BA4F8), fontSize: 7, fontFamily: 'monospace'),
+      style: TextStyle(
+        color: Color(0xFF5BA4F8),
+        fontSize: 7,
+        fontFamily: 'monospace',
+      ),
     );
     textPainter.layout();
     textPainter.paint(canvas, const Offset(220, 135));
@@ -1585,7 +1813,8 @@ class _PulsatingLock extends StatefulWidget {
   State<_PulsatingLock> createState() => _PulsatingLockState();
 }
 
-class _PulsatingLockState extends State<_PulsatingLock> with SingleTickerProviderStateMixin {
+class _PulsatingLockState extends State<_PulsatingLock>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -1616,7 +1845,9 @@ class _PulsatingLockState extends State<_PulsatingLock> with SingleTickerProvide
               height: 72 * _controller.value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.orange[800]?.withValues(alpha: 1.0 - _controller.value),
+                color: Colors.orange[800]?.withValues(
+                  alpha: 1.0 - _controller.value,
+                ),
               ),
             ),
             Container(
