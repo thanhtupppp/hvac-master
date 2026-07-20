@@ -16,6 +16,7 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
   final _value1Controller = TextEditingController();
   final _value2Controller = TextEditingController();
   final _value3Controller = TextEditingController();
+  final _achTargetController = TextEditingController(text: '6');
   String _result = '';
   UnitSystem _unit = UnitSystem.metric;
   AirflowMode _mode = AirflowMode.flowRate;
@@ -30,6 +31,7 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
     _value1Controller.addListener(_recalculate);
     _value2Controller.addListener(_recalculate);
     _value3Controller.addListener(_recalculate);
+    _achTargetController.addListener(_recalculate);
   }
 
   @override
@@ -37,14 +39,18 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
     _value1Controller.dispose();
     _value2Controller.dispose();
     _value3Controller.dispose();
+    _achTargetController.dispose();
     super.dispose();
   }
+
+  String get _dimUnit => _unit == UnitSystem.imperial ? 'ft' : 'm';
 
   void _recalculate() {
     final v1 = double.tryParse(_value1Controller.text);
     final v2 = double.tryParse(_value2Controller.text);
     final v3 = double.tryParse(_value3Controller.text);
-    if (v1 == null || v2 == null || v3 == null) return;
+    final achTarget = double.tryParse(_achTargetController.text);
+    if (v1 == null || v2 == null || v3 == null || achTarget == null) return;
 
     switch (_mode) {
       case AirflowMode.flowRate:
@@ -78,21 +84,24 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         final length = v1;
         final width = v2;
         final height = v3;
-        final volCuM = length * width * height;
-        if (volCuM <= 0) return;
+        if (length <= 0 || width <= 0 || height <= 0 || achTarget <= 0) return;
 
-        final volCuFt = volCuM * 35.3147;
+        // Dimensions are always entered in the selected unit system.
+        // Volume in ft³: if imperial, dimensions are already in ft; if metric, convert from m³.
+        final volCuFt = _unit == UnitSystem.imperial
+            ? length * width * height
+            : length * width * height * 35.3147;
+        final volCuM = volCuFt / 35.3147;
 
-        final flowCMH = _unit == UnitSystem.metric ? v1 : v1 * 1.699;
-        final cfm = _unit == UnitSystem.metric ? flowCMH / 1.699 : v1;
-
-        final ach = (cfm * 60) / volCuFt;
-        final requiredCFM = (ach * volCuFt) / 60;
+        // Required flow (ACH → CFM)
+        final requiredCFM = (achTarget * volCuFt) / 60.0;
         final requiredCMH = requiredCFM * 1.699;
 
         setState(
           () => _result =
-              'Thể tích: ${volCuM.toStringAsFixed(1)} m³ (${volCuFt.toStringAsFixed(1)} ft³)\nACH: ${ach.toStringAsFixed(1)} lần/giờ\nCFM cần: ${requiredCFM.toStringAsFixed(1)} CFM / ${requiredCMH.toStringAsFixed(1)} m³/h',
+              'Thể tích: ${volCuM.toStringAsFixed(1)} m³ (${volCuFt.toStringAsFixed(1)} ft³)\n'
+              'ACH mục tiêu: ${achTarget.toStringAsFixed(1)} lần/giờ\n'
+              'Lưu lượng cần: ${requiredCFM.toStringAsFixed(0)} CFM / ${requiredCMH.toStringAsFixed(0)} m³/h',
         );
         break;
     }
@@ -227,11 +236,13 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
       case AirflowMode.ach:
         return Column(
           children: [
-            _buildField('Chiều dài phòng', _value1Controller, 'm'),
+            _buildField('Chiều dài phòng', _value1Controller, _dimUnit),
             const SizedBox(height: 12),
-            _buildField('Chiều rộng', _value2Controller, 'm'),
+            _buildField('Chiều rộng', _value2Controller, _dimUnit),
             const SizedBox(height: 12),
-            _buildField('Chiều cao', _value3Controller, 'm'),
+            _buildField('Chiều cao', _value3Controller, _dimUnit),
+            const SizedBox(height: 12),
+            _buildField('ACH mục tiêu', _achTargetController, 'lần/h'),
           ],
         );
     }

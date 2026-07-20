@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/hvac/thermo/thermo.dart';
+import '../../core/hvac/units/pressure.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/refrigerant_model.dart';
-
-const double kPsiPerBar = 14.5037738;
 
 class SaturationTemperatureScreen extends StatefulWidget {
   const SaturationTemperatureScreen({super.key});
@@ -56,10 +55,18 @@ class _SaturationTemperatureScreenState
     setState(() {
       if (_pressureUnit == 'PSI') {
         _pressureUnit = 'Bar';
-        _pressureController.text = (p / kPsiPerBar).toStringAsFixed(2);
+        _pressureController.text = PressureConverter.convert(
+          p,
+          PressureUnit.psi,
+          PressureUnit.bar,
+        ).toStringAsFixed(2);
       } else {
         _pressureUnit = 'PSI';
-        _pressureController.text = (p * kPsiPerBar).toStringAsFixed(1);
+        _pressureController.text = PressureConverter.convert(
+          p,
+          PressureUnit.bar,
+          PressureUnit.psi,
+        ).toStringAsFixed(1);
       }
       _recalculate();
     });

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/hvac/standards/diagnostic_thresholds.dart';
 import '../../core/hvac/thermo/thermo.dart';
+import '../../core/hvac/units/pressure.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/refrigerant_model.dart';
-
-const double kPsiPerBar = 14.5037738;
 
 class SuperheatCalculatorScreen extends StatefulWidget {
   const SuperheatCalculatorScreen({super.key});
@@ -173,14 +172,37 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen>
                 // Pressure Unit Toggle
                 GestureDetector(
                   onTap: () {
+                    final pSuction =
+                        double.tryParse(_suctionPressureController.text) ?? 0.0;
+                    final pLiquid =
+                        double.tryParse(_liquidPressureController.text) ?? 0.0;
                     setState(() {
-                      _pressureUnit = _pressureUnit == 'PSI' ? 'Bar' : 'PSI';
-                      if (_pressureUnit == 'Bar') {
-                        _suctionPressure = _suctionPressure / kPsiPerBar;
-                        _liquidPressure = _liquidPressure / kPsiPerBar;
+                      if (_pressureUnit == 'PSI') {
+                        // Switching to Bar: convert PSI → Bar
+                        _pressureUnit = 'Bar';
+                        _suctionPressure = PressureConverter.convert(
+                          pSuction,
+                          PressureUnit.psi,
+                          PressureUnit.bar,
+                        );
+                        _liquidPressure = PressureConverter.convert(
+                          pLiquid,
+                          PressureUnit.psi,
+                          PressureUnit.bar,
+                        );
                       } else {
-                        _suctionPressure = _suctionPressure * kPsiPerBar;
-                        _liquidPressure = _liquidPressure * kPsiPerBar;
+                        // Switching to PSI: convert Bar → PSI
+                        _pressureUnit = 'PSI';
+                        _suctionPressure = PressureConverter.convert(
+                          pSuction,
+                          PressureUnit.bar,
+                          PressureUnit.psi,
+                        );
+                        _liquidPressure = PressureConverter.convert(
+                          pLiquid,
+                          PressureUnit.bar,
+                          PressureUnit.psi,
+                        );
                       }
                       _suctionPressureController.text = _suctionPressure
                           .toStringAsFixed(1);

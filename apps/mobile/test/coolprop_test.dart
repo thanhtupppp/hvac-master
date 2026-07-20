@@ -121,9 +121,13 @@ void main() {
         pressureUnit: 'Bar',
         isGauge: false,
       );
-      if (!temp.isNaN && !temp.isInfinite) {
-        expect(temp, closeTo(20.0, 3.0));
-      }
+      expect(
+        temp.isNaN,
+        false,
+        reason: 'R22 at 9.1 bar should be in Antoine range',
+      );
+      expect(temp.isInfinite, false);
+      expect(temp, closeTo(20.0, 3.0));
     });
   });
 }

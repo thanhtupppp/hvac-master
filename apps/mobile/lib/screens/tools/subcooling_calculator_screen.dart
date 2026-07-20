@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/hvac/thermo/thermo.dart';
+import '../../core/hvac/units/pressure.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/refrigerant_model.dart';
-
-const double kPsiPerBar = 14.5037738;
 
 class SubcoolingCalculatorScreen extends StatefulWidget {
   const SubcoolingCalculatorScreen({super.key});
@@ -230,11 +229,17 @@ class _SubcoolingCalculatorScreenState
             setState(() {
               _pressureUnit = s.first;
               if (_pressureUnit == 'Bar') {
-                _liquidPressureController.text = (p / kPsiPerBar)
-                    .toStringAsFixed(2);
+                _liquidPressureController.text = PressureConverter.convert(
+                  p,
+                  PressureUnit.psi,
+                  PressureUnit.bar,
+                ).toStringAsFixed(2);
               } else {
-                _liquidPressureController.text = (p * kPsiPerBar)
-                    .toStringAsFixed(1);
+                _liquidPressureController.text = PressureConverter.convert(
+                  p,
+                  PressureUnit.bar,
+                  PressureUnit.psi,
+                ).toStringAsFixed(1);
               }
               _recalculate();
             });
