@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 export interface PaymentAnalytics {
@@ -31,7 +32,12 @@ export function usePaymentsAnalytics() {
     setIsLoading(true);
     setError(null);
     try {
-      const idToken = await auth.currentUser?.getIdToken();
+      const user = auth.currentUser;
+      if (!user) {
+        setError("Bạn cần đăng nhập để xem analytics.");
+        return;
+      }
+      const idToken = await user.getIdToken();
       const res = await fetch("/api/payments/analytics", {
         headers: { Authorization: `Bearer ${idToken}` },
       });
@@ -46,7 +52,15 @@ export function usePaymentsAnalytics() {
   }, []);
 
   useEffect(() => {
-    loadAnalytics();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadAnalytics();
+      } else {
+        setAnalytics(null);
+        setIsLoading(false);
+      }
+    });
+    return () => unsubscribe();
   }, [loadAnalytics]);
 
   return { analytics, isLoading, error, refetch: loadAnalytics };

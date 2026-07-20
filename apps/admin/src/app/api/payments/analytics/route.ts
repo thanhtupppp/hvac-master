@@ -85,50 +85,57 @@ export async function GET(req: Request) {
     // ── 3. Subscriber counts ─────────────────────────────────────────────
     const totalActive = activePayments.length;
 
-    const vipSnap = await adminDb
-      .collection("users")
-      .where("isPremium", "==", true)
-      .get();
-    const vipCount = vipSnap.size;
-
-    const totalUsersSnap = await adminDb.collection("users").get();
-    const totalUsers = totalUsersSnap.size;
+    // Aggregation counts — only need .size, not full docs
+    const [vipCountSnap, totalUsersSnap] = await Promise.all([
+      adminDb.collection("users").where("isPremium", "==", true).count().get(),
+      adminDb.collection("users").count().get(),
+    ]);
+    const vipCount = vipCountSnap.data().count;
+    const totalUsers = totalUsersSnap.data().count;
 
     // ── 4. Churn rate (monthly) ─────────────────────────────────────────
     // Churn = subscriptions that expired this month / active at start of month
     const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    const expiredThisMonthSnap = await adminDb
-      .collection("payments")
-      .where("status", "==", "expired")
-      .where("expiryTime", ">=", startOfThisMonth)
-      .get();
-
-    const expiredLastMonthSnap = await adminDb
-      .collection("payments")
-      .where("status", "==", "expired")
-      .where("expiryTime", ">=", startOfLastMonth)
-      .where("expiryTime", "<", startOfThisMonth)
-      .get();
-
-    const cancelledThisMonthSnap = await adminDb
-      .collection("payments")
-      .where("status", "==", "cancelled")
-      .where("updatedAt", ">=", startOfThisMonth)
-      .get();
+    const [
+      expiredThisMonthSnap,
+      cancelledThisMonthSnap,
+      newSubsThisMonthSnap,
+      newSubsLastMonthSnap,
+    ] = await Promise.all([
+      adminDb
+        .collection("payments")
+        .where("status", "==", "expired")
+        .where("expiryTime", ">=", startOfThisMonth)
+        .count()
+        .get(),
+      adminDb
+        .collection("payments")
+        .where("status", "==", "cancelled")
+        .where("updatedAt", ">=", startOfThisMonth)
+        .count()
+        .get(),
+      adminDb
+        .collection("payments")
+        .where("purchaseTime", ">=", startOfThisMonth)
+        .count()
+        .get(),
+      adminDb
+        .collection("payments")
+        .where("purchaseTime", ">=", startOfLastMonth)
+        .where("purchaseTime", "<", startOfThisMonth)
+        .count()
+        .get(),
+    ]);
 
     const churnedThisMonth =
-      expiredThisMonthSnap.size + cancelledThisMonthSnap.size;
+      expiredThisMonthSnap.data().count + cancelledThisMonthSnap.data().count;
 
     // Active at start of last month (approximation: active payments - new this month)
-    const newThisMonthSnap = await adminDb
-      .collection("payments")
-      .where("purchaseTime", ">=", startOfThisMonth)
-      .get();
     const activeAtStartOfMonth = Math.max(
       1,
-      totalActive - newThisMonthSnap.size,
+      totalActive - newSubsThisMonthSnap.data().count,
     );
     const churnRate =
       activeAtStartOfMonth > 0
@@ -136,8 +143,8 @@ export async function GET(req: Request) {
         : 0;
 
     // ── 5. New subscribers this month ────────────────────────────────────
-    const newSubsThisMonth = newThisMonthSnap.size;
-    const newSubsLastMonth = expiredLastMonthSnap.size;
+    const newSubsThisMonth = newSubsThisMonthSnap.data().count;
+    const newSubsLastMonth = newSubsLastMonthSnap.data().count;
 
     // ── 6. Top products by revenue ───────────────────────────────────────
     const productRevenue: Record<string, { revenue: number; count: number }> =
@@ -163,26 +170,25 @@ export async function GET(req: Request) {
       .slice(0, 5);
 
     // ── 7. Subscription type breakdown ───────────────────────────────────
-    const subSnap = await adminDb
-      .collection("payments")
-      .where("purchaseType", "==", "subscription")
-      .where("status", "==", "active")
-      .get();
-    const inappSnap = await adminDb
-      .collection("payments")
-      .where("purchaseType", "==", "inapp")
-      .where("status", "==", "active")
-      .get();
-
-    const activeSubscriptions = subSnap.size;
-    const activeInApps = inappSnap.size;
+    // Reuse activeSnap from section 1 — same predicate (active + subscription).
+    const activeSubscriptions = activeSnap.size;
+    const activeInApps = (
+      await adminDb
+        .collection("payments")
+        .where("purchaseType", "==", "inapp")
+        .where("status", "==", "active")
+        .count()
+        .get()
+    ).data().count;
 
     // ── 8. Refund rate ───────────────────────────────────────────────────
-    const refundedSnap = await adminDb
-      .collection("payments")
-      .where("status", "==", "refunded")
-      .get();
-    const refundedCount = refundedSnap.size;
+    const refundedCount = (
+      await adminDb
+        .collection("payments")
+        .where("status", "==", "refunded")
+        .count()
+        .get()
+    ).data().count;
     const totalPayments = revenueSnap.size;
     const refundRate =
       totalPayments > 0

@@ -77,6 +77,10 @@ export default function PaymentsPage() {
   );
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+
   const {
     payments,
     stats,
@@ -159,13 +163,43 @@ export default function PaymentsPage() {
   };
 
   const handleExport = async () => {
-    const idToken = await (
-      await import("@/lib/firebase")
-    ).auth.currentUser?.getIdToken();
-    const params = new URLSearchParams();
-    if (filter !== "all") params.set("status", filter);
-    const url = `/api/payments/export?${params}`;
-    window.open(url, "_blank");
+    setIsExporting(true);
+    try {
+      const { auth } = await import("@/lib/firebase");
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        alert("Bạn cần đăng nhập để export.");
+        return;
+      }
+      const params = new URLSearchParams();
+      if (filter !== "all") params.set("status", filter);
+      if (dateFrom) params.set("from", new Date(dateFrom).toISOString());
+      if (dateTo) {
+        // include the whole "to" day
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        params.set("to", end.toISOString());
+      }
+      const res = await fetch(`/api/payments/export?${params}`, {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Export failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `payments-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    } catch (err: any) {
+      alert("Export lỗi: " + err.message);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const filterTabs: { label: string; value: FilterType }[] = [
@@ -183,9 +217,14 @@ export default function PaymentsPage() {
           Quản lý thanh toán
         </h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
             <Download className="h-4 w-4 mr-2" />
-            Export CSV
+            {isExporting ? "Đang export..." : "Export CSV"}
           </Button>
           <Button
             variant="outline"
@@ -322,7 +361,21 @@ export default function PaymentsPage() {
             </Button>
           ))}
         </div>
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-2 ml-auto flex-wrap items-center">
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-40"
+            title="Từ ngày"
+          />
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-40"
+            title="Đến ngày"
+          />
           <Input
             placeholder="Tìm theo email, Order ID..."
             value={searchInput}
@@ -380,7 +433,7 @@ export default function PaymentsPage() {
                   payments.map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell
-                        className="font-mono text-xs max-w-[120px] truncate"
+                        className="font-mono text-xs max-w-30 truncate"
                         title={payment.orderId}
                       >
                         {payment.orderId?.slice(0, 20)}…

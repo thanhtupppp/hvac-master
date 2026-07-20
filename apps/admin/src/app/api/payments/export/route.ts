@@ -59,7 +59,6 @@ export async function GET(req: Request) {
       return {
         id: doc.id,
         orderId: d.orderId || doc.id,
-        purchaseToken: d.purchaseToken || "",
         productId: d.productId || "",
         purchaseType: d.purchaseType || "",
         status: d.status || "",
@@ -80,13 +79,12 @@ export async function GET(req: Request) {
     });
 
     const csvHeader =
-      "ID,Order ID,Purchase Token,Product ID,Type,Status,Amount,Currency,Auto-Renewing,User ID,User Email,Purchase Time,Expiry Time,Verified At,Store,Period Type,RC Event Type,RC Transaction ID\n";
+      "ID,Order ID,Product ID,Type,Status,Amount,Currency,Auto-Renewing,User ID,User Email,Purchase Time,Expiry Time,Verified At,Store,Period Type,RC Event Type,RC Transaction ID\n";
 
     const csvRows = payments.map((p) =>
       [
         escape(p.id),
         escape(p.orderId),
-        escape(p.purchaseToken),
         escape(p.productId),
         escape(p.purchaseType),
         escape(p.status),
@@ -105,7 +103,8 @@ export async function GET(req: Request) {
       ].join(","),
     );
 
-    const csv = csvHeader + csvRows.join("\n");
+    // BOM so Excel opens Vietnamese UTF-8 correctly
+    const csv = "\uFEFF" + csvHeader + csvRows.join("\n");
     const timestamp = new Date().toISOString().slice(0, 10);
 
     return new NextResponse(csv, {
@@ -124,9 +123,13 @@ export async function GET(req: Request) {
   }
 }
 
-/** Escape a value for CSV — wrap in quotes if contains comma, newline, or quote. */
+/** Escape a value for CSV — wrap in quotes if contains comma, newline, or quote.
+ *  Prefix `'` on cells that start with =, +, -, @ to prevent CSV/formula injection. */
 function escape(value: string | number): string {
-  const str = String(value);
+  let str = String(value);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = "'" + str;
+  }
   if (str.includes(",") || str.includes("\n") || str.includes('"')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
