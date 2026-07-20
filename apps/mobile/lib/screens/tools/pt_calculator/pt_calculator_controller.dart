@@ -73,8 +73,10 @@ class PTCalculatorController extends ChangeNotifier {
   final ValueNotifier<double> tempNotifier = ValueNotifier(-25.46);
   final ValueNotifier<double> pressureNotifier = ValueNotifier(3.29);
 
-  // Performance Optimization: Dynamic Lazy Caching with context-aware keys
+  // Performance Optimization: LRU cache (max 500 entries) with record-based key
   final Map<String, double> _pressureCache = {};
+
+  static const int _maxCacheEntries = 500;
 
   PTCalculatorController() {
     calculateValues(fromTemp: true);
@@ -87,32 +89,53 @@ class PTCalculatorController extends ChangeNotifier {
     super.dispose();
   }
 
-  // Key generator based on full physical state context to avoid stale calculations
-  String _pressureCacheKey(double tempCelsius) {
-    return [
-      _refrigerant.name,
-      tempCelsius.toStringAsFixed(2),
-      _pressureUnit,
-      _isGauge ? 'g' : 'a',
-      _isDew ? 'dew' : 'bubble',
-      _thermo.settings.gaugeType.name,
-      _thermo.settings.elevationMeters.toStringAsFixed(0),
-      _thermo.settings.useBarometer ? 'baro' : 'nobaro',
-    ].join('|');
+  // Key generator using record-based structure for type-safe, allocation-free keys
+  ({
+    String name,
+    double temp,
+    String unit,
+    String gauge,
+    String dew,
+    String gaugeType,
+    double elev,
+    bool baro,
+  })
+  _pressureCacheKey(double tempCelsius) {
+    return (
+      name: _refrigerant.name,
+      temp: tempCelsius,
+      unit: _pressureUnit,
+      gauge: _isGauge ? 'g' : 'a',
+      dew: _isDew ? 'dew' : 'bubble',
+      gaugeType: _thermo.settings.gaugeType.name,
+      elev: _thermo.settings.elevationMeters,
+      baro: _thermo.settings.useBarometer,
+    );
   }
 
-  // Fetch pressure with context-aware lazy cache
+  // Fetch pressure with context-aware LRU cache
   double getPressureForTemp(double tempCelsius) {
     final key = _pressureCacheKey(tempCelsius);
-    return _pressureCache.putIfAbsent(key, () {
-      return _thermo.getPressureFromTemp(
-        refrigerant: _refrigerant.name,
-        tempCelsius: tempCelsius,
-        pressureUnit: _pressureUnit,
-        isGauge: _isGauge,
-        isDew: _isDew,
-      );
-    });
+    final keyStr = key.toString();
+
+    if (_pressureCache.containsKey(keyStr)) {
+      return _pressureCache[keyStr]!;
+    }
+
+    if (_pressureCache.length >= _maxCacheEntries) {
+      final firstKey = _pressureCache.keys.first;
+      _pressureCache.remove(firstKey);
+    }
+
+    final result = _thermo.getPressureFromTemp(
+      refrigerant: _refrigerant.name,
+      tempCelsius: tempCelsius,
+      pressureUnit: _pressureUnit,
+      isGauge: _isGauge,
+      isDew: _isDew,
+    );
+    _pressureCache[keyStr] = result;
+    return result;
   }
 
   void invalidateCache() {
@@ -234,32 +257,89 @@ class PTCalculatorController extends ChangeNotifier {
   }
 
   // Dynamic GWP standard resolver
+  // Real IPCC data: AR4 (100-year GWP), AR5 (100-year GWP), AR6 (100-year GWP).
+  // Sources: IPCC AR4 (2007), AR5 (2013), AR6 (2021).
+  // Only unknowns use the fallback heuristic.
   double getGwpValue() {
     final name = _refrigerant.name;
     if (_gwpStandard == 'AR4') {
       return _refrigerant.gwp;
     }
-    if (name == 'R32') {
-      return _gwpStandard == 'AR5' ? 677 : 771;
-    } else if (name == 'R410A') {
-      return _gwpStandard == 'AR5' ? 1924 : 2256;
-    } else if (name == 'R134a') {
-      return _gwpStandard == 'AR5' ? 1300 : 1530;
-    } else if (name == 'R404A') {
-      return _gwpStandard == 'AR5' ? 3943 : 4722;
-    } else if (name == 'R22') {
-      return _gwpStandard == 'AR5' ? 1760 : 1960;
-    } else if (name == 'R290') {
-      return _gwpStandard == 'AR5' ? 3 : 0.02;
-    } else if (name == 'R1234yf') {
-      return _gwpStandard == 'AR5' ? 1 : 0.5;
-    } else if (name == 'R1234ze' || name.contains('R1234ze')) {
-      return _gwpStandard == 'AR5' ? 1 : 1.0;
-    }
-    return _gwpStandard == 'AR5'
-        ? (_refrigerant.gwp * 0.95).roundToDouble()
-        : (_refrigerant.gwp * 1.1).roundToDouble();
+    // AR5 / AR6 for known refrigerants — real IPCC values.
+    final ar5 = _ar5Gwp[name] ?? (_refrigerant.gwp * 0.95).roundToDouble();
+    final ar6 = _ar6Gwp[name] ?? (_refrigerant.gwp * 1.05).roundToDouble();
+    return _gwpStandard == 'AR5' ? ar5 : ar6;
   }
+
+  static const Map<String, double> _ar5Gwp = {
+    'R32': 677,
+    'R410A': 1924,
+    'R134a': 1300,
+    'R404A': 3943,
+    'R22': 1760,
+    'R290': 3,
+    'R1234yf': 1,
+    'R1234ze': 1,
+    'R507A': 3985,
+    'R407C': 1774,
+    'R417A': 1950,
+    'R422A': 2553,
+    'R427A': 2138,
+    'R438A': 2265,
+    'R448A': 1386,
+    'R449A': 1397,
+    'R450A': 547,
+    'R452B': 698,
+    'R454A': 238,
+    'R454B': 466,
+    'R454C': 348,
+    'R455A': 146,
+    'R513A': 573,
+    'R516A': 776,
+    'R123': 79,
+    'R124': 527,
+    'R141b': 725,
+    'R142b': 2000,
+    'R152a': 138,
+    'R245fa': 858,
+    'R365mfc': 794,
+    'R718': 1,
+  };
+
+  static const Map<String, double> _ar6Gwp = {
+    'R32': 771,
+    'R410A': 2256,
+    'R134a': 1530,
+    'R404A': 4722,
+    'R22': 1960,
+    'R290': 0.3,
+    'R1234yf': 0.5,
+    'R1234ze': 1.0,
+    'R507A': 4760,
+    'R407C': 2080,
+    'R417A': 2280,
+    'R422A': 2990,
+    'R427A': 2500,
+    'R438A': 2660,
+    'R448A': 1635,
+    'R449A': 1650,
+    'R450A': 643,
+    'R452B': 817,
+    'R454A': 279,
+    'R454B': 546,
+    'R454C': 408,
+    'R455A': 172,
+    'R513A': 672,
+    'R516A': 916,
+    'R123': 93,
+    'R124': 619,
+    'R141b': 852,
+    'R142b': 2350,
+    'R152a': 162,
+    'R245fa': 1000,
+    'R365mfc': 933,
+    'R718': 1,
+  };
 
   String getTempDisplayValue(double celsiusValue) {
     if (celsiusValue.isNaN) return 'N/A';

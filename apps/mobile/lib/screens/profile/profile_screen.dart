@@ -15,6 +15,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
+  final _initialized = <String>{};
   bool _isSaving = false;
   String? _errorMessage;
   String? _successMessage;
@@ -159,6 +160,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  void _initControllers(UserModel user) {
+    final key = user.uid;
+    if (!_initialized.contains(key) && user.displayName.isNotEmpty) {
+      _nameController.text = user.displayName;
+      _initialized.add(key);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(userProfileProvider);
@@ -197,10 +206,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             );
           }
 
-          // Initialize controller with display name once loaded
-          if (_nameController.text.isEmpty && !_isSaving) {
-            _nameController.text = user.displayName;
-          }
+          _initControllers(user);
 
           final colors =
               _avatarGradients[user.photoURL] ?? _avatarGradients['purple']!;

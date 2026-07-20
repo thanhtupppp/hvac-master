@@ -48,19 +48,19 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
 
     switch (_mode) {
       case AirflowMode.flowRate:
-        final cfm = v1;
-        final areaSqFt = v2;
+        final cfm = _unit == UnitSystem.metric ? v1 / 1.699 : v1;
+        final areaSqFt = _unit == UnitSystem.metric ? v2 * 10.764 : v2;
         if (areaSqFt <= 0) return;
         final fpm = cfm / areaSqFt;
-        final ms = _unit == UnitSystem.imperial ? fpm : fpm / 196.85;
-        final flow = _unit == UnitSystem.imperial ? cfm : cfm * 1.699;
+        final ms = fpm / 196.85;
+        final flowCMH = cfm * 1.699;
         setState(
           () => _result =
-              '${fpm.toStringAsFixed(1)} FPM\n${ms.toStringAsFixed(2)} m/s\n${flow.toStringAsFixed(1)} m³/h',
+              '${fpm.toStringAsFixed(1)} FPM\n${ms.toStringAsFixed(2)} m/s\n${flowCMH.toStringAsFixed(1)} m³/h',
         );
         break;
       case AirflowMode.airVelocity:
-        final cfm = v1;
+        final cfm = _unit == UnitSystem.metric ? v1 / 1.699 : v1;
         final fpm = v2;
         if (fpm <= 0) return;
         final areaSqFt = cfm / fpm;
@@ -68,25 +68,31 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         if (diameterIn <= 0) return;
         final areaFromDia = 3.14159 * diameterIn * diameterIn / 4 / 144;
         final cfmFromDia = fpm * areaFromDia;
-        final flow = _unit == UnitSystem.imperial
-            ? cfmFromDia
-            : cfmFromDia * 1.699;
+        final flowCMH = cfmFromDia * 1.699;
         setState(
           () => _result =
-              'Diện tích: ${areaSqFt.toStringAsFixed(2)} ft²\n${areaSqFt * 929.03 > 0 ? (areaSqFt * 929.03).toStringAsFixed(1) : '—'} cm²\nLưu lượng (Ø${diameterIn.toStringAsFixed(1)}"): ${flow.toStringAsFixed(1)} ${_unit == UnitSystem.imperial ? 'CFM' : 'm³/h'}',
+              'Diện tích: ${areaSqFt.toStringAsFixed(2)} ft²\n${(areaSqFt * 929.03).toStringAsFixed(1)} cm²\nLưu lượng (Ø${diameterIn.toStringAsFixed(1)}"): ${cfmFromDia.toStringAsFixed(1)} CFM / ${flowCMH.toStringAsFixed(1)} m³/h',
         );
         break;
       case AirflowMode.ach:
         final length = v1;
         final width = v2;
         final height = v3;
-        final vol = length * width * height;
-        final cfm = v2;
-        if (vol <= 0) return;
-        final ach = (cfm * 60) / vol;
+        final volCuM = length * width * height;
+        if (volCuM <= 0) return;
+
+        final volCuFt = volCuM * 35.3147;
+
+        final flowCMH = _unit == UnitSystem.metric ? v1 : v1 * 1.699;
+        final cfm = _unit == UnitSystem.metric ? flowCMH / 1.699 : v1;
+
+        final ach = (cfm * 60) / volCuFt;
+        final requiredCFM = (ach * volCuFt) / 60;
+        final requiredCMH = requiredCFM * 1.699;
+
         setState(
           () => _result =
-              'Thể tích: ${vol.toStringAsFixed(1)} m³\nACH: ${ach.toStringAsFixed(1)} lần/giờ\nCFM cần: ${(ach * vol / 60).toStringAsFixed(1)}',
+              'Thể tích: ${volCuM.toStringAsFixed(1)} m³ (${volCuFt.toStringAsFixed(1)} ft³)\nACH: ${ach.toStringAsFixed(1)} lần/giờ\nCFM cần: ${requiredCFM.toStringAsFixed(1)} CFM / ${requiredCMH.toStringAsFixed(1)} m³/h',
         );
         break;
     }

@@ -24,8 +24,23 @@ class _RefrigerantSelectorScreenState extends State<RefrigerantSelectorScreen> {
   @override
   void initState() {
     super.initState();
-    // Copy the default list so we can modify favorite status in-memory
-    _refrigerants = List.from(defaultRefrigerants);
+    // Deep copy: create new model instances so toggling favorites does not mutate
+    // the shared defaultRefrigerants list.
+    _refrigerants = defaultRefrigerants
+        .map(
+          (r) => RefrigerantModel(
+            name: r.name,
+            gwp: r.gwp,
+            odp: r.odp,
+            criticalTemp: r.criticalTemp,
+            boilingPoint: r.boilingPoint,
+            safetyGroup: r.safetyGroup,
+            typeClass: r.typeClass,
+            color: r.color,
+            isFavorite: r.isFavorite,
+          ),
+        )
+        .toList();
     if (widget.selectedRefrigerant != null) {
       // Keep match
       final index = _refrigerants.indexWhere(

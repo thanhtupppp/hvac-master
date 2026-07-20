@@ -3,6 +3,8 @@ import '../../core/hvac/thermo/thermo.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/refrigerant_model.dart';
 
+const double kPsiPerBar = 14.5037738;
+
 class SaturationTemperatureScreen extends StatefulWidget {
   const SaturationTemperatureScreen({super.key});
 
@@ -54,10 +56,10 @@ class _SaturationTemperatureScreenState
     setState(() {
       if (_pressureUnit == 'PSI') {
         _pressureUnit = 'Bar';
-        _pressureController.text = (p / 14.5038).toStringAsFixed(2);
+        _pressureController.text = (p / kPsiPerBar).toStringAsFixed(2);
       } else {
         _pressureUnit = 'PSI';
-        _pressureController.text = (p * 14.5038).toStringAsFixed(1);
+        _pressureController.text = (p * kPsiPerBar).toStringAsFixed(1);
       }
       _recalculate();
     });

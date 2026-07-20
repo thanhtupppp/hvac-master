@@ -1,4 +1,5 @@
 export '../core/hvac/thermo/thermo.dart';
+import 'dart:math' as math;
 import '../core/hvac/units/power.dart';
 
 @Deprecated('Use Thermodynamics from core/hvac/thermo/thermo.dart')
@@ -309,24 +310,11 @@ double _pow(double base, double exponent) {
 }
 
 double _exp(double x) {
-  double sum = 1.0;
-  double term = 1.0;
-  for (int i = 1; i <= 100; i++) {
-    term *= x / i;
-    sum += term;
-    if (term.abs() < 1e-15) break;
-  }
-  return sum;
+  if (x < -700) return 0.0;
+  return math.exp(x);
 }
 
 double _ln(double x) {
   if (x <= 0) return double.negativeInfinity;
-  double y = (x - 1) / (x + 1);
-  double sum = 0.0;
-  double term = y;
-  for (int i = 1; i <= 200; i += 2) {
-    sum += term / i;
-    term *= y * y;
-  }
-  return 2 * sum;
+  return math.log(x);
 }

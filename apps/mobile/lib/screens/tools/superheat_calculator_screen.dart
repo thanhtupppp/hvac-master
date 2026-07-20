@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../core/hvac/standards/diagnostic_thresholds.dart';
 import '../../core/hvac/thermo/thermo.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/refrigerant_model.dart';
+
+const double kPsiPerBar = 14.5037738;
 
 class SuperheatCalculatorScreen extends StatefulWidget {
   const SuperheatCalculatorScreen({super.key});
@@ -173,11 +176,11 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen>
                     setState(() {
                       _pressureUnit = _pressureUnit == 'PSI' ? 'Bar' : 'PSI';
                       if (_pressureUnit == 'Bar') {
-                        _suctionPressure = _suctionPressure / 14.5038;
-                        _liquidPressure = _liquidPressure / 14.5038;
+                        _suctionPressure = _suctionPressure / kPsiPerBar;
+                        _liquidPressure = _liquidPressure / kPsiPerBar;
                       } else {
-                        _suctionPressure = _suctionPressure * 14.5038;
-                        _liquidPressure = _liquidPressure * 14.5038;
+                        _suctionPressure = _suctionPressure * kPsiPerBar;
+                        _liquidPressure = _liquidPressure * kPsiPerBar;
                       }
                       _suctionPressureController.text = _suctionPressure
                           .toStringAsFixed(1);
@@ -323,12 +326,12 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen>
       diagnosisText = 'Ngoài giới hạn tính toán (Trạng thái siêu tới hạn)';
       diagnosisColor = Colors.redAccent;
     } else if (_tabController.index == 0) {
-      // Superheat diagnosis: target is usually 5-15 °F (approx 3-8 K)
-      if (_resultVal < 2.0) {
+      // Superheat diagnosis (in Kelvin)
+      if (_resultVal < DiagnosticThresholds.superheatLowK) {
         diagnosisText =
             'Quá nhiệt thấp - Nguy cơ ngập dịch nén (Liquid Floodback)';
         diagnosisColor = Colors.redAccent;
-      } else if (_resultVal > 8.0) {
+      } else if (_resultVal > DiagnosticThresholds.superheatHighK) {
         diagnosisText =
             'Quá nhiệt cao - Thiếu ga hoặc nghẹt cáp/expansion valve';
         diagnosisColor = Colors.orange;
@@ -337,11 +340,11 @@ class _SuperheatCalculatorScreenState extends State<SuperheatCalculatorScreen>
         diagnosisColor = Colors.green;
       }
     } else {
-      // Subcooling diagnosis: target is usually 8-12 °F (approx 4-7 K)
-      if (_resultVal < 3.0) {
+      // Subcooling diagnosis (in Kelvin)
+      if (_resultVal < DiagnosticThresholds.subcoolingLowK) {
         diagnosisText = 'Quá lạnh thấp - Thiếu ga hoặc ngưng tụ kém';
         diagnosisColor = Colors.redAccent;
-      } else if (_resultVal > 8.0) {
+      } else if (_resultVal > DiagnosticThresholds.subcoolingHighK) {
         diagnosisText =
             'Quá lạnh cao - Dư ga hoặc tắc nghẽn phin lọc/đường lỏng';
         diagnosisColor = Colors.orange;

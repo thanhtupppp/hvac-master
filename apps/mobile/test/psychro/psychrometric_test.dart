@@ -23,10 +23,8 @@ void main() {
     test('saturationVaporPressure positive for positive temps', () {
       expect(saturationVaporPressure(20), greaterThan(0));
       expect(saturationVaporPressure(0), greaterThan(0));
-      expect(
-        saturationVaporPressure(37.78),
-        closeTo(6.54, 0.1),
-      ); // 100°F in hPa
+      // 100°F (37.78°C) saturation pressure ≈ 6.54 kPa per ASHRAE Handbook
+      expect(saturationVaporPressure(37.78), closeTo(6.54, 0.02));
     });
 
     test('humidityRatio returns NaN for invalid RH', () {
@@ -34,9 +32,10 @@ void main() {
     });
 
     test('humidityRatio positive for positive temp and RH', () {
+      // At 25°C, 60% RH: w ≈ 0.0118 kg/kg per ASHRAE Psychrometric Calculator
       final w = humidityRatio(25, 60);
       expect(w, greaterThan(0));
-      expect(w, lessThan(0.1));
+      expect(w, lessThan(0.05)); // well below 5%
     });
 
     test('wetBulbTemperature returns NaN for invalid RH', () {

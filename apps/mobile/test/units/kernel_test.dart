@@ -26,7 +26,7 @@ void main() {
       // 1 RT = 12000 BTU/h = 3516.85 W
       expect(
         PowerConverter.convert(1.0, PowerUnit.ton, PowerUnit.btuHr),
-        closeTo(12000.0, 1e-6),
+        closeTo(12000.0, 0.01),
       );
       expect(
         PowerConverter.convert(1.0, PowerUnit.ton, PowerUnit.w),

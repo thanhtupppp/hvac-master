@@ -47,18 +47,16 @@ class _AirVelocityCalculatorScreenState
       return;
     }
 
-    double cfm = flow;
+    final cfm = _unit == UnitSystem.metric ? flow / 1.699 : flow;
     double areaSqFt;
 
     if (_byDuct) {
       final diameter = double.tryParse(_diameterController.text);
       if (diameter == null || diameter <= 0) return;
-      // diameter in mm if metric, inches if imperial
       final dIn = _unit == UnitSystem.metric ? diameter / 25.4 : diameter;
       areaSqFt = 3.14159 * dIn * dIn / 4 / 144;
-      cfm = flow;
     } else {
-      var area = double.tryParse(_areaController.text);
+      final area = double.tryParse(_areaController.text);
       if (area == null || area <= 0) return;
       areaSqFt = _unit == UnitSystem.metric ? area * 10.764 : area;
     }
