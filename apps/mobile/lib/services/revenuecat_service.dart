@@ -9,10 +9,28 @@ class RevenueCatService {
 
   static final RevenueCatService instance = RevenueCatService._();
 
-  /// RevenueCat API key. In production this should be loaded from
-  /// a secure source. Replace with your actual RevenueCat API key.
+  /// RevenueCat API key passed via --dart-define=REVENUECAT_API_KEY=...
   /// Prefix with "goog_" for Google Play, "appl_" for App Store.
-  static const String _apiKey = 'YOUR_REVENUECAT_API_KEY';
+  /// Falls back to a development key only in debug mode (never production).
+  String get _apiKey {
+    // ignore: avoid_dynamic_calls
+    const apiKey = String.fromEnvironment(
+      'REVENUECAT_API_KEY',
+      defaultValue: '',
+    );
+    if (apiKey.isNotEmpty) return apiKey;
+
+    // Development fallback — never ship with a real entitlement.
+    assert(() {
+      // ignore: avoid_print
+      print(
+        '[RevenueCat] WARNING: Using placeholder API key in debug mode. '
+        'Set --dart-define=REVENUECAT_API_KEY=goog_... for real purchases.',
+      );
+      return true;
+    }());
+    return 'YOUR_REVENUECAT_API_KEY';
+  }
 
   /// Entitlement identifier as configured in the RevenueCat dashboard.
   /// This must match exactly (e.g., "vip", "premium", "pro").

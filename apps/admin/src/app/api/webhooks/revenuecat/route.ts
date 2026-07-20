@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { createHmac, timingSafeEqual, createHash } from "crypto";
+import { timingSafeEqual } from "crypto";
 
 /**
  * POST /api/webhooks/revenuecat
  *
  * RevenueCat sends webhook events for all store purchases (Google Play, Apple, etc.).
- * This replaces the Google Play webhook as the single source of truth for entitlements.
+ * RevenueCat dashboard → Integration → Webhooks: set the webhook URL and a custom
+ * "Webhook Secret" (a shared secret you define). RevenueCat sends this secret in the
+ * HTTP `Authorization` header as a bearer token: `Authorization: Bearer <secret>`.
  *
- * RevenueCat docs: https://www.revenuecat.com/docs/webhooks
+ * This replaces the Google Play webhook for user entitlement management.
+ * The Google Play webhook is kept for product acknowledgement only (which must be
+ * done per-platform to prevent auto-refunds).
  *
- * Event flow:
- *   INITIAL_PURCHASE / RENEWAL → grant VIP
- *   CANCELLATION / EXPIRATION / BILLING_ISSUE → revoke VIP
- *   UNCANCELLATION → re-grant VIP
- *   TRIAL_CONVERTED → treat as INITIAL_PURCHASE
+ * RevenueCat event docs: https://www.revenuecat.com/docs/webhooks
  */
 export async function POST(req: Request) {
-  // 1. Verify RevenueCat webhook signature
+  // 1. Verify Authorization header (simple shared-secret bearer token)
   const webhookSecret = process.env.REVENUECAT_WEBHOOK_SECRET;
   if (!webhookSecret) {
     console.error(
@@ -30,12 +30,34 @@ export async function POST(req: Request) {
     );
   }
 
-  const signature = req.headers.get("RC_WEBHOOK_SIGNATURE");
-  if (!signature) {
-    console.warn("[RevenueCat Webhook] Missing RC_WEBHOOK_SIGNATURE header.");
-    return NextResponse.json({ error: "Missing signature." }, { status: 401 });
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader) {
+    console.warn("[RevenueCat Webhook] Missing Authorization header.");
+    return NextResponse.json({ error: "Missing auth." }, { status: 401 });
   }
 
+  const receivedToken = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : authHeader;
+
+  // Timing-safe comparison to prevent timing attacks
+  const encoder = new TextEncoder();
+  try {
+    const receivedBuf = encoder.encode(receivedToken);
+    const expectedBuf = encoder.encode(webhookSecret);
+    if (
+      receivedBuf.length !== expectedBuf.length ||
+      !timingSafeEqual(receivedBuf, expectedBuf)
+    ) {
+      console.warn("[RevenueCat Webhook] Invalid Authorization token.");
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+  } catch {
+    console.warn("[RevenueCat Webhook] Authorization comparison failed.");
+    return NextResponse.json({ error: "Auth error." }, { status: 401 });
+  }
+
+  // 2. Parse payload
   let rawBody: string;
   try {
     rawBody = await req.text();
@@ -43,34 +65,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid body." }, { status: 400 });
   }
 
-  // Compute expected HMAC-SHA256 of raw body
-  const expectedSig = createHmac("sha256", webhookSecret)
-    .update(rawBody)
-    .digest("hex");
-
-  // Timing-safe comparison to prevent timing attacks
-  try {
-    const receivedBuf = Buffer.from(signature, "hex");
-    const expectedBuf = Buffer.from(expectedSig, "hex");
-    if (
-      receivedBuf.length !== expectedBuf.length ||
-      !timingSafeEqual(receivedBuf, expectedBuf)
-    ) {
-      console.warn("[RevenueCat Webhook] Invalid webhook signature.");
-      return NextResponse.json(
-        { error: "Invalid signature." },
-        { status: 401 },
-      );
-    }
-  } catch {
-    console.warn("[RevenueCat Webhook] Signature comparison failed.");
-    return NextResponse.json(
-      { error: "Invalid signature format." },
-      { status: 401 },
-    );
-  }
-
-  // 2. Parse payload
   let payload: RevenueCatWebhookPayload;
   try {
     payload = JSON.parse(rawBody);
@@ -96,16 +90,18 @@ export async function POST(req: Request) {
     purchase_at_ms: purchaseAtMs,
     period_type: periodType,
     is_trial_conversion: isTrialConversion,
-    price_in_app_currency: priceInAppCurrency,
+    price_in_purchased_currency: priceInPurchasedCurrency,
     iso_currency_code: isoCurrencyCode,
     transaction_id: transactionId,
+    original_transaction_id: originalTransactionId,
+    auto_renewing: autoRenewing,
   } = event;
 
   console.log(
     `[RevenueCat Webhook] event_id=${event_id} type=${event_type} user=${userId} product=${productId}`,
   );
 
-  // Only process VIP entitlement events — ignore other entitlement_ids
+  // Only process VIP entitlement events
   const vipEntitlementId =
     entitlementId ||
     entitlementIds.find(
@@ -125,14 +121,17 @@ export async function POST(req: Request) {
     );
   }
 
-  // 3. Derive payment doc ID (stable per purchaseToken/transactionId)
-  const paymentDocId = transactionId
-    ? createHash("sha256").update(transactionId).digest("hex").slice(0, 40)
-    : event_id;
+  // 3. Derive a stable payment doc ID.
+  // Use original_transaction_id when available — it stays the same across all
+  // renewals of the same subscription. Fall back to event_id.
+  // We deliberately do NOT use transaction_id as it changes every billing cycle
+  // (same problem as latestOrderId in the old Google Play webhook).
+  const stableId = originalTransactionId || event_id;
+  const paymentDocId = stableId;
 
   // 4. Determine VIP status from event type
   const isGranting = isVipGrantingEvent(event_type, isTrialConversion);
-  const isRevoking = isVipRevokingEvent(event_type);
+  const isDefinitelyRevoking = isDefinitelyRevokingEvent(event_type);
 
   // 5. Upsert payment record
   const expiryTime = expirationAtMs
@@ -141,6 +140,7 @@ export async function POST(req: Request) {
   const purchaseTime = purchaseAtMs
     ? Timestamp.fromMillis(purchaseAtMs)
     : FieldValue.serverTimestamp();
+
   try {
     const paymentRef = adminDb.collection("payments").doc(paymentDocId);
 
@@ -148,17 +148,26 @@ export async function POST(req: Request) {
       {
         revenuecatEventId: event_id,
         revenuecatTransactionId: transactionId,
-        purchaseToken: transactionId,
+        revenuecatOriginalTransactionId: originalTransactionId || null,
+        purchaseToken: originalTransactionId || transactionId || event_id,
         productId,
         purchaseType: store === "GOOGLE_PLAY" ? "subscription" : "inapp",
         entitlementId: vipEntitlementId,
         store,
-        status: isGranting ? "active" : isRevoking ? "expired" : "pending",
-        autoRenewing: isRevoking ? false : true,
+        status: isGranting
+          ? "active"
+          : isDefinitelyRevoking
+            ? "expired"
+            : "pending",
+        // autoRenewing: false only when user has cancelled (not for grace-period
+        // BILLING_ISSUE which still has time left).
+        autoRenewing: autoRenewing ?? null,
         expiryTime,
         purchaseTime,
-        amount: priceInAppCurrency ?? 0,
-        currency: isoCurrencyCode ?? "VND",
+        // RevenueCat sends price_in_purchased_currency (amount in the currency the
+        // user was charged). price_in_app_currency is the USD base price — wrong.
+        amount: priceInPurchasedCurrency ?? 0,
+        currency: isoCurrencyCode ?? null,
         periodType: periodType || "normal",
         isTrialConversion: isTrialConversion || false,
         revenuecatEventType: event_type,
@@ -169,7 +178,7 @@ export async function POST(req: Request) {
       { merge: true },
     );
 
-    // Look up user email if available
+    // Backfill user email if available
     try {
       const userDoc = await adminDb.collection("users").doc(userId).get();
       if (userDoc.exists) {
@@ -186,9 +195,13 @@ export async function POST(req: Request) {
   // 6. Update user VIP entitlement
   if (isGranting) {
     await grantVip(userId, paymentDocId, expiryTime);
-  } else if (isRevoking) {
+  } else if (isDefinitelyRevoking) {
     await revokeVip(userId);
   }
+  // CANCELLATION and BILLING_ISSUE: do NOT revoke here.
+  // CANCELLATION means auto-renew is OFF but user still has access until period end.
+  // BILLING_ISSUE means payment failed — RevenueCat retries for ~3-7 days.
+  // Revoke only on EXPIRATION.
 
   return NextResponse.json({ ok: true, event_id }, { status: 200 });
 }
@@ -209,11 +222,13 @@ function isVipGrantingEvent(
   );
 }
 
-function isVipRevokingEvent(eventType: string): boolean {
+/** Events that definitively end the subscription — revoke VIP immediately. */
+function isDefinitelyRevokingEvent(eventType: string): boolean {
   const type = (eventType || "").toUpperCase();
-  return (
-    type === "CANCELLATION" || type === "EXPIRATION" || type === "BILLING_ISSUE"
-  );
+  return type === "EXPIRATION";
+  // NOTE: CANCELLATION means "user turned off auto-renew" — they still have
+  // access until period end. BILLING_ISSUE has a grace period. Neither should
+  // revoke VIP here. RevenueCat will send EXPIRATION when access truly ends.
 }
 
 async function grantVip(
@@ -264,8 +279,11 @@ interface RevenueCatWebhookPayload {
     purchase_at_ms?: number;
     period_type?: string;
     is_trial_conversion?: boolean;
-    price_in_app_currency?: number;
+    price_in_purchased_currency?: number;
     iso_currency_code?: string;
     transaction_id?: string;
+    original_transaction_id?: string;
+    auto_renewing?: boolean;
+    [key: string]: any;
   };
 }

@@ -22,20 +22,22 @@ service cloud.firestore {
       // Ai cũng đọc (cần hiển thị profile), nhưng user chỉ đọc được doc của mình.
       allow read: if request.auth != null;
 
-      // User có thể cập nhật doc của chính mình, NGOẠI TRỪ entitlement fields.
-      // Dùng get() để so sánh resource (doc hiện tại) với request.resource (doc muốn ghi).
+      // User được tạo doc của chính mình (first-login auto-create).
+      // Entitlement fields bị chặn để ngăn tự cấp VIP.
+      allow create: if request.auth.uid == userId
+        && !request.resource.data.diff({}).affectedKeys()
+          .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride"]);
+
+      // User được xoá doc của chính mình (deleteAccount).
+      allow delete: if request.auth.uid == userId;
+
+      // Update: user sửa được doc của mình nhưng KHÔNG được sửa entitlement fields.
       allow update: if request.auth.uid == userId
         && (
-          // Không thay đổi entitlement fields
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(["isPremium", "premiumExpiry", "activeSubscriptionId", "isPremiumOverride"])
-          // HOẶC đang được Admin nâng cấp (Admin SDK không qua rules này)
           || isAdmin()
         );
-
-      // Chỉ Admin SDK ghi (webhook, /api/users) mới được tạo/xoá doc.
-      // Client SDK hoàn toàn không được phép tạo/xoá user doc.
-      allow create, delete: if isAdmin();
 
       // Subcollections (bookmarks, etc.)
       match /{document=**} {

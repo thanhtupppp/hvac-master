@@ -188,6 +188,17 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
     );
   }
 
+  // ─── TRANSITION NOTE ───────────────────────────────────────────────────
+  // User VIP entitlement is now managed exclusively by the RevenueCat webhook
+  // (/api/webhooks/revenuecat). During the transition period the Google Play
+  // webhook is kept ONLY for product acknowledgement (prevents auto-refund
+  // after 3 days) and payment record writes. User doc (isPremium, etc.) is
+  // intentionally NOT updated here to prevent state divergence between the two
+  // webhooks. Once RevenueCat is confirmed working, this entire VIP write block
+  // (and the analogous block in handleOneTimeProductNotification) should be
+  // removed.
+  // ───────────────────────────────────────────────────────────────────────
+
   // Update user VIP status if userId is known
   if (userId) {
     const isPremium = status === "active";
