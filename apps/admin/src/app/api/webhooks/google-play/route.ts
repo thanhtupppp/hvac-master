@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { verifySubscription, verifyProduct, acknowledgeSubscription, microsToCurrency, mapSubscriptionStatus } from "@/lib/google-play";
+import {
+  verifySubscription,
+  verifyProduct,
+  acknowledgeSubscription,
+  mapSubscriptionStatus,
+} from "@/lib/google-play";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
-// Validate Pub/Sub push token to prevent unauthorized calls
-const PUBSUB_TOKEN = process.env.GOOGLE_PUBSUB_TOKEN || "";
+// Validate Pub/Sub push token to prevent unauthorized calls.
+// Empty token disables the endpoint entirely (auth not configured).
+const PUBSUB_TOKEN = process.env.GOOGLE_PUBSUB_TOKEN;
+const TOKEN_IS_CONFIGURED = PUBSUB_TOKEN != null && PUBSUB_TOKEN.length > 0;
 
 /**
  * POST /api/webhooks/google-play
@@ -13,25 +20,43 @@ const PUBSUB_TOKEN = process.env.GOOGLE_PUBSUB_TOKEN || "";
  */
 export async function POST(req: Request) {
   // 1. Validate shared secret token
+  if (!TOKEN_IS_CONFIGURED || req.url.includes("token=") === false) {
+    console.error(
+      "[GooglePlay Webhook] Token not configured or missing in URL.",
+    );
+    return NextResponse.json(
+      { ok: false, reason: "auth_not_configured" },
+      { status: 503 },
+    );
+  }
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
-  if (!PUBSUB_TOKEN || token !== PUBSUB_TOKEN) {
+  if (token !== PUBSUB_TOKEN) {
     console.warn("[GooglePlay Webhook] Unauthorized request — invalid token.");
-    // Return 200 anyway to prevent Pub/Sub retry storm on misconfiguration
-    return NextResponse.json({ ok: false, reason: "unauthorized" }, { status: 200 });
+    // Return 200 to ACK the Pub/Sub message and prevent retry storms.
+    // A 4xx here would cause Pub/Sub to retry indefinitely.
+    return NextResponse.json(
+      { ok: false, reason: "unauthorized" },
+      { status: 200 },
+    );
   }
 
   let rawBody: any;
   try {
     rawBody = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, reason: "invalid_body" }, { status: 200 });
+    return NextResponse.json(
+      { ok: false, reason: "invalid_body" },
+      { status: 200 },
+    );
   }
 
   // 2. Decode base64 Pub/Sub message
   const messageData = rawBody?.message?.data;
   if (!messageData) {
-    console.warn("[GooglePlay Webhook] Missing message.data in Pub/Sub payload.");
+    console.warn(
+      "[GooglePlay Webhook] Missing message.data in Pub/Sub payload.",
+    );
     return NextResponse.json({ ok: true, reason: "no_data" }, { status: 200 });
   }
 
@@ -41,10 +66,16 @@ export async function POST(req: Request) {
     notification = JSON.parse(decoded);
   } catch {
     console.error("[GooglePlay Webhook] Failed to decode Pub/Sub message.");
-    return NextResponse.json({ ok: true, reason: "decode_error" }, { status: 200 });
+    return NextResponse.json(
+      { ok: true, reason: "decode_error" },
+      { status: 200 },
+    );
   }
 
-  console.log("[GooglePlay Webhook] Received notification:", JSON.stringify(notification));
+  console.log(
+    "[GooglePlay Webhook] Received notification:",
+    JSON.stringify(notification),
+  );
 
   const packageName = notification.packageName as string;
   const subscriptionNotification = notification.subscriptionNotification;
@@ -52,11 +83,20 @@ export async function POST(req: Request) {
 
   try {
     if (subscriptionNotification) {
-      await handleSubscriptionNotification(subscriptionNotification, notification);
+      await handleSubscriptionNotification(
+        subscriptionNotification,
+        notification,
+      );
     } else if (oneTimeProductNotification) {
-      await handleOneTimeProductNotification(oneTimeProductNotification, notification);
+      await handleOneTimeProductNotification(
+        oneTimeProductNotification,
+        notification,
+      );
     } else {
-      console.log("[GooglePlay Webhook] Unhandled notification type:", notification);
+      console.log(
+        "[GooglePlay Webhook] Unhandled notification type:",
+        notification,
+      );
     }
   } catch (err) {
     console.error("[GooglePlay Webhook] Error processing notification:", err);
@@ -78,11 +118,15 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
   // Verify purchase with Google Play Developer API
   const subscription = await verifySubscription(subscriptionId, purchaseToken);
   const lineItem = subscription.lineItems?.[0];
-  const expiryMillis = lineItem?.expiryTime ? new Date(lineItem.expiryTime).getTime() : null;
+  const expiryMillis = lineItem?.expiryTime
+    ? new Date(lineItem.expiryTime).getTime()
+    : null;
   const status = mapSubscriptionStatus(subscription.subscriptionState);
 
   // Find userId from obfuscatedExternalAccountId (set by Android app on purchase)
-  const userId = subscription.externalAccountIdentifiers?.obfuscatedExternalAccountId || null;
+  const userId =
+    subscription.externalAccountIdentifiers?.obfuscatedExternalAccountId ||
+    null;
   const orderId = subscription.latestOrderId || purchaseToken.slice(0, 40);
 
   // Upsert payment record
@@ -93,7 +137,8 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
     productId: subscriptionId,
     purchaseType: "subscription",
     status,
-    autoRenewing: subscription.subscriptionState === "SUBSCRIPTION_STATE_ACTIVE",
+    autoRenewing:
+      subscription.subscriptionState === "SUBSCRIPTION_STATE_ACTIVE",
     expiryTime: expiryMillis ? Timestamp.fromMillis(expiryMillis) : null,
     verifiedAt: FieldValue.serverTimestamp(),
     rawNotification: raw,
@@ -126,7 +171,10 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
   try {
     await acknowledgeSubscription(subscriptionId, purchaseToken);
   } catch (err) {
-    console.warn("[GooglePlay Webhook] Acknowledge failed (may already be acknowledged):", err);
+    console.warn(
+      "[GooglePlay Webhook] Acknowledge failed (may already be acknowledged):",
+      err,
+    );
   }
 
   // Update user VIP status if userId is known
@@ -143,7 +191,10 @@ async function handleSubscriptionNotification(notification: any, raw: any) {
       userUpdate.premiumExpiry = null;
       userUpdate.activeSubscriptionId = null;
     }
-    await adminDb.collection("users").doc(userId).set(userUpdate, { merge: true });
+    await adminDb
+      .collection("users")
+      .doc(userId)
+      .set(userUpdate, { merge: true });
     console.log(`[GooglePlay Webhook] User ${userId} isPremium=${isPremium}`);
   }
 }
@@ -160,17 +211,20 @@ async function handleOneTimeProductNotification(notification: any, raw: any) {
   const status = product.purchaseState === 0 ? "active" : "pending";
 
   const paymentRef = adminDb.collection("payments").doc(orderId);
-  await paymentRef.set({
-    orderId,
-    purchaseToken,
-    productId: sku,
-    purchaseType: "inapp",
-    status,
-    amount: 0,
-    currency: "VND",
-    purchaseTime: FieldValue.serverTimestamp(),
-    verifiedAt: FieldValue.serverTimestamp(),
-    rawNotification: raw,
-    createdAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  await paymentRef.set(
+    {
+      orderId,
+      purchaseToken,
+      productId: sku,
+      purchaseType: "inapp",
+      status,
+      amount: 0,
+      currency: "VND",
+      purchaseTime: FieldValue.serverTimestamp(),
+      verifiedAt: FieldValue.serverTimestamp(),
+      rawNotification: raw,
+      createdAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
 }

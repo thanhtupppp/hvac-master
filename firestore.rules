@@ -40,8 +40,10 @@ service cloud.firestore {
     }
 
     // Collection "search_queries": Lưu trữ từ khóa tìm kiếm phổ biến
+    // Đọc công khai để suggest, chỉ admin mới được ghi
     match /search_queries/{queryId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

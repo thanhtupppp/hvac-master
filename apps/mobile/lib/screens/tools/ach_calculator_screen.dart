@@ -10,9 +10,9 @@ class AchCalculatorScreen extends StatefulWidget {
 }
 
 class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
-  final _lengthController = TextEditingController(text: '6');
-  final _widthController = TextEditingController(text: '5');
-  final _heightController = TextEditingController(text: '3');
+  final _lengthController = TextEditingController(text: '');
+  final _widthController = TextEditingController(text: '');
+  final _heightController = TextEditingController(text: '');
   final _achController = TextEditingController(text: '6');
   final _flowController = TextEditingController();
 
@@ -22,11 +22,7 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    _lengthController.addListener(_recalculate);
-    _widthController.addListener(_recalculate);
-    _heightController.addListener(_recalculate);
-    _achController.addListener(_recalculate);
-    _flowController.addListener(_recalculate);
+    _recalculate();
   }
 
   @override
@@ -43,16 +39,14 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
     final l = double.tryParse(_lengthController.text);
     final w = double.tryParse(_widthController.text);
     final h = double.tryParse(_heightController.text);
-    if (l == null || w == null || h == null || l <= 0 || w <= 0 || h <= 0) {
-      return;
-    }
+    if (l == null || w == null || h == null) return;
 
     if (_calcFromAch) {
       final ach = double.tryParse(_achController.text);
       if (ach == null || ach <= 0) return;
 
-      final volCuM = l * w * h;
-      final volCuFt = volCuM * 35.3147;
+      final volCuFt = _volCuFt(l, w, h);
+      if (volCuFt <= 0) return;
 
       final cfm = (ach * volCuFt) / 60;
       _flowController.text = cfm.toStringAsFixed(1);
@@ -60,12 +54,16 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
       final flow = double.tryParse(_flowController.text);
       if (flow == null || flow <= 0) return;
 
-      final volCuM = l * w * h;
-      final volCuFt = volCuM * 35.3147;
+      final volCuFt = _volCuFt(l, w, h);
+      if (volCuFt <= 0) return;
 
       final cfm = _unit == UnitSystem.metric ? flow / 1.699 : flow;
       final ach = (cfm * 60) / volCuFt;
-      _achController.text = ach.toStringAsFixed(1);
+
+      // Guard: only write if value actually changed to avoid cursor jump
+      if (_achController.text != ach.toStringAsFixed(1)) {
+        _achController.text = ach.toStringAsFixed(1);
+      }
     }
   }
 
@@ -183,18 +181,43 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
       ),
       child: Column(
         children: [
-          _buildField('Chiều dài phòng', _lengthController, _dimUnit),
+          _buildField(
+            'Chiều dài phòng',
+            _lengthController,
+            _dimUnit,
+            onChanged: _recalculate,
+          ),
           const SizedBox(height: 12),
-          _buildField('Chiều rộng', _widthController, _dimUnit),
+          _buildField(
+            'Chiều rộng',
+            _widthController,
+            _dimUnit,
+            onChanged: _recalculate,
+          ),
           const SizedBox(height: 12),
-          _buildField('Chiều cao', _heightController, _dimUnit),
+          _buildField(
+            'Chiều cao',
+            _heightController,
+            _dimUnit,
+            onChanged: _recalculate,
+          ),
           const SizedBox(height: 12),
           const Divider(color: AppColors.divider),
           const SizedBox(height: 12),
           if (_calcFromAch)
-            _buildField('ACH mục tiêu', _achController, 'lần/giờ')
+            _buildField(
+              'ACH mục tiêu',
+              _achController,
+              'lần/giờ',
+              onChanged: _recalculate,
+            )
           else
-            _buildField('Lưu lượng', _flowController, _flowUnit),
+            _buildField(
+              'Lưu lượng',
+              _flowController,
+              _flowUnit,
+              onChanged: _recalculate,
+            ),
         ],
       ),
     );
@@ -202,8 +225,21 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
 
   String get _dimUnit => _unit == UnitSystem.metric ? 'm' : 'ft';
   String get _flowUnit => _unit == UnitSystem.metric ? 'm³/h' : 'CFM';
+  String get _volUnit => _unit == UnitSystem.metric ? 'm³' : 'ft³';
 
-  Widget _buildField(String label, TextEditingController ctrl, String unit) {
+  /// Volume in ft³ — dimensions are entered in the selected unit system,
+  /// so only convert when the user is using metric.
+  double _volCuFt(double l, double w, double h) =>
+      _unit == UnitSystem.imperial ? l * w * h : l * w * h * 35.3147;
+
+  double _volCuM(double l, double w, double h) => _volCuFt(l, w, h) / 35.3147;
+
+  Widget _buildField(
+    String label,
+    TextEditingController ctrl,
+    String unit, {
+    VoidCallback? onChanged,
+  }) {
     return Row(
       children: [
         Expanded(
@@ -219,6 +255,7 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
           width: 120,
           child: TextField(
             controller: ctrl,
+            onChanged: onChanged != null ? (_) => onChanged() : null,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -269,8 +306,8 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
     final l = double.tryParse(_lengthController.text) ?? 0;
     final w = double.tryParse(_widthController.text) ?? 0;
     final h = double.tryParse(_heightController.text) ?? 0;
-    final volCuM = l * w * h;
-    final volCuFt = volCuM * 35.3147;
+    final volCuFt = _volCuFt(l, w, h);
+    final volCuM = _volCuM(l, w, h);
     final ach = double.tryParse(_achController.text) ?? 0;
 
     final cfm = (ach * volCuFt) / 60;
@@ -278,8 +315,8 @@ class _AchCalculatorScreenState extends State<AchCalculatorScreen> {
 
     final displayVol = _unit == UnitSystem.metric ? volCuM : volCuFt;
     final displayFlow = _unit == UnitSystem.metric ? flowCMH : cfm;
-    final volUnit = _unit == UnitSystem.metric ? 'm³' : 'ft³';
-    final flowUnit = _unit == UnitSystem.metric ? 'm³/h' : 'CFM';
+    final volUnit = _volUnit;
+    final flowUnit = _flowUnit;
 
     return Container(
       padding: const EdgeInsets.all(20),
