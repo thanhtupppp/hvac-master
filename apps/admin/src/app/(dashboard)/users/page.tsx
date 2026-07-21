@@ -14,6 +14,23 @@ import { vi } from "date-fns/locale";
 
 type FilterType = "all" | "vip" | "free" | "disabled";
 
+const tabs: { label: string; value: FilterType }[] = [
+  { label: "Tất cả", value: "all" },
+  { label: "VIP", value: "vip" },
+  { label: "Free", value: "free" },
+  { label: "Bị khóa", value: "disabled" },
+];
+
+function formatDate(timestamp: any) {
+  if (!timestamp) return "—";
+  try {
+    const date = timestamp?.toDate?.() || new Date(timestamp);
+    return format(date, "dd/MM/yyyy", { locale: vi });
+  } catch {
+    return "—";
+  }
+}
+
 export default function UsersPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchInput, setSearchInput] = useState("");
@@ -56,21 +73,6 @@ export default function UsersPage() {
       setActionLoading(null);
     }
   };
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return "—";
-    try {
-      const date = timestamp?.toDate?.() || new Date(timestamp);
-      return format(date, "dd/MM/yyyy", { locale: vi });
-    } catch { return "—"; }
-  };
-
-  const tabs: { label: string; value: FilterType }[] = [
-    { label: "Tất cả", value: "all" },
-    { label: "VIP", value: "vip" },
-    { label: "Free", value: "free" },
-    { label: "Bị khóa", value: "disabled" },
-  ];
 
   return (
     <>

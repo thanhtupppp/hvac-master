@@ -42,14 +42,29 @@ export { initializeApp, getApps, cert };
  * Returns the validated UID if successful, or throws an error with a specific status code (e.g. 401, 403).
  */
 export async function requireAdmin(req: Request): Promise<string> {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  let idToken: string | null = null;
+
+  // 1. Prefer HttpOnly cookie set by /api/admin/session (set on login)
+  const cookieHeader = req.headers.get("cookie") || "";
+  const cookieMatch = /(?:^|;\s*)__AdminSession=([^;]+)/.exec(cookieHeader);
+  if (cookieMatch) {
+    idToken = decodeURIComponent(cookieMatch[1]);
+  }
+
+  // 2. Fallback to Authorization: Bearer <idToken>
+  if (!idToken) {
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      idToken = authHeader.substring(7);
+    }
+  }
+
+  if (!idToken) {
     const error = new Error("Authentication token required.");
     (error as any).status = 401;
     throw error;
   }
 
-  const idToken = authHeader.substring(7);
   let userUid: string;
 
   try {

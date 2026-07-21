@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -19,6 +25,55 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+async function logout() {
+  try {
+    await signOut(auth);
+  } catch (error) {
+    console.error("Error signing out: ", error);
+  } finally {
+    if (typeof window !== "undefined") {
+      try {
+        await fetch("/api/admin/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "clear" }),
+        });
+      } catch {
+        // best-effort cookie cleanup; logout still proceeds
+      }
+    }
+  }
+}
+
+async function persistSessionCookie(uid: string): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const idToken = await window.auth?.currentUser?.getIdToken?.();
+  if (!idToken) return false;
+  try {
+    const res = await fetch("/api/admin/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "set", idToken }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function clearSessionCookie(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    await fetch("/api/admin/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "clear" }),
+    });
+  } catch {
+    // best-effort
+  }
+}
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,14 +86,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const adminDoc = await getDoc(doc(db, "admins", currentUser.uid));
           if (adminDoc.exists()) {
             setUser(currentUser);
-            if (typeof window !== "undefined") {
-              document.cookie = "admin_session=true; path=/; max-age=86400; SameSite=Lax";
-            }
+            await persistSessionCookie(currentUser.uid);
           } else {
             setUser(null);
-            if (typeof window !== "undefined") {
-              document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            }
+            await clearSessionCookie();
             await signOut(auth);
             if (typeof window !== "undefined") {
               window.location.href = "/login?error=unauthorized";
@@ -47,16 +98,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
           console.error("Error checking admin status in AuthContext:", error);
           setUser(null);
-          if (typeof window !== "undefined") {
-            document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-          }
+          await clearSessionCookie();
           await signOut(auth);
         }
       } else {
         setUser(null);
-        if (typeof window !== "undefined") {
-          document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        }
+        await clearSessionCookie();
       }
       setLoading(false);
     });
@@ -64,20 +111,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const logout = async () => {
-    try {
-      if (typeof window !== "undefined") {
-        document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      }
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out: ", error);
-    }
-  };
+  const contextValue = useMemo(
+    () => ({ user, loading, logout }),
+    [user, loading],
+  );
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };

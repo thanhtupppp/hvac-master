@@ -49,13 +49,15 @@ const THEME_COLORS: Record<string, string> = {
   gold: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200",
 };
 
+const plansVndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
 function formatVND(n: number) {
   if (!n) return "—";
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(n);
+  return plansVndFormatter.format(n);
 }
 
 export default function PlansPage() {
@@ -444,10 +446,10 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
     setFeatureInput("");
   };
 
-  const removeFeature = (idx: number) => {
+  const removeFeature = (feat: string) => {
     updateField(
       "features",
-      form.features.filter((_: any, i: number) => i !== idx),
+      form.features.filter((f: string) => f !== feat),
     );
   };
 
@@ -486,10 +488,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           {/* Row 1: planCode + entitlementId */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="planCode"
+                className="text-sm font-medium block mb-1"
+              >
                 Plan code *
               </label>
               <Input
+                id="planCode"
                 value={form.planCode}
                 onChange={(e) => updateField("planCode", e.target.value)}
                 placeholder="vip_monthly"
@@ -502,10 +508,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="entitlementId"
+                className="text-sm font-medium block mb-1"
+              >
                 Entitlement ID
               </label>
               <Input
+                id="entitlementId"
                 value={form.entitlementId}
                 onChange={(e) => updateField("entitlementId", e.target.value)}
                 placeholder="vip"
@@ -516,10 +526,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           {/* Row 2: names */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="planName"
+                className="text-sm font-medium block mb-1"
+              >
                 Tên tiếng Việt *
               </label>
               <Input
+                id="planName"
                 value={form.name}
                 onChange={(e) => updateField("name", e.target.value)}
                 placeholder="VIP 1 tháng"
@@ -527,10 +541,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="planNameEn"
+                className="text-sm font-medium block mb-1"
+              >
                 Tên tiếng Anh
               </label>
               <Input
+                id="planNameEn"
                 value={form.nameEn}
                 onChange={(e) => updateField("nameEn", e.target.value)}
                 placeholder="VIP Monthly"
@@ -539,8 +557,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           </div>
 
           <div>
-            <label className="text-sm font-medium block mb-1">Mô tả</label>
+            <label
+              htmlFor="planDescription"
+              className="text-sm font-medium block mb-1"
+            >
+              Mô tả
+            </label>
             <Input
+              id="planDescription"
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Mô tả ngắn hiển thị trên paywall..."
@@ -550,10 +574,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           {/* Row 3: prices */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="priceVND"
+                className="text-sm font-medium block mb-1"
+              >
                 Giá VND *
               </label>
               <Input
+                id="priceVND"
                 type="number"
                 value={form.priceVND}
                 onChange={(e) => updateField("priceVND", e.target.value)}
@@ -563,10 +591,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               <p className="text-xs text-muted-foreground mt-1">vd: 99000</p>
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="priceUSD"
+                className="text-sm font-medium block mb-1"
+              >
                 Giá USD (optional)
               </label>
               <Input
+                id="priceUSD"
                 type="number"
                 step="0.01"
                 value={form.priceUSD}
@@ -579,8 +611,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           {/* Row 4: interval + duration */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-sm font-medium block mb-1">Chu kỳ *</label>
+              <label
+                htmlFor="interval"
+                className="text-sm font-medium block mb-1"
+              >
+                Chu kỳ *
+              </label>
               <select
+                id="interval"
                 className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 value={form.interval}
                 onChange={(e) => updateField("interval", e.target.value)}
@@ -593,8 +631,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">Số ngày</label>
+              <label
+                htmlFor="durationDays"
+                className="text-sm font-medium block mb-1"
+              >
+                Số ngày
+              </label>
               <Input
+                id="durationDays"
                 type="number"
                 value={form.durationDays}
                 onChange={(e) => updateField("durationDays", e.target.value)}
@@ -603,10 +647,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="trialDays"
+                className="text-sm font-medium block mb-1"
+              >
                 Trial (ngày)
               </label>
               <Input
+                id="trialDays"
                 type="number"
                 value={form.trialDays}
                 onChange={(e) => updateField("trialDays", e.target.value)}
@@ -619,10 +667,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           {/* Row 5: provider + productId */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="provider"
+                className="text-sm font-medium block mb-1"
+              >
                 Provider *
               </label>
               <select
+                id="provider"
                 className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 value={form.provider}
                 onChange={(e) => updateField("provider", e.target.value)}
@@ -634,10 +686,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">
+              <label
+                htmlFor="productId"
+                className="text-sm font-medium block mb-1"
+              >
                 Product ID *
               </label>
               <Input
+                id="productId"
                 value={form.productId}
                 onChange={(e) => updateField("productId", e.target.value)}
                 placeholder="hvac_vip_monthly"
@@ -652,16 +708,22 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
           {/* Row 6: badge + theme + sortOrder */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-sm font-medium block mb-1">Badge</label>
+              <label htmlFor="badge" className="text-sm font-medium block mb-1">
+                Badge
+              </label>
               <Input
+                id="badge"
                 value={form.badge}
                 onChange={(e) => updateField("badge", e.target.value)}
                 placeholder="Tiết kiệm 30%"
               />
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">Theme</label>
+              <label htmlFor="theme" className="text-sm font-medium block mb-1">
+                Theme
+              </label>
               <select
+                id="theme"
                 className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 value={form.theme}
                 onChange={(e) => updateField("theme", e.target.value)}
@@ -672,8 +734,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium block mb-1">Thứ tự</label>
+              <label
+                htmlFor="sortOrder"
+                className="text-sm font-medium block mb-1"
+              >
+                Thứ tự
+              </label>
               <Input
+                id="sortOrder"
                 type="number"
                 value={form.sortOrder}
                 onChange={(e) => updateField("sortOrder", e.target.value)}
@@ -683,11 +751,15 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
 
           {/* Features */}
           <div>
-            <label className="text-sm font-medium block mb-1">
+            <label
+              htmlFor="featureInput"
+              className="text-sm font-medium block mb-1"
+            >
               Tính năng nổi bật
             </label>
             <div className="flex gap-2">
               <Input
+                id="featureInput"
                 value={featureInput}
                 onChange={(e) => setFeatureInput(e.target.value)}
                 placeholder="vd: Xem toàn bộ mã lỗi"
@@ -698,22 +770,27 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
                   }
                 }}
               />
-              <Button type="button" onClick={addFeature}>
+              <Button
+                type="button"
+                onClick={addFeature}
+                aria-label="Thêm tính năng"
+              >
                 Thêm
               </Button>
             </div>
             {form.features?.length > 0 && (
               <ul className="mt-2 space-y-1">
-                {form.features.map((feat: string, idx: number) => (
+                {form.features.map((feat: string) => (
                   <li
-                    key={idx}
+                    key={feat}
                     className="flex items-center justify-between text-sm bg-muted/40 px-3 py-1.5 rounded"
                   >
                     <span>✓ {feat}</span>
                     <button
                       type="button"
+                      aria-label={`Xóa tính năng: ${feat}`}
                       className="text-red-500 text-xs hover:underline"
-                      onClick={() => removeFeature(idx)}
+                      onClick={() => removeFeature(feat)}
                     >
                       Xoá
                     </button>
@@ -747,10 +824,14 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
 
           {/* Internal note */}
           <div>
-            <label className="text-sm font-medium block mb-1">
+            <label
+              htmlFor="internalNote"
+              className="text-sm font-medium block mb-1"
+            >
               Ghi chú nội bộ (admin only)
             </label>
             <Input
+              id="internalNote"
               value={form.internalNote}
               onChange={(e) => updateField("internalNote", e.target.value)}
               placeholder="Không hiển thị trên mobile..."
@@ -761,6 +842,7 @@ function PlanFormModal({ initial, onClose, onSave }: PlanFormModalProps) {
             <Button
               type="button"
               variant="outline"
+              aria-label="Đóng"
               className="flex-1"
               onClick={onClose}
             >

@@ -15,7 +15,7 @@ const syncSchema = z.object({
   productId: z.string().min(3),
   purchaseType: z.enum(["subscription", "inapp"]).default("subscription"),
   userId: z.string().optional(),
-  userEmail: z.string().email().optional(),
+  userEmail: z.email().optional(),
 });
 
 const patchSchema = z.object({

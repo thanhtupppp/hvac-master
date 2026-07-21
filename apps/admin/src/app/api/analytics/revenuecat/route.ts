@@ -93,6 +93,7 @@ async function fetchRevenueCatAnalytics(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
+      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -190,10 +191,12 @@ async function fetchRevenueCatAnalytics(
   };
 }
 
+const revenuecatVndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
 function formatVND(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return revenuecatVndFormatter.format(amount);
 }

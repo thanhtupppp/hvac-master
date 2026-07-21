@@ -154,7 +154,7 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle>Biểu đồ hoạt động hệ thống</CardTitle>
           </CardHeader>
-          <CardContent className="h-[260px] flex items-center justify-center text-muted-foreground bg-muted/40 rounded-md m-4 mt-0">
+          <CardContent className="h-65 flex items-center justify-center text-muted-foreground bg-muted/40 rounded-md m-4 mt-0">
             {/* TODO: Tích hợp chart hoạt động thật sự (recharts / Tremor) - JIRA-HVAC-104 */}
             <span>Biểu đồ hoạt động đang được phát triển</span>
           </CardContent>
@@ -197,8 +197,13 @@ export default function Dashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {latestArticles.map((article, index) => (
-                    <TableRow key={article.id ?? `article-${index}`}>
+                  {latestArticles.map((article) => (
+                    <TableRow
+                      key={
+                        article.id ??
+                        `${article.slug ?? "article"}-${article.titleVi}`
+                      }
+                    >
                       <TableCell
                         className="font-medium max-w-[150px] truncate"
                         title={article.titleVi}

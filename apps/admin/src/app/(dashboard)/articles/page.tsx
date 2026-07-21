@@ -2,14 +2,39 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Plus, Trash2, FileText, Pencil, Search,
-  Lock, Unlock, Layers, Award, Database,
-  Building, Sparkles, Eye, AlertCircle, CheckCircle2
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  Trash2,
+  FileText,
+  Pencil,
+  Search,
+  Lock,
+  Unlock,
+  Layers,
+  Award,
+  Database,
+  Building,
+  Sparkles,
+  Eye,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { useArticles, useCategories, useBrands } from "@/hooks";
 import { getCategoryName } from "@/constants";
@@ -41,7 +66,9 @@ export default function ArticlesPage() {
 
   // Custom Delete Confirm Dialog state
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [confirmDeleteTitle, setConfirmDeleteTitle] = useState<string | null>(null);
+  const [confirmDeleteTitle, setConfirmDeleteTitle] = useState<string | null>(
+    null,
+  );
 
   // Accessibility Refs for Modal Focus Management
   const headingRef = useRef<HTMLHeadingElement | null>(null);
@@ -72,12 +99,14 @@ export default function ArticlesPage() {
         if (!modalElement) return;
 
         const focusableElements = modalElement.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex="0"]'
+          'button, [href], input, select, textarea, [tabindex="0"]',
         );
         if (focusableElements.length === 0) return;
 
         const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
 
         if (e.shiftKey) {
           if (document.activeElement === firstElement) {
@@ -116,7 +145,11 @@ export default function ArticlesPage() {
     wasDialogOpenRef.current = false;
   }, [confirmDeleteId]);
 
-  const handleOpenConfirmDelete = (articleId: string, articleTitle: string, trigger: HTMLButtonElement | null) => {
+  const handleOpenConfirmDelete = (
+    articleId: string,
+    articleTitle: string,
+    trigger: HTMLButtonElement | null,
+  ) => {
     lastTriggerRef.current = trigger;
     setConfirmDeleteId(articleId);
     setConfirmDeleteTitle(articleTitle);
@@ -152,10 +185,15 @@ export default function ArticlesPage() {
   // Client-side filtering logic
   const filteredArticles = useMemo(() => {
     return articles.filter((article) => {
-      const titleMatch = article.titleVi.toLowerCase().includes(searchQuery.toLowerCase());
-      const categoryMatch = selectedCategory === "all" || article.category === selectedCategory;
-      const brandMatch = selectedBrand === "all" || article.brand === selectedBrand;
-      const typeMatch = selectedType === "all" ||
+      const titleMatch = article.titleVi
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const categoryMatch =
+        selectedCategory === "all" || article.category === selectedCategory;
+      const brandMatch =
+        selectedBrand === "all" || article.brand === selectedBrand;
+      const typeMatch =
+        selectedType === "all" ||
         (selectedType === "premium" && article.isPremium) ||
         (selectedType === "free" && !article.isPremium);
       return titleMatch && categoryMatch && brandMatch && typeMatch;
@@ -164,16 +202,22 @@ export default function ArticlesPage() {
 
   // Calculate statistics
   const totalCount = articles.length;
-  const premiumCount = useMemo(() => articles.filter(a => a.isPremium).length, [articles]);
+  const premiumCount = useMemo(
+    () => articles.filter((a) => a.isPremium).length,
+    [articles],
+  );
   const freeCount = totalCount - premiumCount;
-  const brandCount = useMemo(() => new Set(articles.map(a => a.brand).filter(Boolean)).size, [articles]);
+  const brandCount = useMemo(
+    () => new Set(articles.flatMap((a) => (a.brand ? [a.brand] : []))).size,
+    [articles],
+  );
 
   return (
     <>
       {/* Header Title and Actions */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 
+          <h2
             ref={headingRef}
             tabIndex={-1}
             className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white focus:outline-none"
@@ -181,14 +225,15 @@ export default function ArticlesPage() {
             Quản lý Bài viết Hướng dẫn
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Quản lý các quy trình chẩn đoán, nguyên nhân mã lỗi và dịch tài liệu kỹ thuật đa ngôn ngữ.
+            Quản lý các quy trình chẩn đoán, nguyên nhân mã lỗi và dịch tài liệu
+            kỹ thuật đa ngôn ngữ.
           </p>
         </div>
-        <Link 
+        <Link
           href="/editor"
           className={cn(
             buttonVariants(),
-            "flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-md shadow-blue-500/10"
+            "flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-md shadow-blue-500/10",
           )}
         >
           <Plus className="h-4.5 w-4.5" />
@@ -212,7 +257,7 @@ export default function ArticlesPage() {
             <span>{errorMsg}</span>
           </div>
         )}
-        
+
         {successMsg && (
           <div className="flex items-start gap-2 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/20 p-3 rounded border border-green-200 dark:border-green-900/30 animate-in fade-in slide-in-from-top-1 duration-200">
             <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
@@ -226,8 +271,12 @@ export default function ArticlesPage() {
         <Card className="border-blue-100 dark:border-blue-900/20 bg-linear-to-br from-white to-blue-50/10 dark:from-gray-950 dark:to-blue-950/5">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">Tổng bài viết</span>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white mt-1 block">{totalCount}</span>
+              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">
+                Tổng bài viết
+              </span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white mt-1 block">
+                {totalCount}
+              </span>
             </div>
             <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <Database className="h-5 w-5" />
@@ -238,8 +287,12 @@ export default function ArticlesPage() {
         <Card className="border-amber-100 dark:border-amber-900/20 bg-linear-to-br from-white to-amber-50/10 dark:from-gray-950 dark:to-amber-950/5">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">Bài viết VIP (Premium)</span>
-              <span className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 block">{premiumCount}</span>
+              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">
+                Bài viết VIP (Premium)
+              </span>
+              <span className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1 block">
+                {premiumCount}
+              </span>
             </div>
             <div className="h-10 w-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
               <Award className="h-5 w-5" />
@@ -250,8 +303,12 @@ export default function ArticlesPage() {
         <Card className="border-emerald-100 dark:border-emerald-900/20 bg-linear-to-br from-white to-emerald-50/10 dark:from-gray-950 dark:to-emerald-950/5">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">Bài viết Miễn phí</span>
-              <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">{freeCount}</span>
+              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">
+                Bài viết Miễn phí
+              </span>
+              <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                {freeCount}
+              </span>
             </div>
             <div className="h-10 w-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <Sparkles className="h-5 w-5" />
@@ -262,8 +319,12 @@ export default function ArticlesPage() {
         <Card className="border-indigo-100 dark:border-indigo-900/20 bg-linear-to-br from-white to-indigo-50/10 dark:from-gray-950 dark:to-indigo-950/5">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">Hãng sản xuất</span>
-              <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 block">{brandCount}</span>
+              <span className="text-xs text-muted-foreground font-semibold block uppercase tracking-wider">
+                Hãng sản xuất
+              </span>
+              <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 block">
+                {brandCount}
+              </span>
             </div>
             <div className="h-10 w-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Building className="h-5 w-5" />
@@ -292,8 +353,11 @@ export default function ArticlesPage() {
                 className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800"
               />
             </div>
-            <div className="w-full md:w-[180px]">
-              <Select value={selectedCategory} onValueChange={(val) => setSelectedCategory(val || "all")}>
+            <div className="w-full md:w-45">
+              <Select
+                value={selectedCategory}
+                onValueChange={(val) => setSelectedCategory(val || "all")}
+              >
                 <SelectTrigger className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
                   <span className="flex items-center gap-2 truncate">
                     <Layers className="h-3.5 w-3.5 text-blue-500 shrink-0" />
@@ -303,13 +367,18 @@ export default function ArticlesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tất cả chuyên mục</SelectItem>
                   {Object.entries(categoriesMap).map(([key, name]) => (
-                    <SelectItem key={key} value={key}>{name}</SelectItem>
+                    <SelectItem key={key} value={key}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full md:w-[180px]">
-              <Select value={selectedBrand} onValueChange={(val) => setSelectedBrand(val || "all")}>
+            <div className="w-full md:w-45">
+              <Select
+                value={selectedBrand}
+                onValueChange={(val) => setSelectedBrand(val || "all")}
+              >
                 <SelectTrigger className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
                   <span className="flex items-center gap-2 truncate">
                     <Building className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
@@ -319,13 +388,18 @@ export default function ArticlesPage() {
                 <SelectContent>
                   <SelectItem value="all">Tất cả hãng sản xuất</SelectItem>
                   {Object.entries(brandsMap).map(([key, name]) => (
-                    <SelectItem key={key} value={key}>{name}</SelectItem>
+                    <SelectItem key={key} value={key}>
+                      {name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full md:w-[160px]">
-              <Select value={selectedType} onValueChange={(val) => setSelectedType(val || "all")}>
+            <div className="w-full md:w-40">
+              <Select
+                value={selectedType}
+                onValueChange={(val) => setSelectedType(val || "all")}
+              >
                 <SelectTrigger className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
                   <span className="flex items-center gap-2 truncate">
                     <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
@@ -350,25 +424,44 @@ export default function ArticlesPage() {
           ) : filteredArticles.length === 0 ? (
             <div className="py-16 text-center text-muted-foreground border-2 border-dashed rounded-lg bg-gray-50/50 dark:bg-gray-950/20">
               <FileText className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="font-semibold text-sm">Không tìm thấy bài viết nào phù hợp</p>
-              <p className="text-xs text-muted-foreground mt-1">Vui lòng kiểm tra lại bộ lọc hoặc tạo bài viết mới.</p>
+              <p className="font-semibold text-sm">
+                Không tìm thấy bài viết nào phù hợp
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Vui lòng kiểm tra lại bộ lọc hoặc tạo bài viết mới.
+              </p>
             </div>
           ) : (
             <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-white dark:bg-gray-950">
               <Table>
                 <TableHeader className="bg-gray-50 dark:bg-gray-900/50">
                   <TableRow>
-                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">Tiêu đề bài viết (Tiếng Việt)</TableHead>
-                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">Chuyên mục</TableHead>
-                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">Hãng sản xuất</TableHead>
-                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">Phân loại</TableHead>
-                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">Lượt xem</TableHead>
-                    <TableHead className="w-[120px] text-right font-semibold text-gray-700 dark:text-gray-300">Thao tác</TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+                      Tiêu đề bài viết (Tiếng Việt)
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+                      Chuyên mục
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+                      Hãng sản xuất
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+                      Phân loại
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 dark:text-gray-300">
+                      Lượt xem
+                    </TableHead>
+                    <TableHead className="w-30 text-right font-semibold text-gray-700 dark:text-gray-300">
+                      Thao tác
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredArticles.map((article) => (
-                    <TableRow key={article.id} className="hover:bg-slate-50/40 dark:hover:bg-slate-900/25 transition-colors">
+                    <TableRow
+                      key={article.id}
+                      className="hover:bg-slate-50/40 dark:hover:bg-slate-900/25 transition-colors"
+                    >
                       <TableCell className="font-medium max-w-md">
                         <Link
                           href={`/editor?id=${article.id}`}
@@ -409,14 +502,18 @@ export default function ArticlesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Link 
+                          <Link
                             href={`/editor?id=${article.id}`}
                             aria-label={`Chỉnh sửa bài viết ${article.titleVi}`}
                             title={`Chỉnh sửa bài viết ${article.titleVi}`}
                             className={cn(
-                              buttonVariants({ variant: "ghost", size: "icon" }),
+                              buttonVariants({
+                                variant: "ghost",
+                                size: "icon",
+                              }),
                               "h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30",
-                              deletingId !== null && "pointer-events-none opacity-50"
+                              deletingId !== null &&
+                                "pointer-events-none opacity-50",
                             )}
                           >
                             <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -425,7 +522,13 @@ export default function ArticlesPage() {
                             variant="ghost"
                             size="icon"
                             disabled={deletingId !== null}
-                            onClick={(e) => handleOpenConfirmDelete(article.id, article.titleVi, e.currentTarget)}
+                            onClick={(e) =>
+                              handleOpenConfirmDelete(
+                                article.id,
+                                article.titleVi,
+                                e.currentTarget,
+                              )
+                            }
                             className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
                             aria-label={`Xóa bài viết ${article.titleVi}`}
                             title={`Xóa bài viết ${article.titleVi}`}
@@ -445,32 +548,46 @@ export default function ArticlesPage() {
 
       {/* Accessible Custom Confirm Delete Modal Overlay */}
       {confirmDeleteId && (
-        <div 
+        <div
           id="confirm-delete-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" 
-          role="alertdialog" 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          role="alertdialog"
           aria-modal="true"
           aria-labelledby="confirm-modal-title"
           aria-describedby="confirm-modal-description"
         >
           <div className="bg-background border rounded-lg max-w-md w-full p-6 shadow-xl animate-in zoom-in-95 duration-200 mx-4">
-            <h3 id="confirm-modal-title" className="text-lg font-bold text-foreground mb-2">
+            <h3
+              id="confirm-modal-title"
+              className="text-lg font-bold text-foreground mb-2"
+            >
               Xác nhận xóa bài viết
             </h3>
-            <p id="confirm-modal-description" className="text-sm text-muted-foreground mb-6">
-              Bạn có chắc chắn muốn xóa bài viết <span className="font-semibold text-foreground">"{confirmDeleteTitle}"</span>? Hành động này sẽ loại bỏ hoàn toàn tài liệu này và không thể hoàn tác.
+            <p
+              id="confirm-modal-description"
+              className="text-sm text-muted-foreground mb-6"
+            >
+              Bạn có chắc chắn muốn xóa bài viết{" "}
+              <span className="font-semibold text-foreground">
+                "{confirmDeleteTitle}"
+              </span>
+              ? Hành động này sẽ loại bỏ hoàn toàn tài liệu này và không thể
+              hoàn tác.
             </p>
             <div className="flex justify-end gap-3">
-              <Button 
+              <Button
                 ref={cancelButtonRef}
-                variant="outline" 
+                variant="outline"
                 type="button"
-                onClick={() => { setConfirmDeleteId(null); setConfirmDeleteTitle(null); }}
+                onClick={() => {
+                  setConfirmDeleteId(null);
+                  setConfirmDeleteTitle(null);
+                }}
                 disabled={deletingId !== null}
               >
                 Hủy
               </Button>
-              <Button 
+              <Button
                 variant="destructive"
                 type="button"
                 onClick={handleExecuteDelete}

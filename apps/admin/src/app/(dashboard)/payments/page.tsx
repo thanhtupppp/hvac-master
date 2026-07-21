@@ -60,6 +60,35 @@ const STATUS_VARIANTS: Record<
   refunded: "destructive",
 };
 
+const vndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
+function formatDate(timestamp: any) {
+  if (!timestamp) return "—";
+  try {
+    const date = timestamp?.toDate?.() || new Date(timestamp);
+    return format(date, "dd/MM/yyyy HH:mm", { locale: vi });
+  } catch {
+    return "—";
+  }
+}
+
+function formatVND(amount: number) {
+  if (!amount) return "—";
+  return vndFormatter.format(amount);
+}
+
+const filterTabs: { label: string; value: FilterType }[] = [
+  { label: "Tất cả", value: "all" },
+  { label: "Đang active", value: "active" },
+  { label: "Chờ xử lý", value: "pending" },
+  { label: "Hết hạn", value: "expired" },
+  { label: "Đã hủy", value: "cancelled" },
+];
+
 export default function PaymentsPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchInput, setSearchInput] = useState("");
@@ -99,25 +128,6 @@ export default function PaymentsPage() {
   );
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSearch();
-  };
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return "—";
-    try {
-      const date = timestamp?.toDate?.() || new Date(timestamp);
-      return format(date, "dd/MM/yyyy HH:mm", { locale: vi });
-    } catch {
-      return "—";
-    }
-  };
-
-  const formatVND = (amount: number) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   const handleSync = async () => {
@@ -201,14 +211,6 @@ export default function PaymentsPage() {
       setIsExporting(false);
     }
   };
-
-  const filterTabs: { label: string; value: FilterType }[] = [
-    { label: "Tất cả", value: "all" },
-    { label: "Đang active", value: "active" },
-    { label: "Chờ xử lý", value: "pending" },
-    { label: "Hết hạn", value: "expired" },
-    { label: "Đã hủy", value: "cancelled" },
-  ];
 
   return (
     <>
@@ -532,27 +534,35 @@ export default function PaymentsPage() {
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium block mb-1">
+                <label
+                  htmlFor="syncToken"
+                  className="text-sm font-medium block mb-1"
+                >
                   Purchase Token <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="syncToken"
                   value={syncToken}
                   onChange={(e) => setSyncToken(e.target.value)}
                   placeholder="token từ Google Play..."
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">
+                <label
+                  htmlFor="syncProductId"
+                  className="text-sm font-medium block mb-1"
+                >
                   Product ID <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="syncProductId"
                   value={syncProductId}
                   onChange={(e) => setSyncProductId(e.target.value)}
                   placeholder="vd: hvac_premium_monthly"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">Loại</label>
+                <span className="text-sm font-medium block mb-1">Loại</span>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -573,20 +583,28 @@ export default function PaymentsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">
+                <label
+                  htmlFor="syncUserId"
+                  className="text-sm font-medium block mb-1"
+                >
                   Firebase UID (tùy chọn)
                 </label>
                 <Input
+                  id="syncUserId"
                   value={syncUserId}
                   onChange={(e) => setSyncUserId(e.target.value)}
                   placeholder="uid người dùng..."
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">
+                <label
+                  htmlFor="syncUserEmail"
+                  className="text-sm font-medium block mb-1"
+                >
                   Email (tùy chọn)
                 </label>
                 <Input
+                  id="syncUserEmail"
                   value={syncUserEmail}
                   onChange={(e) => setSyncUserEmail(e.target.value)}
                   placeholder="email@example.com"

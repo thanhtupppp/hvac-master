@@ -2,6 +2,51 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/firebase-admin";
 import { z } from "zod";
 
+function repairJson(raw: string, fields: string[]): Record<string, string> | null {
+  // Stage 1: direct parse
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // continue
+  }
+
+  // Stage 2: strip markdown code fences (```json ... ```)
+  const stripped = raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+  try {
+    return JSON.parse(stripped);
+  } catch {
+    // continue
+  }
+
+  // Stage 3: extract first {...} block
+  const match = stripped.match(/\{[\s\S]*\}/);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      // continue
+    }
+  }
+
+  // Stage 4: field-by-field regex extraction (last resort)
+  const out: Record<string, string> = {};
+  let any = false;
+  for (const field of fields) {
+    const re = new RegExp(
+      `"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`,
+      "s",
+    );
+    const m = stripped.match(re);
+    const value = m ? m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
+    out[field] = value;
+    if (value) any = true;
+  }
+  return any ? out : null;
+}
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://hvacpro.vn";
 
@@ -16,6 +61,19 @@ const MODEL_ID_SCHEMA = z
     /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.:-]+$/,
     "Model ID không đúng định dạng."
   );
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "Tiếng Anh (English)",
+  ko: "Tiếng Hàn Quốc (Korean)",
+  ja: "Tiếng Nhật Bản (Japanese)",
+  zh: "Tiếng Trung Quốc (Chinese)",
+  km: "Tiếng Campuchia/Khmer (Khmer)",
+  lo: "Tiếng Lào (Lao)",
+  hi: "Tiếng Hindi (Hindi - हिन्दी). Bạn bắt buộc phải dịch sang chữ viết Devanagari chính thức của tiếng Hindi (không dùng bảng chữ cái Latinh hay tiếng Anh).",
+  es: "Tiếng Tây Ban Nha (Spanish)",
+  fr: "Tiếng Pháp (French)",
+  de: "Tiếng Đức (German)",
+};
 
 // Request validation schema
 const requestBodySchema = z.object({
@@ -77,20 +135,7 @@ export async function POST(req: Request) {
     }
     const model = aiModel || modelFallback;
 
-    const languageNames: Record<string, string> = {
-      en: "Tiếng Anh (English)",
-      ko: "Tiếng Hàn Quốc (Korean)",
-      ja: "Tiếng Nhật Bản (Japanese)",
-      zh: "Tiếng Trung Quốc (Chinese)",
-      km: "Tiếng Campuchia/Khmer (Khmer)",
-      lo: "Tiếng Lào (Lao)",
-      hi: "Tiếng Hindi (Hindi - हिन्दी). Bạn bắt buộc phải dịch sang chữ viết Devanagari chính thức của tiếng Hindi (không dùng bảng chữ cái Latinh hay tiếng Anh).",
-      es: "Tiếng Tây Ban Nha (Spanish)",
-      fr: "Tiếng Pháp (French)",
-      de: "Tiếng Đức (German)",
-    };
-
-    const targetLangName = languageNames[targetLang];
+    const targetLangName = LANGUAGE_NAMES[targetLang];
     const systemPrompt = `Bạn là một chuyên gia dịch thuật kỹ thuật chuyên nghiệp trong lĩnh vực Cơ điện lạnh (HVAC) và Thiết bị gia dụng. Hãy dịch tiêu đề và các phần nội dung bài viết sang ngôn ngữ: ${targetLangName}.
     
 Yêu cầu BẮT BUỘC về ngôn ngữ và kỹ thuật:
@@ -183,36 +228,7 @@ ${notes}`;
     }
 
     // --- Multi-stage JSON repair pipeline ---
-    const repairJson = (raw: string): Record<string, string> | null => {
-      // Stage 1: direct parse
-      try { return JSON.parse(raw); } catch {}
-
-      // Stage 2: strip markdown code fences (```json ... ```)
-      const stripped = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
-      try { return JSON.parse(stripped); } catch {}
-
-      // Stage 3: extract first {...} block
-      const match = stripped.match(/\{[\s\S]*\}/);
-      if (match) {
-        try { return JSON.parse(match[0]); } catch {}
-      }
-
-      // Stage 4: field-by-field regex extraction (last resort)
-      const extract = (key: string): string => {
-        const re = new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, "s");
-        const m = stripped.match(re);
-        return m ? m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
-      };
-      const title  = extract("title");
-      const causes = extract("causes");
-      const steps  = extract("steps");
-      const notes  = extract("notes");
-      if (title || causes || steps || notes) return { title, causes, steps, notes };
-
-      return null;
-    };
-
-    const translatedContent = repairJson(resultText);
+    const translatedContent = repairJson(resultText, ["title", "causes", "steps", "notes"]);
     if (translatedContent) {
       return NextResponse.json(translatedContent);
     }

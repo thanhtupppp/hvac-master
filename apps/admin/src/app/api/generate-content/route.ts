@@ -5,6 +5,52 @@ import { z } from "zod";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://hvacpro.vn";
 
+// Multi-stage JSON repair pipeline (extracted from AI responses)
+function repairJson(raw: string, fields: string[]): Record<string, string> | null {
+  // Stage 1: direct parse
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // continue
+  }
+
+  // Stage 2: strip markdown code fences (```json ... ```)
+  const stripped = raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/i, "")
+    .trim();
+  try {
+    return JSON.parse(stripped);
+  } catch {
+    // continue
+  }
+
+  // Stage 3: extract first {...} block
+  const match = stripped.match(/\{[\s\S]*\}/);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      // continue
+    }
+  }
+
+  // Stage 4: field-by-field regex extraction (last resort)
+  const out: Record<string, string> = {};
+  let any = false;
+  for (const field of fields) {
+    const re = new RegExp(
+      `"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`,
+      "s",
+    );
+    const m = stripped.match(re);
+    const value = m ? m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
+    out[field] = value;
+    if (value) any = true;
+  }
+  return any ? out : null;
+}
+
 // Model ID format: "provider/model-name" or "provider/model-name:variant"
 // Accepts any valid OpenRouter model slug — no whitelist enforced.
 const MODEL_ID_SCHEMA = z
@@ -187,37 +233,7 @@ Yêu cầu BẮT BUỘC:
 
     // 6. Handle JSON output formatting and validation
     if (section === "all") {
-      // --- Multi-stage JSON repair pipeline ---
-      const repairJson = (raw: string): Record<string, string> | null => {
-        // Stage 1: direct parse
-        try { return JSON.parse(raw); } catch {}
-
-        // Stage 2: strip markdown code fences (```json ... ```)
-        const stripped = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
-        try { return JSON.parse(stripped); } catch {}
-
-        // Stage 3: extract first {...} block
-        const match = stripped.match(/\{[\s\S]*\}/);
-        if (match) {
-          try { return JSON.parse(match[0]); } catch {}
-        }
-
-        // Stage 4: field-by-field regex extraction (last resort)
-        const extract = (key: string): string => {
-          // Match "key": "value" — value can span multiple lines
-          const re = new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`,"s");
-          const m = stripped.match(re);
-          return m ? m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
-        };
-        const causes = extract("causes");
-        const steps  = extract("steps");
-        const notes  = extract("notes");
-        if (causes || steps || notes) return { causes, steps, notes };
-
-        return null;
-      };
-
-      const parsedJson = repairJson(resultText);
+      const parsedJson = repairJson(resultText, ["causes", "steps", "notes"]);
       if (parsedJson) {
         return NextResponse.json(parsedJson);
       }

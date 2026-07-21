@@ -37,18 +37,20 @@ export async function GET(req: Request) {
       .where("purchaseType", "==", "subscription")
       .get();
 
-    const activePayments = activeSnap.docs
-      .map((d) => ({ id: d.id, ...d.data() }))
-      .filter((p: any) => {
-        // Exclude expired subscriptions (webhook might have missed them)
-        const expiry = p.expiryTime?.toDate?.() || null;
-        return !expiry || expiry > now;
-      });
+    const activePayments: any[] = [];
+    for (const d of activeSnap.docs) {
+      const p = { id: d.id, ...d.data() } as any;
+      // Exclude expired subscriptions (webhook might have missed them)
+      const expiry = p.expiryTime?.toDate?.() || null;
+      if (!expiry || expiry > now) {
+        activePayments.push(p);
+      }
+    }
 
-    const mrr = activePayments.reduce(
-      (sum: number, p: any) => sum + (p.amount || 0),
-      0,
-    );
+    let mrr = 0;
+    for (const p of activePayments) {
+      mrr += p.amount || 0;
+    }
 
     // ── 2. Revenue by month (last 12 months) ──────────────────────────────
     const revenueSnap = await adminDb
@@ -225,10 +227,12 @@ export async function GET(req: Request) {
   }
 }
 
+const vndFormatter = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0,
+});
+
 function formatVND(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return vndFormatter.format(amount);
 }

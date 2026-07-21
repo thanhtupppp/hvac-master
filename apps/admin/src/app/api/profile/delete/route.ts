@@ -173,10 +173,7 @@ async function deleteSubcollections(
   // Fetch all top-level subcollections for this user document.
   // listCollections returns CollectionReference[] for direct children.
   const collections = await userDoc.listCollections();
-
-  for (const col of collections) {
-    await deleteCollectionRecursively(col);
-  }
+  await Promise.all(collections.map((col) => deleteCollectionRecursively(col)));
 }
 
 /**

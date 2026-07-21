@@ -6,19 +6,19 @@ import { Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const navItems = [
+  { label: "Tổng quan", href: "/" },
+  { label: "Bài viết", href: "/articles" },
+  { label: "Danh mục", href: "/categories" },
+  { label: "Hãng sản xuất", href: "/brands" },
+  { label: "Người dùng", href: "/users" },
+  { label: "Thanh toán", href: "/payments" },
+  { label: "Gói VIP", href: "/plans" },
+];
+
 export default function Header() {
   const { logout, user } = useAuth();
   const pathname = usePathname();
-
-  const navItems = [
-    { label: "Tổng quan", href: "/" },
-    { label: "Bài viết", href: "/articles" },
-    { label: "Danh mục", href: "/categories" },
-    { label: "Hãng sản xuất", href: "/brands" },
-    { label: "Người dùng", href: "/users" },
-    { label: "Thanh toán", href: "/payments" },
-    { label: "Gói VIP", href: "/plans" },
-  ];
 
   return (
     <header className="flex h-16 items-center border-b bg-white dark:bg-gray-950 px-6">

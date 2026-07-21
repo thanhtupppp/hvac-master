@@ -1,9 +1,9 @@
-export interface LanguageOption {
+interface LanguageOption {
   code: string;
   name: string;
 }
 
-export const SUPPORTED_LANGUAGES: LanguageOption[] = [
+const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: "en", name: "Tiếng Anh" },
   { code: "ko", name: "Tiếng Hàn" },
   { code: "ja", name: "Tiếng Nhật" },

@@ -84,7 +84,7 @@ export async function acknowledgeProduct(
  * Parse priceMicros to VND integer.
  * Google Play stores prices in micros (1 VND = 1_000_000 micros).
  */
-export function microsToCurrency(
+function microsToCurrency(
   priceMicros: string | null | undefined,
 ): number {
   if (!priceMicros) return 0;
