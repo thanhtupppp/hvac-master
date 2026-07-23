@@ -266,7 +266,7 @@ class PipePressureLossEngine {
           ? HydronicConstants.hwCoefficientDefault
           : null,
       frictionRateFth: frictionRateFth,
-      frictionRateMperM: frictionRateFth / 100 * _ftTom,
+      frictionRateMperM: frictionRateFth / 100, // ft/100ft = m/100m (same ratio)
       relativeRoughness: relRough,
       fluidDensity: rho,
       fluidViscosity: mu,

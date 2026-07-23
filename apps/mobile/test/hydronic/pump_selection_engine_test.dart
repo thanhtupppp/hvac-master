@@ -152,10 +152,13 @@ void main() {
         (p) => p.maxFlowGpm == 200 && p.maxHeadFt == 50,
       );
       final qBep = pump.maxFlowGpm * 0.75;
+      // Pick a head below the curve at BEP (75% Q → ~17.5 ft on the
+      // parabolic curve; using 15 ft ensures the operating point lies on
+      // the pump curve).
       final result = PumpSelectionEngine.calculate(
         PumpSelectionInput(
           flowRate: qBep,
-          headFt: 40,
+          headFt: 15,
           unit: UnitSystem.imperial,
         ),
       )!;
@@ -164,8 +167,11 @@ void main() {
       final candidate = result.candidates.firstWhere(
         (c) => c.pump.model == pump.model,
       );
-      // Efficiency should be at or near BEP value
-      expect(candidate.efficiencyAtPoint, closeTo(pump.bestEfficiency, 0.1));
+      // Efficiency should be at or near BEP value (within 10%)
+      expect(
+        candidate.efficiencyAtPoint,
+        closeTo(pump.bestEfficiency, 0.1),
+      );
     });
 
     test('brake power is positive and finite', () {

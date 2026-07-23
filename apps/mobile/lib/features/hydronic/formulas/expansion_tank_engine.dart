@@ -168,26 +168,9 @@ class ExpansionTankEngine {
     final reliefAbs = reliefKpa + atmKpa;
 
     if (prechargeAbs >= reliefAbs) {
-      warnings.add('Precharge pressure must be less than relief pressure.');
-      return ExpansionTankResult(
-        requiredVolume: input.unit == UnitSystem.imperial
-            ? input.systemVolume
-            : volumeLiters / 3.78541,
-        requiredVolumeLiters: volumeLiters,
-        requiredVolumeGallons: volumeLiters / 3.78541,
-        acceptanceVolumeLiters: 0,
-        acceptanceVolumeGallons: 0,
-        totalVolumeLiters: volumeLiters,
-        totalVolumeGallons: volumeLiters / 3.78541,
-        expansionVolumeLiters: 0,
-        expansionVolumeGallons: 0,
-        expansionCoeff: coeff,
-        prechargeRatio: prechargeAbs / reliefAbs,
-        tempRiseC: tempRiseCForWarn,
-        recommendedStandardSizeGal: 0,
-        recommendedStandardSizeL: 0,
-        warnings: warnings,
-      );
+      // Physically invalid configuration: precharge must be less than relief
+      // so the system has pressurization range available.
+      return null;
     }
 
     // Expansion volume ΔV = V_s × η × ΔT (in °C)

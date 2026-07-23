@@ -96,7 +96,39 @@ class ExpansionTankNotifier extends StateNotifier<ExpansionTankState> {
     final next = state.unit == UnitSystem.imperial
         ? UnitSystem.metric
         : UnitSystem.imperial;
-    state = state.copyWith(unit: next);
+
+    // Convert numeric values to the new unit system so the displayed
+    // numbers remain physically equivalent across the toggle.
+    double newVolume = state.systemVolume;
+    double newTempInitial = state.tempInitial;
+    double newTempFinal = state.tempFinal;
+    double newPrecharge = state.prechargePressure;
+    double newRelief = state.reliefPressure;
+
+    if (state.unit == UnitSystem.imperial && next == UnitSystem.metric) {
+      // gal → L, °F → °C, PSI → kPa
+      newVolume = state.systemVolume * 3.78541;
+      newTempInitial = (state.tempInitial - 32.0) * 5.0 / 9.0;
+      newTempFinal = (state.tempFinal - 32.0) * 5.0 / 9.0;
+      newPrecharge = state.prechargePressure * HydronicConstants.psiToPa / 1000.0;
+      newRelief = state.reliefPressure * HydronicConstants.psiToPa / 1000.0;
+    } else {
+      // L → gal, °C → °F, kPa → PSI
+      newVolume = state.systemVolume / 3.78541;
+      newTempInitial = state.tempInitial * 9.0 / 5.0 + 32.0;
+      newTempFinal = state.tempFinal * 9.0 / 5.0 + 32.0;
+      newPrecharge = state.prechargePressure * 1000.0 / HydronicConstants.psiToPa;
+      newRelief = state.reliefPressure * 1000.0 / HydronicConstants.psiToPa;
+    }
+
+    state = state.copyWith(
+      unit: next,
+      systemVolume: newVolume,
+      tempInitial: newTempInitial,
+      tempFinal: newTempFinal,
+      prechargePressure: newPrecharge,
+      reliefPressure: newRelief,
+    );
   }
 
   void reset() => state = const ExpansionTankState();

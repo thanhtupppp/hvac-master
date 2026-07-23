@@ -178,9 +178,8 @@ class PipeSizerCandidate {
 ///   D_calc = √(4 × Q_m3s / (π × V_target))
 ///   Round up to next standard size, verify velocity, friction rate.
 class PipeSizerEngine {
-  // Imperial constants for Darcy-Weisbach in ft/s units
-  static const double _nuFt2s =
-      HydronicConstants.nuWater20C; // m²/s — will convert
+  // Kinematic viscosity of water at 20°C (m²/s); converted to ft²/s where used.
+  static const double _nuWaterMs2 = HydronicConstants.nuWater20C;
   static const double _ftTom = HydronicConstants.ftToM; // 0.3048
   static const double _gFt = 32.174; // ft/s² (standard gravity)
 
@@ -242,7 +241,7 @@ class PipeSizerEngine {
       regime: selected.regime,
       darcyFrictionFactor: selected.darcyFrictionFactor,
       frictionRateFth: selected.frictionRateFth,
-      frictionRateMperM: selected.frictionRateFth * 0.3048 / 100,
+      frictionRateMperM: selected.frictionRateFth / 100, // same ratio: ft/100ft = m/100m
       recommendedVelocityMs: recVelMs,
       minVelocityMs: minVelMs,
       maxVelocityMs: maxVelMs,
@@ -260,7 +259,7 @@ class PipeSizerEngine {
     final List<PipeSizerCandidate> candidates = [];
     final roughnessM = _roughnessM(input.material);
     // ν in ft²/s: 1 m²/s = 10.764 ft²/s
-    final nuFt2s = _nuFt2s * 10.764;
+    final nuFt2s = _nuWaterMs2 * 10.764;
 
     List<double> nominalSizes;
     if (input.material == PipeMaterial.copperTypeK ||
@@ -322,8 +321,7 @@ class PipeSizerEngine {
       // Imperial values
       final idFt = idIn / 12.0;
       final vFps = vMs / _ftTom;
-      final vFt3s = vFps * idFt * idFt * pi / 4;
-      if (vFt3s <= 0) continue;
+      if (vFps <= 0) continue;
 
       // Reynolds in ft units
       final re = vFps * idFt / nuFt2s;

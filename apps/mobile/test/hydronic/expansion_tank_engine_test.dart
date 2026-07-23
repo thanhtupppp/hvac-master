@@ -141,7 +141,7 @@ void main() {
       expect(r, isNull);
     });
 
-    test('precharge >= relief triggers warning', () {
+    test('precharge >= relief returns null (physically invalid)', () {
       final r = ExpansionTankEngine.calculate(
         const ExpansionTankInput(
           systemVolume: 100,
@@ -153,8 +153,9 @@ void main() {
         ),
       );
 
-      expect(r, isNotNull);
-      expect(r!.warnings, isNotEmpty);
+      // Precharge must be strictly less than relief; otherwise the
+      // pressurization range is negative and no valid tank can be sized.
+      expect(r, isNull);
     });
   });
 

@@ -199,12 +199,12 @@ class PumpHeadEngine {
       ),
     );
 
-    final pipeFrictionFt = loss?.totalFrictionFt ?? 0.0;
+    final pipeFrictionFt = loss?.pipeFrictionFt ?? 0.0;
     final pipeFrictionM = pipeFrictionFt * HydronicConstants.ftToM;
-    final fittingFrictionFt =
-        0.0; // already merged in pipeFrictionFt via engine
-    final frictionHeadFt = pipeFrictionFt;
-    final frictionHeadM = pipeFrictionM;
+    final fittingFrictionFt = loss?.fittingFrictionFt ?? 0.0;
+    final fittingFrictionM = fittingFrictionFt * HydronicConstants.ftToM;
+    final frictionHeadFt = pipeFrictionFt + fittingFrictionFt;
+    final frictionHeadM = pipeFrictionM + fittingFrictionM;
 
     // ── Velocity head ───────────────────────────────────────────
     final velocityHeadM = vMs * vMs / (2.0 * _g);

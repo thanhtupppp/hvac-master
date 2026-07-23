@@ -245,21 +245,31 @@ class PumpCatalog {
     double flowGpm,
     double headFt,
   ) {
-    // Pump curve approximation: parabolic H = H_shutoff × (1 - (Q/Q_max)^1.5)
-    // (Affinity-law-like shape — actual curves are more complex)
+    // Capacity bounds: pump cannot deliver beyond its max envelope
     if (flowGpm > pump.maxFlowGpm * 1.05) return null;
+    if (flowGpm < pump.minFlowGpm * 0.9) return null;
     if (headFt > pump.maxHeadFt * 1.05) return null;
 
-    // Operating point efficiency: bell curve peaking at ~70-80% of max flow
+    // Pump curve approximation: parabolic head-flow relationship
+    //   H(Q) ≈ H_shutoff × (1 − (Q/Q_max)^n)  with n ≈ 1.5
+    // The operating point (Q, H) must lie ON or BELOW this curve, otherwise
+    // the pump cannot deliver the required head at that flow.
     final qRatio = flowGpm / pump.maxFlowGpm;
-    // BEP ~ 0.75 × Q_max typically
+    final curveHeadFt = pump.maxHeadFt * (1.0 - math.pow(qRatio, 1.5).toDouble());
+    // Allow 5% tolerance for curve approximation
+    if (headFt > curveHeadFt * 1.05) return null;
+    final curveDeviation = (headFt - curveHeadFt) / pump.maxHeadFt; // negative = below curve
+
+    // Operating point efficiency: bell curve peaking at ~75% of max flow (BEP)
     final devFromBep = (qRatio - 0.75).abs();
     final efficiencyFactor = (1.0 - devFromBep * 1.2).clamp(0.0, 1.0);
     final efficiencyAtPoint = pump.bestEfficiency * efficiencyFactor;
 
-    // Head margin: how much extra head available
-    final headMargin = pump.maxHeadFt - headFt;
-    final headMarginPct = headMargin / pump.maxHeadFt;
+    // Head margin: how much extra head available at the operating flow
+    final headMargin = curveHeadFt - headFt;
+    final headMarginPct = pump.maxHeadFt > 0
+        ? headMargin / pump.maxHeadFt
+        : 0.0;
 
     // Power at operating point (BHP = ρ g Q H / η)
     const rho = 62.4; // lb/ft³ (water)
