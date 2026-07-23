@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../constants/hydronic_constants.dart';
 import '../data/fitting_coefficients.dart';
 import '../formulas/pipe_pressure_loss_engine.dart';
+import '../formulas/pump_head_engine.dart';
 import '../providers/pump_head_provider.dart';
 
 class PumpHeadScreen extends ConsumerStatefulWidget {
@@ -76,8 +77,11 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -150,7 +154,11 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
     );
   }
 
-  Widget _buildResultCard(PumpHeadResult? result, String headUnit, String pressUnit) {
+  Widget _buildResultCard(
+    PumpHeadResult? result,
+    String headUnit,
+    String pressUnit,
+  ) {
     if (result == null) {
       return _card(
         color: AppColors.bgSecondary,
@@ -195,10 +203,7 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
                 const SizedBox(width: 6),
                 Text(
                   'ft ($headUnit)',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(width: 16),
                 Text(
@@ -276,26 +281,31 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: result.warnings
-                      .map((w) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.warning_amber_rounded,
-                                    color: Colors.orange, size: 16),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    w,
-                                    style: const TextStyle(
-                                      color: Colors.orange,
-                                      fontSize: 12,
-                                    ),
+                      .map(
+                        (w) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.warning_amber_rounded,
+                                color: Colors.orange,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  w,
+                                  style: const TextStyle(
+                                    color: Colors.orange,
+                                    fontSize: 12,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ))
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -353,8 +363,7 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
         _numberField(
           label: 'Flow Rate ($flowUnit)',
           controller: _flowController,
-          onChanged: (v) =>
-              notifier.onFlowChanged(double.tryParse(v) ?? 0),
+          onChanged: (v) => notifier.onFlowChanged(double.tryParse(v) ?? 0),
           minValue: 0,
           maxValue: 100000,
         ),
@@ -366,7 +375,8 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
           onChanged: notifier.onServiceChanged,
         ),
         _slider(
-          label: 'Glycol concentration '
+          label:
+              'Glycol concentration '
               '(${(state.glycolConcentration * 100).toStringAsFixed(0)}%)',
           value: state.glycolConcentration,
           min: 0,
@@ -398,16 +408,14 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
         _numberField(
           label: 'Diameter ($diamUnit)',
           controller: _diameterController,
-          onChanged: (v) =>
-              notifier.onDiameterChanged(double.tryParse(v) ?? 0),
+          onChanged: (v) => notifier.onDiameterChanged(double.tryParse(v) ?? 0),
           minValue: 0,
           maxValue: 1000,
         ),
         _numberField(
           label: 'Length ($lengthUnit)',
           controller: _lengthController,
-          onChanged: (v) =>
-              notifier.onLengthChanged(double.tryParse(v) ?? 0),
+          onChanged: (v) => notifier.onLengthChanged(double.tryParse(v) ?? 0),
           minValue: 0,
           maxValue: 100000,
         ),
@@ -472,17 +480,19 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
           children: state.fittings
               .asMap()
               .entries
-              .map((e) => Chip(
-                    label: Text(
-                      '${e.value.quantity}× '
-                      '${getFittingNameVi(e.value.type)}',
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                    onDeleted: () => notifier.removeFitting(e.key),
-                    backgroundColor: AppColors.bgCard,
-                    labelStyle: const TextStyle(color: Colors.white),
-                    deleteIconColor: Colors.white70,
-                  ))
+              .map(
+                (e) => Chip(
+                  label: Text(
+                    '${e.value.quantity}× '
+                    '${getFittingNameVi(e.value.type)}',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  onDeleted: () => notifier.removeFitting(e.key),
+                  backgroundColor: AppColors.bgCard,
+                  labelStyle: const TextStyle(color: Colors.white),
+                  deleteIconColor: Colors.white70,
+                ),
+              )
               .toList(),
         ),
         if (state.fittings.isNotEmpty)
@@ -539,13 +549,15 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
                     ),
                     style: const TextStyle(color: Colors.white),
                     items: FittingType.values
-                        .map((t) => DropdownMenuItem(
-                              value: t,
-                              child: Text(
-                                getFittingNameVi(t),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ))
+                        .map(
+                          (t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(
+                              getFittingNameVi(t),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        )
                         .toList(),
                     onChanged: (v) {
                       if (v != null) setState(() => selected = v);
@@ -649,8 +661,10 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
             borderSide: BorderSide.none,
           ),
           isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
         onChanged: onChanged,
       ),
@@ -670,15 +684,16 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: AppColors.accentPrimary,
               inactiveTrackColor: AppColors.bgCard,
               thumbColor: AppColors.accentPrimary,
-              overlayColor:
-                  AppColors.accentPrimary.withValues(alpha: 0.2),
+              overlayColor: AppColors.accentPrimary.withValues(alpha: 0.2),
             ),
             child: Slider(
               value: value.clamp(min, max),
@@ -715,18 +730,19 @@ class _PumpHeadScreenState extends ConsumerState<PumpHeadScreen> {
             borderSide: BorderSide.none,
           ),
           isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
         ),
         style: const TextStyle(color: Colors.white),
         items: items
-            .map((i) => DropdownMenuItem<T>(
-                  value: i,
-                  child: Text(
-                    labelFor(i),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ))
+            .map(
+              (i) => DropdownMenuItem<T>(
+                value: i,
+                child: Text(labelFor(i), overflow: TextOverflow.ellipsis),
+              ),
+            )
             .toList(),
         onChanged: (v) {
           if (v != null) onChanged(v);

@@ -29,6 +29,9 @@ import '../../features/air_distribution/screens/velocity_reduction_screen.dart';
 import '../../features/hydronic/screens/water_flow_screen.dart';
 import '../../features/hydronic/screens/pipe_sizer_screen.dart';
 import '../../features/hydronic/screens/pipe_pressure_loss_screen.dart';
+import '../../features/hydronic/screens/pump_head_screen.dart';
+import '../../features/hydronic/screens/pump_selection_screen.dart';
+import '../../features/hydronic/screens/expansion_tank_screen.dart';
 import '../../screens/tools/ach_calculator_screen.dart';
 import '../../screens/tools/saturation_temperature_screen.dart';
 import '../../screens/tools/subcooling_calculator_screen.dart';
@@ -65,6 +68,9 @@ class AppRoutes {
   static const String waterFlow = '/tools/water-flow';
   static const String pipeSizer = '/tools/pipe-sizer';
   static const String pipePressureLoss = '/tools/pipe-pressure-loss';
+  static const String pumpHead = '/tools/pump-head';
+  static const String pumpSelection = '/tools/pump-selection';
+  static const String expansionTank = '/tools/expansion-tank';
   static const String superheat = '/tools/refrigerant';
   static const String unitConverter = '/tools/converter';
   static const String refrigerantSelector = '/tools/refrigerant-selector';
@@ -135,6 +141,12 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const PipePressureLossScreen(),
         );
+      case pumpHead:
+        return MaterialPageRoute(builder: (_) => const PumpHeadScreen());
+      case pumpSelection:
+        return MaterialPageRoute(builder: (_) => const PumpSelectionScreen());
+      case expansionTank:
+        return MaterialPageRoute(builder: (_) => const ExpansionTankScreen());
       case superheat:
         return MaterialPageRoute(
           builder: (_) => const SuperheatCalculatorScreen(),

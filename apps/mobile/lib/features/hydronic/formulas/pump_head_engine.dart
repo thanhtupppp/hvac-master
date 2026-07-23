@@ -18,16 +18,16 @@ import 'pipe_pressure_loss_engine.dart';
 ///   H_pressure   = pressure at suction minus pressure at discharge (if both
 ///                  are pressurized, this can be negative)
 class PumpHeadInput {
-  final double flowRate;             // GPM (imperial) or m³/h (metric)
-  final double pipeDiameterIn;       // pipe ID (in for imperial, mm for metric)
-  final double pipeLengthFt;         // ft (imperial) or m (metric)
+  final double flowRate; // GPM (imperial) or m³/h (metric)
+  final double pipeDiameterIn; // pipe ID (in for imperial, mm for metric)
+  final double pipeLengthFt; // ft (imperial) or m (metric)
   final PipeMaterial material;
   final PipeService service;
-  final double glycolConcentration;  // 0.0–0.4 (fraction)
+  final double glycolConcentration; // 0.0–0.4 (fraction)
   final FrictionMethod method;
   final List<FittingEntry> fittings;
-  final double staticHeadFt;         // elevation difference (ft or m)
-  final double suctionPressurePsi;   // PSI (imperial) or kPa (metric)
+  final double staticHeadFt; // elevation difference (ft or m)
+  final double suctionPressurePsi; // PSI (imperial) or kPa (metric)
   final double dischargePressurePsi; // PSI (imperial) or kPa (metric)
   final UnitSystem unit;
 
@@ -136,7 +136,9 @@ class PumpHeadEngine {
   /// Returns null if input is invalid (zero/negative values).
   static PumpHeadResult? calculate(PumpHeadInput input) {
     // Validate inputs
-    if (input.flowRate <= 0 || input.pipeDiameterIn <= 0 || input.pipeLengthFt < 0) {
+    if (input.flowRate <= 0 ||
+        input.pipeDiameterIn <= 0 ||
+        input.pipeLengthFt < 0) {
       return null;
     }
 
@@ -199,7 +201,8 @@ class PumpHeadEngine {
 
     final pipeFrictionFt = loss?.totalFrictionFt ?? 0.0;
     final pipeFrictionM = pipeFrictionFt * HydronicConstants.ftToM;
-    final fittingFrictionFt = 0.0; // already merged in pipeFrictionFt via engine
+    final fittingFrictionFt =
+        0.0; // already merged in pipeFrictionFt via engine
     final frictionHeadFt = pipeFrictionFt;
     final frictionHeadM = pipeFrictionM;
 
@@ -244,18 +247,21 @@ class PumpHeadEngine {
 
     // ── Warnings ────────────────────────────────────────────────
     if (vMs > HydronicConstants.velocityLimitsMps[input.service]!.max) {
-      warnings.add('Vận tốc ${vMs.toStringAsFixed(2)} m/s vượt giới hạn tối đa.');
+      warnings.add(
+        'Van toc ${vMs.toStringAsFixed(2)} m/s vuot gioi han toi da.',
+      );
     }
     if (totalHeadFt < 0) {
-      warnings.add('Cột áp âm — hệ thống tự dẫn nước, không cần bơm.');
+      warnings.add('Cot ap am — he thong tu dan nuoc, khong can bom.');
     }
     if (totalHeadFt > 300) {
-      warnings.add('Cột áp rất cao (>300 ft). Kiểm tra thiết kế hệ thống.');
+      warnings.add('Cot ap rat cao (>300 ft). Kiem tra thiet ke he thong.');
     }
-    if (frictionHeadFt > 0 && totalHeadFt > 0 &&
+    if (frictionHeadFt > 0 &&
+        totalHeadFt > 0 &&
         frictionHeadFt / totalHeadFt > 0.7) {
       warnings.add(
-        'Tổn thất ma sát chiếm >70% cột áp — xem xét đường ống lớn hơn.',
+        'Ton that ma sat chiem >70% cot ap — xem xet duong ong lon hon.',
       );
     }
 

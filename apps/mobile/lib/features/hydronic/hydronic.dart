@@ -1,6 +1,10 @@
 export 'constants/hydronic_constants.dart';
 export 'data/pipe_catalog.dart';
 export 'data/fitting_coefficients.dart';
+export 'data/pump_catalog.dart';
 export 'formulas/water_flow_engine.dart';
 export 'formulas/pipe_sizer_engine.dart';
 export 'formulas/pipe_pressure_loss_engine.dart';
+export 'formulas/pump_head_engine.dart';
+export 'formulas/pump_selection_engine.dart';
+export 'formulas/expansion_tank_engine.dart';

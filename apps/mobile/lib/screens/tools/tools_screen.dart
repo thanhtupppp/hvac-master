@@ -337,8 +337,8 @@ class ToolsScreen extends StatelessWidget {
           desc: 'Tính cột áp bơm yêu cầu.',
           icon: Icons.arrow_upward,
           color: const Color(0xFF1565C0),
-          route: null,
-          isReady: false,
+          route: AppRoutes.pumpHead,
+          isReady: true,
           capabilities: ['pump-head', 'static-head', 'friction-head'],
         ),
         ToolItem(
@@ -348,8 +348,8 @@ class ToolsScreen extends StatelessWidget {
           desc: 'Chọn bơm theo lưu lượng và cột áp.',
           icon: Icons.water_damage,
           color: const Color(0xFF0D47A1),
-          route: null,
-          isReady: false,
+          route: AppRoutes.pumpSelection,
+          isReady: true,
           capabilities: ['pump-selection', 'efficiency', 'power'],
         ),
         ToolItem(
@@ -359,8 +359,8 @@ class ToolsScreen extends StatelessWidget {
           desc: 'Tính dung tích bình giãn nở.',
           icon: Icons.invert_colors,
           color: const Color(0xFF0277BD),
-          route: null,
-          isReady: false,
+          route: AppRoutes.expansionTank,
+          isReady: true,
           capabilities: [
             'expansion-tank',
             'thermal-expansion',
