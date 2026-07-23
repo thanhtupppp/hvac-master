@@ -93,8 +93,14 @@ class StandardSizes {
     List<double> standardList,
   ) {
     if (standardList.isEmpty) return rawDiameter;
-    return standardList.reduce(
-      (a, b) => (a - rawDiameter).abs() < (b - rawDiameter).abs() ? a : b,
-    );
+    // Always round UP to ensure selected duct can handle the required flow
+    // without exceeding target velocity.
+    final candidates =
+        standardList.where((s) => s >= rawDiameter).toList();
+    if (candidates.isNotEmpty) {
+      return candidates.reduce((a, b) => (a - rawDiameter).abs() < (b - rawDiameter).abs() ? a : b);
+    }
+    // No size larger than rawDiameter exists; use the largest available.
+    return standardList.last;
   }
 }

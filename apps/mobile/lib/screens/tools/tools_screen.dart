@@ -1,463 +1,679 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/routes/app_routes.dart';
-import '../../providers/user_provider.dart';
+import '../../models/tool_item.dart';
 
-class _ToolItem {
-  final String title;
-  final String desc;
-  final IconData icon;
-  final Color color;
-  final String? route;
-  final bool isVipOnly;
-
-  const _ToolItem({
-    required this.title,
-    required this.desc,
-    required this.icon,
-    required this.color,
-    required this.route,
-    this.isVipOnly = false,
-  });
-}
-
-class _ToolCategory {
-  final String name;
-  final String emoji;
-  final IconData icon;
-  final Color accent;
-  final List<_ToolItem> tools;
-
-  const _ToolCategory({
-    required this.name,
-    required this.emoji,
-    required this.icon,
-    required this.accent,
-    required this.tools,
-  });
-}
-
-class ToolsScreen extends ConsumerWidget {
+class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
-  static final List<_ToolCategory> _categories = [
-    _ToolCategory(
+  static final List<ToolCategory> _categories = [
+    ToolCategory(
+      id: 'air-distribution',
+      sortOrder: 1,
       name: 'Air Distribution',
       emoji: '🌬️',
       icon: Icons.air,
       accent: const Color(0xFF00BFA5),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/air_distribution.png',
+      tools: [
+        ToolItem(
+          id: 'duct-calculator',
+          categoryId: 'air-distribution',
           title: 'Duct Calculator',
           desc: 'Thiết kế ống gió tròn, chữ nhật theo lưu lượng CFM.',
           icon: Icons.air,
-          color: Color(0xFF00BFA5),
+          color: const Color(0xFF00BFA5),
           route: AppRoutes.ductSizer,
+          isReady: true,
+          standard: 'SMACNA / ASHRAE',
+          capabilities: [
+            'round-duct-sizing',
+            'rectangular-duct-sizing',
+            'velocity-method',
+            'equal-friction',
+          ],
+          supportedUnits: ToolUnitSystem.both,
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'duct-pressure-loss',
+          categoryId: 'air-distribution',
           title: 'Duct Pressure Loss',
           desc: 'Tính tổn thất áp suất đường ống gió.',
           icon: Icons.compress,
-          color: Color(0xFF26C6DA),
-          route: null,
+          color: const Color(0xFF26C6DA),
+          route: AppRoutes.ductPressureLoss,
+          isReady: true,
+          standard: 'Darcy-Weisbach / ASHRAE',
+          capabilities: [
+            'friction-loss',
+            'fitting-loss',
+            'velocity',
+            'reynolds',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'equal-friction-duct-sizer',
+          categoryId: 'air-distribution',
           title: 'Equal Friction Duct Sizer',
           desc: 'Thiết kế theo phương pháp Equal Friction.',
           icon: Icons.balance,
-          color: Color(0xFF00ACC1),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF00ACC1),
+          route: AppRoutes.equalFriction,
+          isReady: true,
+          standard: 'SMACNA',
+          capabilities: [
+            'equal-friction',
+            'round-sizing',
+            'rectangular-sizing',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'velocity-duct-sizer',
+          categoryId: 'air-distribution',
           title: 'Velocity Duct Sizer',
           desc: 'Thiết kế theo phương pháp Velocity.',
           icon: Icons.speed,
-          color: Color(0xFF0097A7),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF0097A7),
+          route: AppRoutes.velocityReduction,
+          isReady: true,
+          standard: 'SMACNA',
+          capabilities: [
+            'velocity-method',
+            'round-sizing',
+            'rectangular-sizing',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'duct-fitting-loss',
+          categoryId: 'air-distribution',
           title: 'Duct Fitting Loss',
           desc: 'Tổn thất qua co, cút, tê, van...',
           icon: Icons.turn_right,
-          color: Color(0xFF00838F),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF00838F),
+          route: AppRoutes.fittingLoss,
+          isReady: true,
+          standard: 'SMACNA',
+          capabilities: [
+            'elbow-loss',
+            'tee-loss',
+            'fitting-coefficient',
+            'K-value',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'air-velocity-calculator',
+          categoryId: 'air-distribution',
           title: 'Air Velocity Calculator',
           desc: 'Tính vận tốc gió trong ống.',
           icon: Icons.toys,
-          color: Color(0xFF006064),
+          color: const Color(0xFF006064),
           route: AppRoutes.airVelocityCalculator,
+          isReady: true,
+          capabilities: [
+            'velocity-from-cfm',
+            'diameter-to-velocity',
+            'round-duct',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'airflow-calculator',
+          categoryId: 'air-distribution',
           title: 'Airflow Calculator',
           desc: 'Tính lưu lượng gió CFM / m³/h.',
           icon: Icons.wind_power,
-          color: Color(0xFF00B8D4),
+          color: const Color(0xFF00B8D4),
           route: AppRoutes.airflowCalculator,
+          isReady: true,
+          capabilities: ['flow-rate', 'velocity', 'ach', 'cfm-to-m3h'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'ach-calculator',
+          categoryId: 'air-distribution',
           title: 'Air Change Calculator (ACH)',
           desc: 'Số lần thay đổi không khí/giờ.',
           icon: Icons.refresh,
-          color: Color(0xFF00BCD4),
+          color: const Color(0xFF00BCD4),
           route: AppRoutes.achCalculator,
+          isReady: true,
+          capabilities: ['ach-to-cfm', 'cfm-to-ach', 'room-volume'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'diffuser-selector',
+          categoryId: 'air-distribution',
           title: 'Diffuser Selector',
           desc: 'Chọn miệng gió phù hợp.',
           icon: Icons.scatter_plot,
-          color: Color(0xFF009688),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF009688),
+          route: AppRoutes.diffuserSelection,
+          isReady: true,
+          standard: 'ASHRAE',
+          capabilities: [
+            'diffuser-type',
+            'throw-distance',
+            'neck-velocity',
+            'NC-rating',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'grille-selector',
+          categoryId: 'air-distribution',
           title: 'Grille Selector',
           desc: 'Chọn cửa gió hồi / cấp.',
           icon: Icons.grid_view,
-          color: Color(0xFF00897B),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF00897B),
+          route: AppRoutes.grilleSelection,
+          isReady: true,
+          standard: 'ASHRAE',
+          capabilities: ['grille-type', 'free-area', 'face-velocity'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'vav-box-sizing',
+          categoryId: 'air-distribution',
           title: 'VAV Box Sizing',
           desc: 'Chọn hộp VAV theo lưu lượng.',
           icon: Icons.dashboard_customize,
-          color: Color(0xFF00796B),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF00796B),
+          route: AppRoutes.vavBoxSizing,
+          isReady: true,
+          capabilities: ['VAV-sizing', 'cooling-CFM', 'min-CFM', 'reheat'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'fan-selection',
+          categoryId: 'air-distribution',
           title: 'Fan Selection',
           desc: 'Chọn quạt theo cột áp và lưu lượng.',
           icon: Icons.toys_outlined,
-          color: Color(0xFF00695C),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF00695C),
+          route: AppRoutes.fanSelection,
+          isReady: true,
+          capabilities: [
+            'fan-power',
+            'RPM',
+            'efficiency',
+            'pressure-classification',
+          ],
         ),
       ],
     ),
-    _ToolCategory(
+    ToolCategory(
+      id: 'refrigeration',
+      sortOrder: 2,
       name: 'Refrigeration',
       emoji: '❄️',
       icon: Icons.ac_unit,
       accent: const Color(0xFF388AF6),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/refrigeration.png',
+      tools: [
+        ToolItem(
+          id: 'pt-chart',
+          categoryId: 'refrigeration',
           title: 'PT Chart',
           desc: 'Biểu đồ Áp suất – Nhiệt độ các môi chất lạnh.',
           icon: Icons.thermostat,
-          color: Color(0xFF388AF6),
+          color: const Color(0xFF388AF6),
           route: AppRoutes.ptChart,
+          isReady: true,
+          capabilities: ['PT-chart', 'refrigerant-properties', 'saturation'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'superheat-calculator',
+          categoryId: 'refrigeration',
           title: 'Superheat Calculator',
           desc: 'Tính Superheat để chẩn đoán hệ thống.',
           icon: Icons.trending_up,
-          color: Color(0xFFFF9800),
+          color: const Color(0xFFFF9800),
           route: AppRoutes.superheat,
+          isReady: true,
+          capabilities: ['superheat', 'subcool', 'diagnostics'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'subcooling-calculator',
+          categoryId: 'refrigeration',
           title: 'Subcooling Calculator',
           desc: 'Tính Subcooling kiểm tra dàn ngưng.',
           icon: Icons.trending_down,
-          color: Color(0xFFFFA726),
+          color: const Color(0xFFFFA726),
           route: AppRoutes.subcoolingCalculator,
+          isReady: true,
+          capabilities: ['subcooling', 'condenser-check'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'refrigerant-charge-calculator',
+          categoryId: 'refrigeration',
           title: 'Refrigerant Charge Calculator',
           desc: 'Tính lượng gas nạp thêm / bổ sung.',
           icon: Icons.local_gas_station,
-          color: Color(0xFFFF7043),
+          color: const Color(0xFFFF7043),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['charge-calculation', 'refrigerant-mass'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'refrigerant-pipe-sizer',
+          categoryId: 'refrigeration',
           title: 'Refrigerant Pipe Sizer',
           desc: 'Chọn kích thước ống môi chất lạnh.',
           icon: Icons.plumbing,
-          color: Color(0xFFFF5722),
+          color: const Color(0xFFFF5722),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: [
+            'pipe-sizing',
+            'suction-line',
+            'liquid-line',
+            'discharge-line',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'pressure-converter',
+          categoryId: 'refrigeration',
           title: 'Pressure Converter',
           desc: 'Chuyển đổi áp suất (PSI, Bar, kPa, MPa, inHg, mmHg).',
           icon: Icons.swap_vert,
-          color: Color(0xFF42A5F5),
+          color: const Color(0xFF42A5F5),
           route: AppRoutes.pressureConverter,
+          isReady: true,
+          capabilities: ['pressure-conversion', 'PSI', 'Bar', 'kPa', 'MPa'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'saturation-temperature',
+          categoryId: 'refrigeration',
           title: 'Saturation Temperature',
           desc: 'Tra nhiệt độ bão hòa theo áp suất.',
           icon: Icons.device_thermostat,
-          color: Color(0xFF1E88E5),
+          color: const Color(0xFF1E88E5),
           route: AppRoutes.saturationTemperature,
+          isReady: true,
+          capabilities: ['saturation-temp', 'pressure-to-temp'],
         ),
       ],
     ),
-    _ToolCategory(
+    ToolCategory(
+      id: 'hydronic',
+      sortOrder: 3,
       name: 'Hydronic',
       emoji: '💧',
       icon: Icons.water_drop,
       accent: const Color(0xFF2196F3),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/hydronic.png',
+      tools: [
+        ToolItem(
+          id: 'pipe-sizer',
+          categoryId: 'hydronic',
           title: 'Pipe Sizer',
           desc: 'Thiết kế đường ống nước theo lưu lượng.',
           icon: Icons.water,
-          color: Color(0xFF2196F3),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF2196F3),
+          route: AppRoutes.pipeSizer,
+          isReady: true,
+          capabilities: ['pipe-sizing', 'water-flow', 'velocity'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'water-flow-calculator',
+          categoryId: 'hydronic',
           title: 'Water Flow Calculator',
           desc: 'Tính lưu lượng nước qua ống.',
           icon: Icons.waves,
-          color: Color(0xFF1E88E5),
-          route: null,
+          color: const Color(0xFF1E88E5),
+          route: AppRoutes.waterFlow,
+          isReady: true,
+          capabilities: ['flow-rate', 'velocity', 'GPM'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'pipe-pressure-loss',
+          categoryId: 'hydronic',
           title: 'Pipe Pressure Loss',
           desc: 'Tổn thất áp suất đường ống nước.',
           icon: Icons.horizontal_rule,
-          color: Color(0xFF1976D2),
-          route: null,
-          isVipOnly: true,
+          color: const Color(0xFF1976D2),
+          route: AppRoutes.pipePressureLoss,
+          isReady: true,
+          capabilities: ['pressure-loss', 'Darcy-Weisbach', 'friction'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'pump-head-calculator',
+          categoryId: 'hydronic',
           title: 'Pump Head Calculator',
           desc: 'Tính cột áp bơm yêu cầu.',
           icon: Icons.arrow_upward,
-          color: Color(0xFF1565C0),
+          color: const Color(0xFF1565C0),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['pump-head', 'static-head', 'friction-head'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'pump-selection',
+          categoryId: 'hydronic',
           title: 'Pump Selection',
           desc: 'Chọn bơm theo lưu lượng và cột áp.',
           icon: Icons.water_damage,
-          color: Color(0xFF0D47A1),
+          color: const Color(0xFF0D47A1),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['pump-selection', 'efficiency', 'power'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'expansion-tank-calculator',
+          categoryId: 'hydronic',
           title: 'Expansion Tank Calculator',
           desc: 'Tính dung tích bình giãn nở.',
           icon: Icons.invert_colors,
-          color: Color(0xFF0277BD),
+          color: const Color(0xFF0277BD),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: [
+            'expansion-tank',
+            'thermal-expansion',
+            'closed-system',
+          ],
         ),
       ],
     ),
-    _ToolCategory(
+    ToolCategory(
+      id: 'load-psychrometrics',
+      sortOrder: 4,
       name: 'Load & Psychrometrics',
       emoji: '🌡️',
       icon: Icons.thermostat_auto,
       accent: const Color(0xFFE91E63),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/load_psychrometrics.png',
+      tools: [
+        ToolItem(
+          id: 'cooling-load-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Cooling Load Calculator',
           desc: 'Tính tải lạnh cho phòng / công trình.',
           icon: Icons.severe_cold,
-          color: Color(0xFFE91E63),
+          color: const Color(0xFFE91E63),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: [
+            'cooling-load',
+            'sensible-load',
+            'latent-load',
+            'CLTD',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'heating-load-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Heating Load Calculator',
           desc: 'Tính tải sưởi cho phòng / công trình.',
           icon: Icons.local_fire_department,
-          color: Color(0xFFEC407A),
+          color: const Color(0xFFEC407A),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['heating-load', 'heat-loss', 'U-value'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'psychrometric-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Psychrometric Calculator',
           desc: 'Biểu đồ không khí ẩm tra cứu nhanh.',
           icon: Icons.bubble_chart,
-          color: Color(0xFFD81B60),
+          color: const Color(0xFFD81B60),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: [
+            'psychrometric-chart',
+            'enthalpy',
+            'humidity-ratio',
+            'dew-point',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'dew-point-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Dew Point Calculator',
           desc: 'Tính điểm sương theo nhiệt độ & độ ẩm.',
           icon: Icons.water_drop_outlined,
-          color: Color(0xFFC2185B),
+          color: const Color(0xFFC2185B),
           route: AppRoutes.dewPointCalculator,
+          isReady: true,
+          capabilities: ['dew-point', 'condensation'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'humidity-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Humidity Calculator',
           desc: 'Tính độ ẩm tương đối / tuyệt đối.',
           icon: Icons.opacity,
-          color: Color(0xFFAD1457),
+          color: const Color(0xFFAD1457),
           route: AppRoutes.humidityCalculator,
+          isReady: true,
+          capabilities: ['RH', 'humidity-ratio', 'wet-bulb'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'enthalpy-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Enthalpy Calculator',
           desc: 'Tính enthalpy không khí ẩm.',
           icon: Icons.whatshot,
-          color: Color(0xFF880E4F),
+          color: const Color(0xFF880E4F),
           route: null,
+          isReady: false,
+          capabilities: ['enthalpy', 'psychrometrics'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'fresh-air-calculator',
+          categoryId: 'load-psychrometrics',
           title: 'Fresh Air Calculator',
           desc: 'Tính lưu lượng gió tươi theo người / diện tích.',
           icon: Icons.air_outlined,
-          color: Color(0xFFF06292),
+          color: const Color(0xFFF06292),
           route: null,
+          isReady: false,
+          capabilities: ['OA', 'ventilation', 'per-person', 'per-area'],
         ),
       ],
     ),
-    _ToolCategory(
+    ToolCategory(
+      id: 'conversion',
+      sortOrder: 5,
       name: 'Conversion',
       emoji: '🔄',
       icon: Icons.swap_horiz,
       accent: const Color(0xFF9C27B0),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/conversion.png',
+      tools: [
+        ToolItem(
+          id: 'hvac-unit-converter',
+          categoryId: 'conversion',
           title: 'HVAC Unit Converter',
           desc: 'Chuyển đổi đơn vị HVAC: BTU/h, HP, kW, Tons...',
           icon: Icons.swap_horiz,
-          color: Color(0xFFE91E63),
+          color: const Color(0xFFE91E63),
           route: AppRoutes.unitConverter,
+          isReady: true,
+          capabilities: ['BTU', 'kW', 'HP', 'ton', 'W'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'temperature-converter',
+          categoryId: 'conversion',
           title: 'Temperature Converter',
           desc: 'Chuyển đổi °C, °F, K.',
           icon: Icons.thermostat,
-          color: Color(0xFFAB47BC),
+          color: const Color(0xFFAB47BC),
           route: null,
+          isReady: false,
+          capabilities: ['C', 'F', 'K'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'flow-converter',
+          categoryId: 'conversion',
           title: 'Flow Converter',
           desc: 'Chuyển đổi CFM, m³/h, L/s, GPM.',
           icon: Icons.waves,
-          color: Color(0xFF8E24AA),
+          color: const Color(0xFF8E24AA),
           route: null,
+          isReady: false,
+          capabilities: ['CFM', 'm3h', 'Ls', 'GPM'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'velocity-converter',
+          categoryId: 'conversion',
           title: 'Velocity Converter',
           desc: 'Chuyển đổi m/s, FPM, km/h.',
           icon: Icons.speed,
-          color: Color(0xFF7B1FA2),
+          color: const Color(0xFF7B1FA2),
           route: null,
+          isReady: false,
+          capabilities: ['ms', 'FPM', 'kmh'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'power-converter',
+          categoryId: 'conversion',
           title: 'Power Converter',
           desc: 'Chuyển đổi W, kW, HP, BTU/h.',
           icon: Icons.flash_on,
-          color: Color(0xFF6A1B9A),
+          color: const Color(0xFF6A1B9A),
           route: null,
+          isReady: false,
+          capabilities: ['W', 'kW', 'HP', 'BTU'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'length-converter',
+          categoryId: 'conversion',
           title: 'Length Converter',
           desc: 'Chuyển đổi mm, cm, m, inch, ft.',
           icon: Icons.straighten,
-          color: Color(0xFF4A148C),
+          color: const Color(0xFF4A148C),
           route: null,
+          isReady: false,
+          capabilities: ['mm', 'cm', 'm', 'inch', 'ft'],
         ),
       ],
     ),
-    _ToolCategory(
+    ToolCategory(
+      id: 'electrical',
+      sortOrder: 6,
       name: 'Electrical',
       emoji: '⚡',
       icon: Icons.electric_bolt,
       accent: const Color(0xFFFFC107),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/electrical.png',
+      tools: [
+        ToolItem(
+          id: 'motor-current-calculator',
+          categoryId: 'electrical',
           title: 'Motor Current Calculator',
           desc: 'Tính dòng điện động cơ 1 pha / 3 pha.',
           icon: Icons.electrical_services,
-          color: Color(0xFFFFB300),
+          color: const Color(0xFFFFB300),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: [
+            'motor-current',
+            'single-phase',
+            'three-phase',
+            'ampere',
+          ],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'cable-size-calculator',
+          categoryId: 'electrical',
           title: 'Cable Size Calculator',
           desc: 'Tính tiết diện cáp theo dòng tải.',
           icon: Icons.cable,
-          color: Color(0xFFFFA000),
+          color: const Color(0xFFFFA000),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['cable-sizing', 'ampacity', 'voltage-drop'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'breaker-selector',
+          categoryId: 'electrical',
           title: 'Breaker Selector',
           desc: 'Chọn CB (MCB/MCCB) phù hợp.',
           icon: Icons.toggle_on,
-          color: Color(0xFFFF8F00),
+          color: const Color(0xFFFF8F00),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['breaker', 'MCB', 'MCCB', 'overcurrent'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'power-calculator',
+          categoryId: 'electrical',
           title: 'Power Calculator',
           desc: 'Tính công suất điện 1 pha / 3 pha.',
           icon: Icons.power,
-          color: Color(0xFFFF6F00),
+          color: const Color(0xFFFF6F00),
           route: null,
+          isReady: false,
+          capabilities: ['power', 'PF', 'single-phase', 'three-phase'],
         ),
       ],
     ),
-    _ToolCategory(
+    ToolCategory(
+      id: 'service-commissioning',
+      sortOrder: 7,
       name: 'Service & Commissioning',
       emoji: '📋',
       icon: Icons.assignment,
       accent: const Color(0xFF4CAF50),
-      tools: const [
-        _ToolItem(
+      imageAsset: 'assets/images/tools/service_commissioning.png',
+      tools: [
+        ToolItem(
+          id: 'service-checklist',
+          categoryId: 'service-commissioning',
           title: 'Service Checklist',
           desc: 'Checklist bảo trì định kỳ hệ thống HVAC.',
           icon: Icons.checklist,
-          color: Color(0xFF66BB6A),
+          color: const Color(0xFF66BB6A),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['checklist', 'maintenance', 'inspection'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'commissioning-report',
+          categoryId: 'service-commissioning',
           title: 'Commissioning Report',
           desc: 'Biên bản chạy thử & nghiệm thu hệ thống.',
           icon: Icons.assignment_turned_in,
-          color: Color(0xFF4CAF50),
+          color: const Color(0xFF4CAF50),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['commissioning', 'acceptance', 'testing'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'measurement-logger',
+          categoryId: 'service-commissioning',
           title: 'Measurement Logger',
           desc: 'Ghi số liệu đo đạc tại hiện trường.',
           icon: Icons.note_add,
-          color: Color(0xFF43A047),
+          color: const Color(0xFF43A047),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['logger', 'field-data', 'measurement'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'equipment-database',
+          categoryId: 'service-commissioning',
           title: 'Equipment Database',
           desc: 'Cơ sở dữ liệu thiết bị HVAC.',
           icon: Icons.storage,
-          color: Color(0xFF388E3C),
+          color: const Color(0xFF388E3C),
           route: null,
-          isVipOnly: true,
+          isReady: false,
+          capabilities: ['database', 'equipment', 'specifications'],
         ),
-        _ToolItem(
+        ToolItem(
+          id: 'error-code-lookup',
+          categoryId: 'service-commissioning',
           title: 'Error Code Lookup',
           desc: 'Tra mã lỗi các dòng điều hòa thông dụng.',
           icon: Icons.error_outline,
-          color: Color(0xFF2E7D32),
+          color: const Color(0xFF2E7D32),
           route: null,
+          isReady: false,
+          capabilities: ['error-codes', 'troubleshooting', 'diagnostics'],
         ),
       ],
     ),
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(userProfileProvider);
-    final isPremium = userAsync.asData?.value?.isPremium == true;
-
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
@@ -481,341 +697,162 @@ class ToolsScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      body: GridView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 14,
+          crossAxisSpacing: 14,
+          childAspectRatio: 0.92,
+        ),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final category = _categories[index];
-          return _CategorySection(category: category, isPremium: isPremium);
+          return _CategoryCard(
+            category: category,
+            onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.toolCategory,
+              arguments: category,
+            ),
+          );
         },
       ),
     );
   }
 }
 
-class _CategorySection extends StatefulWidget {
-  final _ToolCategory category;
-  final bool isPremium;
+class _CategoryCard extends StatelessWidget {
+  final ToolCategory category;
+  final VoidCallback onTap;
 
-  const _CategorySection({required this.category, required this.isPremium});
-
-  @override
-  State<_CategorySection> createState() => _CategorySectionState();
-}
-
-class _CategorySectionState extends State<_CategorySection> {
-  bool _expanded = true;
+  const _CategoryCard({required this.category, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final category = widget.category;
-    final tools = category.tools;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: category.accent.withValues(alpha: 0.15),
-                      border: Border.all(
-                        color: category.accent.withValues(alpha: 0.4),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(
-                      category.icon,
-                      color: category.accent,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '${category.emoji}  ${category.name}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: category.accent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${tools.length}',
-                      style: TextStyle(
-                        color: category.accent,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  AnimatedRotation(
-                    turns: _expanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.keyboard_arrow_down,
-                      color: AppColors.textSecondary,
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: _expanded
-                ? Column(
-                    children: [
-                      for (int i = 0; i < tools.length; i++) ...[
-                        _ToolCard(tool: tools[i], isPremium: widget.isPremium),
-                        if (i != tools.length - 1) const SizedBox(height: 10),
-                      ],
-                    ],
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ToolCard extends StatelessWidget {
-  final _ToolItem tool;
-  final bool isPremium;
-
-  const _ToolCard({required this.tool, required this.isPremium});
-
-  @override
-  Widget build(BuildContext context) {
-    final showVipBadge = tool.isVipOnly;
-    final lockAccess = showVipBadge && !isPremium;
-    final hasRoute = tool.route != null;
-
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        if (lockAccess) {
-          _showVipDialog(context);
-        } else if (hasRoute) {
-          Navigator.pushNamed(context, tool.route!);
-        } else {
-          _showComingSoonDialog(context, tool.title);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: lockAccess
-                ? Colors.amber.withValues(alpha: 0.18)
-                : tool.color.withValues(alpha: 0.18),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: tool.color.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Container(
-              width: 44,
-              height: 44,
+            Image.asset(
+              category.imageAsset,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                debugPrint(
+                  '❌ ASSET FAIL: ${category.imageAsset}\n'
+                  '   error: $error\n'
+                  '   stack: $stackTrace',
+                );
+                return Container(
+                  color: category.accent.withValues(alpha: 0.25),
+                );
+              },
+            ),
+            DecoratedBox(
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: tool.color.withValues(alpha: 0.12),
-                border: Border.all(
-                  color: tool.color.withValues(alpha: 0.3),
-                  width: 1,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.10),
+                    Colors.black.withValues(alpha: 0.45),
+                  ],
                 ),
               ),
-              child: Icon(tool.icon, color: tool.color, size: 22),
             ),
-            const SizedBox(width: 12),
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(
-                        child: Text(
-                          tool.title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withValues(alpha: 0.35),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            width: 1,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        child: Icon(
+                          category.icon,
+                          color: Colors.white,
+                          size: 22,
                         ),
                       ),
-                      if (showVipBadge) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(color: Colors.amber, width: 0.5),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.stars, color: Colors.amber, size: 9),
-                              SizedBox(width: 2),
-                              Text(
-                                'VIP',
-                                style: TextStyle(
-                                  color: Colors.amber,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${category.tools.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  const Spacer(),
                   Text(
-                    tool.desc,
+                    category.name,
                     style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11.5,
-                      height: 1.35,
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black54,
+                          blurRadius: 4,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      Text(
+                        'Mở',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 11,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(
-              lockAccess
-                  ? Icons.lock_outline
-                  : (hasRoute ? Icons.arrow_forward_ios : Icons.access_time),
-              size: 14,
-              color: lockAccess
-                  ? Colors.amber
-                  : (hasRoute
-                        ? AppColors.textMuted
-                        : AppColors.textMuted.withValues(alpha: 0.6)),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showVipDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgSecondary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.stars, color: Colors.amber, size: 24),
-            SizedBox(width: 8),
-            Text('Tính năng Premium', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        content: const Text(
-          'Công cụ này chỉ dành cho tài khoản VIP. Vui lòng nâng cấp Premium để sử dụng trọn bộ công cụ kỹ thuật và sơ đồ mạch điện.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, AppRoutes.paywall);
-            },
-            child: const Text(
-              'Nâng cấp ngay',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showComingSoonDialog(BuildContext context, String title) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.bgSecondary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.hourglass_top, color: AppColors.accentBright, size: 24),
-            SizedBox(width: 8),
-            Text('Sắp ra mắt', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        content: Text(
-          'Công cụ "$title" đang được phát triển và sẽ được cập nhật trong phiên bản tiếp theo.',
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Đã hiểu',
-              style: TextStyle(color: AppColors.accentBright),
-            ),
-          ),
-        ],
       ),
     );
   }

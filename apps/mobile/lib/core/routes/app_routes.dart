@@ -8,6 +8,8 @@ import '../../screens/guide/pdf_viewer_screen.dart';
 import '../../screens/brand/brand_list_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/tools/tools_screen.dart';
+import '../../screens/tools/category_detail_screen.dart';
+import '../../models/tool_item.dart';
 import '../../screens/tools/pt_calculator_screen.dart';
 import '../../screens/tools/duct_calculator_screen.dart';
 import '../../screens/tools/superheat_calculator_screen.dart';
@@ -16,6 +18,17 @@ import '../../screens/tools/refrigerant_selector_screen.dart';
 import '../../screens/tools/pressure_converter_screen.dart';
 import '../../screens/tools/airflow_calculator_screen.dart';
 import '../../screens/tools/air_velocity_calculator_screen.dart';
+import '../../features/air_distribution/screens/duct_pressure_loss_screen.dart';
+import '../../features/air_distribution/screens/fitting_loss_screen.dart';
+import '../../features/air_distribution/screens/fan_selection_screen.dart';
+import '../../features/air_distribution/screens/vav_box_sizing_screen.dart';
+import '../../features/air_distribution/screens/diffuser_selection_screen.dart';
+import '../../features/air_distribution/screens/grille_selection_screen.dart';
+import '../../features/air_distribution/screens/equal_friction_screen.dart';
+import '../../features/air_distribution/screens/velocity_reduction_screen.dart';
+import '../../features/hydronic/screens/water_flow_screen.dart';
+import '../../features/hydronic/screens/pipe_sizer_screen.dart';
+import '../../features/hydronic/screens/pipe_pressure_loss_screen.dart';
 import '../../screens/tools/ach_calculator_screen.dart';
 import '../../screens/tools/saturation_temperature_screen.dart';
 import '../../screens/tools/subcooling_calculator_screen.dart';
@@ -38,8 +51,20 @@ class AppRoutes {
   static const String pdfViewer = '/pdf-viewer';
   static const String profile = '/profile';
   static const String tools = '/tools';
+  static const String toolCategory = '/tools/category';
   static const String ptChart = '/tools/pt-chart';
   static const String ductSizer = '/tools/duct-sizer';
+  static const String ductPressureLoss = '/tools/pressure-loss';
+  static const String fittingLoss = '/tools/fitting-loss';
+  static const String fanSelection = '/tools/fan-selection';
+  static const String vavBoxSizing = '/tools/vav-box-sizing';
+  static const String diffuserSelection = '/tools/diffuser-selection';
+  static const String grilleSelection = '/tools/grille-selection';
+  static const String equalFriction = '/tools/equal-friction';
+  static const String velocityReduction = '/tools/velocity-reduction';
+  static const String waterFlow = '/tools/water-flow';
+  static const String pipeSizer = '/tools/pipe-sizer';
+  static const String pipePressureLoss = '/tools/pipe-pressure-loss';
   static const String superheat = '/tools/refrigerant';
   static const String unitConverter = '/tools/converter';
   static const String refrigerantSelector = '/tools/refrigerant-selector';
@@ -68,10 +93,48 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case tools:
         return MaterialPageRoute(builder: (_) => const ToolsScreen());
+      case toolCategory:
+        {
+          final category = settings.arguments as ToolCategory?;
+          if (category == null) return _errorRoute(settings.name);
+          return MaterialPageRoute(
+            builder: (_) => CategoryDetailScreen(category: category),
+          );
+        }
       case ptChart:
         return MaterialPageRoute(builder: (_) => const PTCalculatorScreen());
       case ductSizer:
         return MaterialPageRoute(builder: (_) => const DuctCalculatorScreen());
+      case ductPressureLoss:
+        return MaterialPageRoute(
+          builder: (_) => const DuctPressureLossScreen(),
+        );
+      case fittingLoss:
+        return MaterialPageRoute(builder: (_) => const FittingLossScreen());
+      case fanSelection:
+        return MaterialPageRoute(builder: (_) => const FanSelectionScreen());
+      case vavBoxSizing:
+        return MaterialPageRoute(builder: (_) => const VavBoxSizingScreen());
+      case diffuserSelection:
+        return MaterialPageRoute(
+          builder: (_) => const DiffuserSelectionScreen(),
+        );
+      case grilleSelection:
+        return MaterialPageRoute(builder: (_) => const GrilleSelectionScreen());
+      case equalFriction:
+        return MaterialPageRoute(builder: (_) => const EqualFrictionScreen());
+      case velocityReduction:
+        return MaterialPageRoute(
+          builder: (_) => const VelocityReductionScreen(),
+        );
+      case waterFlow:
+        return MaterialPageRoute(builder: (_) => const WaterFlowScreen());
+      case pipeSizer:
+        return MaterialPageRoute(builder: (_) => const PipeSizerScreen());
+      case pipePressureLoss:
+        return MaterialPageRoute(
+          builder: (_) => const PipePressureLossScreen(),
+        );
       case superheat:
         return MaterialPageRoute(
           builder: (_) => const SuperheatCalculatorScreen(),

@@ -198,12 +198,7 @@ export default function Dashboard() {
                 </TableHeader>
                 <TableBody>
                   {latestArticles.map((article) => (
-                    <TableRow
-                      key={
-                        article.id ??
-                        `${article.slug ?? "article"}-${article.titleVi}`
-                      }
-                    >
+                    <TableRow key={article.id}>
                       <TableCell
                         className="font-medium max-w-[150px] truncate"
                         title={article.titleVi}

@@ -9,8 +9,9 @@ import 'package:mobile/core/hvac/models/models.dart';
 void main() {
   group('StandardSizes Tests', () {
     test(
-      'findNearestStandardRound finds closest standard imperial round diameter',
+      'findNearestStandardRound rounds UP to next standard size',
       () {
+        // 3.8" is closer to 4" than 3" → round up to 4"
         expect(
           StandardSizes.findNearestStandardRound(
             3.8,
@@ -18,19 +19,31 @@ void main() {
           ),
           4.0,
         );
+        // 10.2" is between 10" and 11". Round UP to 11" to ensure
+        // the selected duct CAN carry the required flow without
+        // exceeding target velocity (never undersize).
         expect(
           StandardSizes.findNearestStandardRound(
             10.2,
             StandardSizes.imperialRound,
           ),
-          10.0,
+          11.0,
         );
+        // 13.1" between 12" and 14" → round up to 14"
         expect(
           StandardSizes.findNearestStandardRound(
             13.1,
             StandardSizes.imperialRound,
           ),
           14.0,
+        );
+        // 11.0" exactly on 11" → returns 11"
+        expect(
+          StandardSizes.findNearestStandardRound(
+            11.0,
+            StandardSizes.imperialRound,
+          ),
+          11.0,
         );
       },
     );

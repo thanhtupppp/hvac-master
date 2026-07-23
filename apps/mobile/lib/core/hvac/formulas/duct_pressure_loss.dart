@@ -29,7 +29,7 @@ class DuctPressureLoss {
     final area = _area(ductDiameterMm);
     if (area <= 0) return _zeroResult();
 
-    final velocityMs = flowRateLs / area;
+    final velocityMs = (flowRateLs / 1000) / area;
     final reynolds = _reynolds(velocityMs, ductDiameterMm);
     final f = _frictionFactor(reynolds, roughnessMm, ductDiameterMm);
     final frictionPaPerM =

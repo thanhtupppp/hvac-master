@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -54,10 +55,22 @@ class RevenueCatService {
   Future<void> initialize() async {
     if (_initialized) return;
 
+    final apiKey = _apiKey;
+
+    // Skip configuration entirely when running without a real key —
+    // otherwise the SDK crashes on every Purchases.* call.
+    if (apiKey == 'YOUR_REVENUECAT_API_KEY') {
+      debugPrint(
+        '[RevenueCat] Skipping initialization: '
+        'REVENUECAT_API_KEY not provided. Purchases are disabled.',
+      );
+      return;
+    }
+
     await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.error);
 
     // purchases_flutter v10+ uses PurchasesConfiguration
-    await Purchases.configure(PurchasesConfiguration(_apiKey));
+    await Purchases.configure(PurchasesConfiguration(apiKey));
 
     _initialized = true;
 
@@ -82,10 +95,20 @@ class RevenueCatService {
 
   /// Call this on Firebase Auth state changes (login/logout).
   Future<void> onAuthStateChanged(User? user) async {
-    if (user != null) {
-      await Purchases.logIn(user.uid);
-    } else {
-      await Purchases.logOut();
+    if (!_initialized) return;
+    try {
+      if (user != null) {
+        await Purchases.logIn(user.uid);
+      } else {
+        await Purchases.logOut();
+      }
+    } on PlatformException catch (e) {
+      debugPrint(
+        '[RevenueCat] onAuthStateChanged PlatformException: '
+        'code=${e.code} message=${e.message}',
+      );
+    } catch (e) {
+      debugPrint('[RevenueCat] onAuthStateChanged failed: $e');
     }
   }
 
@@ -93,6 +116,10 @@ class RevenueCatService {
 
   /// Fetch packages configured in the RevenueCat dashboard.
   Future<Offerings?> getOfferings() async {
+    if (!_initialized) {
+      debugPrint('[RevenueCat] getOfferings skipped: SDK not initialized.');
+      return null;
+    }
     try {
       return await Purchases.getOfferings();
     } catch (e) {
@@ -130,6 +157,10 @@ class RevenueCatService {
   /// Throws [UserCancelledException] if user dismisses the paywall.
   /// Throws other exceptions on purchase failure.
   Future<bool> purchase(Package package) async {
+    if (!_initialized) {
+      debugPrint('[RevenueCat] purchase skipped: SDK not initialized.');
+      return false;
+    }
     final result = await Purchases.purchase(PurchaseParams.package(package));
     final customerInfo = result.customerInfo;
     return customerInfo.entitlements.all[entitlementId]?.isActive == true;
@@ -137,6 +168,10 @@ class RevenueCatService {
 
   /// Restore purchases. Returns true if any active entitlement was restored.
   Future<bool> restore() async {
+    if (!_initialized) {
+      debugPrint('[RevenueCat] restore skipped: SDK not initialized.');
+      return false;
+    }
     final customerInfo = await Purchases.restorePurchases();
     return customerInfo.entitlements.all[entitlementId]?.isActive == true;
   }
@@ -145,6 +180,7 @@ class RevenueCatService {
 
   /// True if the VIP entitlement is currently active.
   Future<bool> isVipActive() async {
+    if (!_initialized) return false;
     try {
       final info = await Purchases.getCustomerInfo();
       return info.entitlements.all[entitlementId]?.isActive == true;

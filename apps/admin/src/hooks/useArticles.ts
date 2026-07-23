@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, getDocs, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { ArticleListItem } from '@/types';
+import { useState, useEffect } from "react";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  getDocs,
+  where,
+  getCountFromServer,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { ArticleListItem } from "@/types";
 
 /**
  * Hook to subscribe to articles collection in real-time.
@@ -15,9 +23,9 @@ export function useArticles(limitCount?: number) {
 
   useEffect(() => {
     const q = query(
-      collection(db, 'articles'),
-      where('status', '==', 'active'),
-      orderBy('createdAt', 'desc')
+      collection(db, "articles"),
+      where("status", "==", "active"),
+      orderBy("createdAt", "desc"),
     );
     const unsubscribe = onSnapshot(
       q,
@@ -31,9 +39,9 @@ export function useArticles(limitCount?: number) {
           const data = doc.data();
           list.push({
             id: doc.id,
-            titleVi: data.title_vi || '',
-            category: data.category || '',
-            brand: data.brand || '',
+            titleVi: data.title_vi || "",
+            category: data.category || "",
+            brand: data.brand || "",
             isPremium: data.isPremium || false,
             views: data.views || 0,
             createdAt: data.createdAt,
@@ -45,10 +53,10 @@ export function useArticles(limitCount?: number) {
         setError(null);
       },
       (err) => {
-        console.error('Error in useArticles hook:', err);
+        console.error("Error in useArticles hook:", err);
         setError(err);
         setIsLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -70,19 +78,17 @@ export function useUserStats() {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        const usersSnapshot = await getDocs(collection(db, 'users'));
-        setUsersCount(usersSnapshot.size);
-
-        let vip = 0;
-        usersSnapshot.forEach((doc) => {
-          if (doc.data().isPremium === true) {
-            vip++;
-          }
-        });
-        setVipCount(vip);
+        const [totalSnap, vipSnap] = await Promise.all([
+          getCountFromServer(collection(db, "users")),
+          getCountFromServer(
+            query(collection(db, "users"), where("isPremium", "==", true)),
+          ),
+        ]);
+        setUsersCount(totalSnap.data().count);
+        setVipCount(vipSnap.data().count);
         setError(null);
       } catch (err: any) {
-        console.error('Error fetching users stats:', err);
+        console.error("Error fetching users stats:", err);
         setError(err);
       } finally {
         setIsLoading(false);

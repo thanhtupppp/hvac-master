@@ -70,9 +70,11 @@ class _AirflowCalculatorScreenState extends State<AirflowCalculatorScreen> {
         final fpm = v2;
         if (fpm <= 0) return;
         final areaSqFt = cfm / fpm;
-        final diameterIn = v3;
+        final diameterIn =
+            _unit == UnitSystem.imperial ? v3 : v3 / 25.4;
         if (diameterIn <= 0) return;
-        final areaFromDia = 3.14159 * diameterIn * diameterIn / 4 / 144;
+        final areaFromDia =
+            3.14159 * diameterIn * diameterIn / 4 / 144;
         final cfmFromDia = fpm * areaFromDia;
         final flowCMH = cfmFromDia * 1.699;
         setState(
